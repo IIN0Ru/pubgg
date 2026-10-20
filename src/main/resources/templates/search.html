@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${nickname} + ' - 펍지지'">닉네임 - 펍지지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<main class="pending">
+    <a class="pending__home" href="/" th:href="@{/}">
+        <span class="logo logo--small">PUB<span class="logo__dot">.</span>GG</span>
+    </a>
+
+    <p class="pending__who">
+        <span th:text="${platform.label}">스팀</span>
+        <strong th:text="${nickname}">닉네임</strong>
+    </p>
+
+    <p class="pending__msg">플레이 분석은 아직 만드는 중이에요. PUBG API를 연결하면 이 자리에 플레이 카드가 나와요.</p>
+
+    <a class="pending__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
+</main>
+
+</body>
+</html>

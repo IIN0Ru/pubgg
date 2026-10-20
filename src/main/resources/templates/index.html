@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>펍지지 PUB.GG</title>
+    <meta name="description" content="스팀·카카오 닉네임 하나로 내 배그 플레이 스타일 확인">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<main class="hero">
+
+    <p class="band">스팀·카카오 닉네임 하나로 내 배그 플레이 스타일 확인</p>
+
+    <div class="hero__inner">
+
+        <h1 class="logo">PUB<span class="logo__dot">.</span>GG</h1>
+        <p class="logo-ko">펍지지</p>
+
+        <form class="search" action="/search" th:action="@{/search}" method="get">
+
+            <fieldset class="platform">
+                <legend class="sr-only">플랫폼</legend>
+
+                <!-- 서버에서 받은 플랫폼 목록으로 버튼을 만든다. 첫 번째(스팀)가 기본 선택 -->
+                <label class="platform__option" th:each="p, stat : ${platforms}">
+                    <input type="radio" name="platform"
+                           th:value="${p.shard}" th:checked="${stat.first}"
+                           value="steam" checked>
+                    <span th:text="${p.label}">스팀</span>
+                </label>
+                <!-- 아래 한 줄은 서버 없이 파일만 열었을 때 보이는 미리보기용 -->
+                <label class="platform__option" th:remove="all">
+                    <input type="radio" name="platform" value="kakao">
+                    <span>카카오</span>
+                </label>
+            </fieldset>
+
+            <div class="search__field">
+                <label for="nickname" class="sr-only">배그 닉네임</label>
+                <input id="nickname" name="nickname" type="text"
+                       placeholder="배그 닉네임"
+                       maxlength="24" autocomplete="off" spellcheck="false" required>
+                <button type="submit">분석하기</button>
+            </div>
+
+            <p class="search__error" role="alert"
+               th:if="${error == 'nickname'}">닉네임을 입력해 주세요.</p>
+            <p class="search__error" role="alert"
+               th:if="${error == 'platform'}">스팀이나 카카오 중 하나를 골라 주세요.</p>
+        </form>
+
+    </div>
+
+    <p class="hero__note">펍지지는 개인 포트폴리오 프로젝트로, KRAFTON·PUBG와 관련이 없습니다.</p>
+</main>
+
+</body>
+</html>
