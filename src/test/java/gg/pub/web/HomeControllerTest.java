@@ -56,7 +56,8 @@ class HomeControllerTest {
         mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("search"))
-                .andExpect(model().attribute("result", result));
+                .andExpect(model().attribute("result", result))
+                .andExpect(model().attributeExists("platforms"));   // 상단 검색창용
     }
 
     @Test

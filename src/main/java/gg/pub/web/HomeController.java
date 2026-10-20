@@ -51,6 +51,7 @@ public class HomeController {
             return "redirect:/?error=nickname";
         }
 
+        model.addAttribute("platforms", Platform.values());   // 상단 검색창용
         model.addAttribute("platform", selected.get());
         model.addAttribute("nickname", name);
 

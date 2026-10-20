@@ -68,6 +68,7 @@ src/main/java/gg/pub/
 src/main/resources/
 ├── application.properties     설정
 ├── templates/
+│   ├── fragments/topbar.html  모든 페이지 상단 바 (로고 + 닉네임 검색)
 │   ├── index.html             첫 화면(히어로)
 │   └── search.html            검색 결과: 플레이 카드 + 최근 경기 목록
 └── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)

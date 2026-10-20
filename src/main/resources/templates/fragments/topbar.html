@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    모든 페이지 상단 바: 로고 + 닉네임 검색.
+    사용법: <header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform})}"></header>
+      - platforms: 플랫폼 목록 (Platform.values())
+      - selected : 지금 보고 있는 플랫폼 (검색창에서 미리 선택됨). 없으면 첫 번째(스팀)
+-->
+<header class="topbar" th:fragment="topbar(platforms, selected)">
+    <div class="topbar__inner">
+        <a class="topbar__home" href="/" th:href="@{/}" aria-label="펍지지 첫 화면">
+            <span class="logo logo--small">PUB<span class="logo__dot">.</span>GG</span>
+        </a>
+
+        <form class="topsearch" action="/search" th:action="@{/search}" method="get" role="search">
+            <fieldset class="topsearch__platform">
+                <legend class="sr-only">플랫폼</legend>
+                <label th:each="p, stat : ${platforms}">
+                    <input type="radio" name="platform" th:value="${p.shard}"
+                           th:checked="${selected != null ? selected == p : stat.first}">
+                    <span th:text="${p.label}">스팀</span>
+                </label>
+            </fieldset>
+            <label for="top-nickname" class="sr-only">배그 닉네임</label>
+            <input id="top-nickname" class="topsearch__input" name="nickname" type="text"
+                   placeholder="배그 닉네임" maxlength="24" autocomplete="off" spellcheck="false" required>
+            <button class="topsearch__button" type="submit">검색</button>
+        </form>
+    </div>
+</header>
+
+</body>
+</html>

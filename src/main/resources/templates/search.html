@@ -12,11 +12,7 @@
 </head>
 <body>
 
-<header class="topbar">
-    <a class="topbar__home" href="/" th:href="@{/}">
-        <span class="logo logo--small">PUB<span class="logo__dot">.</span>GG</span>
-    </a>
-</header>
+<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform})}"></header>
 
 <main class="page">
 
@@ -33,7 +29,6 @@
     <!-- 1) 오류: 플레이어 없음, 키 문제, 요청 초과 등 -->
     <section class="notice" th:if="${errorMessage != null}">
         <p class="notice__text" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
-        <a class="notice__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
     </section>
 
     <!-- 플레이 카드: 경쟁전 최근 경기 기준 -->
@@ -130,7 +125,6 @@
         <p class="notice__text">최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.</p>
     </section>
 
-    <a class="page__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
   </aside>
 
   <!-- 가운데~오른쪽: 최근 경기 -->

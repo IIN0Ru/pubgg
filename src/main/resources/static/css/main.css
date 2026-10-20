@@ -211,18 +211,126 @@ body {
 }
 
 /* ---------- 검색 결과 화면 ---------- */
+/* 상단 바: 로고 + 검색 (fragments/topbar.html) */
 .topbar {
-    height: 64px;
-    padding: 0 24px;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.topbar__inner {
     max-width: 1280px;
     margin: 0 auto;
+    padding: 12px 24px;
     display: flex;
     align-items: center;
+    gap: 24px;
 }
 
 .topbar__home {
+    flex: none;
     text-decoration: none;
     border-radius: 4px;
+}
+
+.topsearch {
+    flex: 1;
+    max-width: 520px;
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.topsearch__platform {
+    margin: 0;
+    padding: 3px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    display: flex;
+    gap: 2px;
+}
+
+.topsearch__platform label { position: relative; cursor: pointer; }
+
+.topsearch__platform input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.topsearch__platform span {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.topsearch__platform input:checked + span {
+    background: var(--surface-elevated);
+    color: var(--ink);
+}
+
+.topsearch__platform input:focus-visible + span {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.topsearch__input {
+    flex: 1;
+    width: 0;          /* 기본 너비를 없애고 남는 공간만 채움 (좁은 화면에서 버튼이 밀려나지 않게) */
+    min-width: 0;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+}
+
+.topsearch__input::placeholder { color: var(--muted-soft); }
+
+.topsearch__input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.topsearch__button {
+    flex: none;
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--on-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.topsearch__button:hover,
+.topsearch__button:active { background: var(--primary-active); }
+
+.topsearch__button:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* 좁은 화면: 로고 한 줄, 검색 한 줄 */
+@media (max-width: 640px) {
+    .topbar__inner {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+    .topsearch {
+        flex-basis: 100%;
+        max-width: none;
+        margin-left: 0;
+    }
 }
 
 .logo--small {
@@ -628,27 +736,6 @@ body {
     color: var(--body);
 }
 
-.notice__back {
-    display: inline-block;
-    margin-top: 16px;
-}
-
-.notice__back,
-.page__back {
-    color: var(--ink);
-    font-weight: 600;
-    text-underline-offset: 4px;
-    text-decoration-color: var(--primary);
-    text-decoration-thickness: 2px;
-}
-
-.page__back {
-    display: inline-block;
-    margin-top: 8px;
-}
-
-.notice__back:focus-visible,
-.page__back:focus-visible,
 .topbar__home:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 4px;
