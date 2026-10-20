@@ -18,6 +18,7 @@ import java.util.Locale;
  * @param titles            받은 칭호 (해적, 하이에나, 보급러)
  * @param fightStartPercent 교전 중 우리 팀이 먼저 건 비율 (%). 교전이 없으면 null
  * @param zoneEdgePercent   3페이즈부터 자기장 안 평균 위치 (0 = 중심, 100 = 경계). 기록이 없으면 null
+ * @param farming           착지 성향, 3페이즈 시작 가방 상태
  */
 public record PlayCard(int matches,
                        int kills,
@@ -30,7 +31,8 @@ public record PlayCard(int matches,
                        int analyzedMatches,
                        List<Title> titles,
                        Integer fightStartPercent,
-                       Integer zoneEdgePercent) {
+                       Integer zoneEdgePercent,
+                       Farming farming) {
 
     /** KDA = (킬 + 어시스트) ÷ 죽은 판 수. 한 번도 안 죽었으면 (킬 + 어시스트) 그대로 */
     public double kda() {

@@ -1,5 +1,6 @@
 package gg.pub.service;
 
+import gg.pub.domain.Farming;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
 import gg.pub.domain.Title;
@@ -120,6 +121,47 @@ class PlayCardServiceTest {
 
         assertThat(PlayCardService.titles(List.of(t))).isEmpty();
         assertThat(PlayCardService.zoneEdgePercent(List.of(t))).isNull();
+    }
+
+    @Test
+    void 대도시에_절반_이상_내리면_대도시파() {
+        // 에란겔 4판: 포친키, 포친키, 학교(3페이즈 전 사망), 농장(대도시 아님)
+        List<PlayCardService.Analyzed> analyzed = List.of(
+                analyzed("pochinki", new TelemetryStats.Bag(6, 2, 90)),
+                analyzed("pochinki", new TelemetryStats.Bag(4, 4, 110)),
+                analyzed("school", null),
+                analyzed("farm", new TelemetryStats.Bag(8, 0, 100)));
+
+        Farming f = PlayCardService.farming(analyzed);
+
+        assertThat(f.drops()).isEqualTo(4);
+        assertThat(f.bigCityDrops()).isEqualTo(3);
+        assertThat(f.dropStyle()).isEqualTo(Farming.BIG_CITY);
+        assertThat(f.mainCity()).isEqualTo("포친키");
+        assertThat(f.phase3Matches()).isEqualTo(3);           // 학교에서 죽은 판은 빼고
+        assertThat(f.avgHealsText()).isEqualTo("6.0");        // (6 + 4 + 8) ÷ 3
+        assertThat(f.avgThrowablesText()).isEqualTo("2.0");   // (2 + 4 + 0) ÷ 3
+        assertThat(f.avgAmmo()).isEqualTo(100);               // (90 + 110 + 100) ÷ 3
+    }
+
+    @Test
+    void 대도시가_절반보다_적으면_짤파밍파() {
+        List<PlayCardService.Analyzed> analyzed = List.of(
+                analyzed("pochinki", null),
+                analyzed("farm", null),
+                analyzed("quarry", null));
+
+        Farming f = PlayCardService.farming(analyzed);
+
+        assertThat(f.dropStyle()).isEqualTo(Farming.SMALL_TOWN);
+        assertThat(f.mainCity()).isNull();
+        assertThat(f.hasBag()).isFalse();
+    }
+
+    private static PlayCardService.Analyzed analyzed(String zone, TelemetryStats.Bag bag) {
+        TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0,
+                new TelemetryStats.Landing(List.of(zone), 0, 0), bag);
+        return new PlayCardService.Analyzed(match("m", "squad-fpp", 0, 0, 0, 5), stats);
     }
 
     /** 테스트용 경쟁전 경기 하나 만들기 (나 한 명 + 텔레메트리 주소) */

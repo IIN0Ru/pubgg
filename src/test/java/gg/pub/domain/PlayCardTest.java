@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.within;
 class PlayCardTest {
 
     private static PlayCard card(Integer fight, Integer zone) {
-        return new PlayCard(10, 30, 10, 8, 400, "FPP", List.of(), 2.0, 10, List.of(), fight, zone);
+        return new PlayCard(10, 30, 10, 8, 400, "FPP", List.of(), 2.0, 10, List.of(), fight, zone, null);
     }
 
     @Test

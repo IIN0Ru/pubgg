@@ -37,6 +37,8 @@ class TelemetryAnalyzerTest {
                 .doesNotContainKey("Item_Weapon_Pan_C")
                 .doesNotContainKey("Item_Weapon_AWM_C");
         assertThat(stats.throwables()).isEqualTo(2);
+        assertThat(stats.landing()).isNull();   // 이 예시에는 착지 기록이 없음
+        assertThat(stats.phase3()).isNull();    // 3페이즈 전에 죽음
     }
 
     @Test
@@ -83,4 +85,27 @@ class TelemetryAnalyzerTest {
         assertThat(stats.zoneSamples()).isEqualTo(2);
         assertThat(stats.zoneRatioSum()).isEqualTo(0.75);
     }
+
+    /**
+     * 파밍 예시 (src/test/resources/pubg/telemetry-farming.json)
+     *
+     *  착지: 포친키(zone "pochinki"), x 300000 / y 400000  (두 번째 착지 기록은 무시)
+     *  회복·부스트: 붕대 5 + 구급상자 1 + 에너지 드링크 2 = 8 → 붕대 사용 -1, 에너지 드링크 버림 -1 = 6
+     *  투척: 수류탄 1 + 연막 2 = 3 → 수류탄 던짐 -1 = 2
+     *  총알: 60 + 30 = 90 주움 (버린 10은 빼지 않음: 주운 양만 셈)
+     *  M416·다른 사람 의료키트는 제외, 3페이즈 이후 주운 의료키트도 제외
+     */
+    @Test
+    void 착지와_3페이즈_가방을_기록한다() throws IOException {
+        TelemetryStats stats;
+        try (InputStream in = getClass().getResourceAsStream("/pubg/telemetry-farming.json")) {
+            stats = analyzer.analyze(in, "account.me");
+        }
+
+        assertThat(stats.landing().zones()).containsExactly("pochinki");
+        assertThat(stats.landing().x()).isEqualTo(300000);
+        assertThat(stats.phase3()).isEqualTo(new TelemetryStats.Bag(6, 2, 90));
+        assertThat(stats.throwables()).isEqualTo(1);
+    }
 }
+

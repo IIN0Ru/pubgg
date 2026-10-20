@@ -1,0 +1,41 @@
+[
+  { "_D": "2026-10-19T14:01:00Z", "_T": "LogParachuteLanding", "common": { "isGame": 0.5 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "zone": ["pochinki"],
+                   "location": { "x": 300000, "y": 400000, "z": 1200 } }, "distance": 0 },
+
+  { "_D": "2026-10-19T14:02:00Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Heal_Bandage_C", "stackCount": 5, "category": "Use", "subCategory": "Heal" } },
+  { "_D": "2026-10-19T14:02:10Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Heal_FirstAid_C", "stackCount": 1, "category": "Use", "subCategory": "Heal" } },
+  { "_D": "2026-10-19T14:02:20Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Boost_EnergyDrink_C", "stackCount": 2, "category": "Use", "subCategory": "Boost" } },
+  { "_D": "2026-10-19T14:02:30Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Ammo_556mm_C", "stackCount": 60, "category": "Ammunition", "subCategory": "None" } },
+  { "_D": "2026-10-19T14:02:40Z", "_T": "LogItemPickupFromLootbox", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Ammo_556mm_C", "stackCount": 30, "category": "Ammunition", "subCategory": "None" } },
+  { "_D": "2026-10-19T14:02:50Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Weapon_Grenade_C", "stackCount": 1, "category": "Weapon", "subCategory": "Throwable" } },
+  { "_D": "2026-10-19T14:03:00Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Weapon_SmokeBomb_C", "stackCount": 2, "category": "Weapon", "subCategory": "Throwable" } },
+  { "_D": "2026-10-19T14:03:10Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Weapon_HK416_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+  { "_D": "2026-10-19T14:03:20Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
+    "character": { "accountId": "account.other" }, "item": { "itemId": "Item_Heal_MedKit_C", "stackCount": 1, "category": "Use", "subCategory": "Heal" } },
+
+  { "_D": "2026-10-19T14:05:00Z", "_T": "LogItemUse", "common": { "isGame": 1.5 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Heal_Bandage_C", "stackCount": 4, "category": "Use", "subCategory": "Heal" } },
+  { "_D": "2026-10-19T14:05:10Z", "_T": "LogItemDrop", "common": { "isGame": 1.5 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Boost_EnergyDrink_C", "stackCount": 1, "category": "Use", "subCategory": "Boost" } },
+  { "_D": "2026-10-19T14:05:20Z", "_T": "LogItemDrop", "common": { "isGame": 1.5 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Ammo_556mm_C", "stackCount": 10, "category": "Ammunition", "subCategory": "None" } },
+  { "_D": "2026-10-19T14:06:00Z", "_T": "LogPlayerUseThrowable", "common": { "isGame": 2.0 },
+    "attacker": { "accountId": "account.me" }, "weapon": { "itemId": "Item_Weapon_Grenade_C", "category": "Weapon", "subCategory": "Throwable" } },
+
+  { "_D": "2026-10-19T14:20:00Z", "_T": "LogGameStatePeriodic", "common": { "isGame": 3.0 },
+    "gameState": { "poisonGasWarningPosition": { "x": 400000, "y": 400000, "z": 0 }, "poisonGasWarningRadius": 60000 } },
+
+  { "_D": "2026-10-19T14:20:30Z", "_T": "LogItemPickup", "common": { "isGame": 3.0 },
+    "character": { "accountId": "account.me" }, "item": { "itemId": "Item_Heal_MedKit_C", "stackCount": 1, "category": "Use", "subCategory": "Heal" } },
+  { "_D": "2026-10-19T14:21:00Z", "_T": "LogParachuteLanding", "common": { "isGame": 3.0 },
+    "character": { "accountId": "account.me", "zone": ["school"], "location": { "x": 1, "y": 1, "z": 1 } }, "distance": 0 }
+]

@@ -13,7 +13,8 @@
 - [x] PUBG API 연결: 닉네임 검색 → 최근 10경기 목록
 - [x] 플레이 카드 기본 정보: 경쟁전 최근 10경기 KDA, 평균 딜량, 평균 투척, 시점, 주무기 2개
 - [x] 칭호(해적, 하이에나, 보급러), 게이지(싸움걸기 ↔ 걸리기, 센터 ↔ 외곽)
-- [ ] 파밍, 포지션 직접 입력
+- [x] 파밍: 대도시파/짤파밍파, 3페이즈 시작 때 힐템·투척 보유량, 주운 총알
+- [ ] 2D 리플레이, 디스코드 공유
 - [ ] 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -59,6 +60,8 @@ src/main/java/gg/pub/
 │   ├── PlayCard.java          플레이 카드
 │   ├── Title.java             칭호 (이름은 여기서 바꿈)
 │   ├── WeaponCatalog.java     무기 ID → 이름·분류 (5.56 AR, DMR, SR ...)
+│   ├── DropZones.java         랭크 맵 대도시 목록 (지역 ID / 론도는 좌표)
+│   ├── Farming.java           파밍 정보
 │   ├── WeaponClass.java, WeaponUsage.java, TelemetryStats.java
 │   └── GameLabels.java        맵·모드 한글 이름
 └── config/

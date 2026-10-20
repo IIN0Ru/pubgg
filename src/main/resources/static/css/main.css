@@ -345,19 +345,12 @@ body {
     align-items: start;
 }
 
-/* 왼쪽은 스크롤해도 화면에 붙어 있게 */
-.side {
-    position: sticky;
-    top: 24px;
-}
-
 /* 모바일·좁은 화면: 위아래로 쌓기 */
 @media (max-width: 960px) {
     .page {
         grid-template-columns: 1fr;
         padding: 24px 16px 96px;
     }
-    .side { position: static; }
 }
 
 .profile {
@@ -598,6 +591,65 @@ body {
     font-size: 14px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
+}
+
+/* 파밍 */
+.farming {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+}
+
+.farming__style {
+    margin: 0 0 16px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+}
+
+.farming__style b {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.farming__style span {
+    font-size: 14px;
+    color: var(--body);
+}
+
+.farming__bag {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.farming__bag div {
+    padding: 12px 14px;
+    background: var(--surface-elevated);
+    border-radius: 8px;
+}
+
+.farming__bag dt {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.farming__bag dd {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.farming__caption {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .card__empty,

@@ -116,6 +116,35 @@
             <p class="card__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
         </div>
 
+        <!-- 파밍 -->
+        <div class="farming" th:if="${c.farming() != null and (c.farming().hasDropStyle() or c.farming().hasBag())}"
+             th:with="f=${c.farming()}">
+            <h3 class="card__label">파밍</h3>
+
+            <p class="farming__style" th:if="${f.hasDropStyle()}">
+                <b th:text="${f.dropStyle()}">대도시파</b>
+                <span th:if="${f.hasMainCity()}" th:text="'주 착지 ' + ${f.mainCity()}">주 착지 포친키</span>
+            </p>
+
+            <dl class="farming__bag" th:if="${f.hasBag()}">
+                <div>
+                    <dt>힐템</dt>
+                    <dd th:text="${f.avgHealsText()}">7.5</dd>
+                </div>
+                <div>
+                    <dt>투척</dt>
+                    <dd th:text="${f.avgThrowablesText()}">3.2</dd>
+                </div>
+                <div>
+                    <dt>주운 총알</dt>
+                    <dd th:text="${f.avgAmmo()}">214</dd>
+                </div>
+            </dl>
+            <p class="farming__caption" th:if="${f.hasBag()}">
+                3페이즈 시작 때 평균 · 살아남은 <span th:text="${f.phase3Matches()}">8</span>경기 기준
+            </p>
+        </div>
+
         <p class="card__note" th:if="${c.analyzedMatches() lt c.matches()}">
             주무기와 투척은 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
         </p>

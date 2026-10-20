@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.domain.TelemetryStats;
+import gg.pub.domain.TelemetryStats.Bag;
+import gg.pub.domain.TelemetryStats.Landing;
 import gg.pub.domain.WeaponCatalog;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +18,9 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +39,9 @@ import java.util.Set;
  *  - LogGameStatePeriodic                    → 자기장(다음 안전구역, 흰 원) 위치와 크기
  *  - LogPlayerMakeGroggy / LogPlayerKillV2   → 해적 성공 판정, 내가 죽은 시각
  *  - LogItemPickupFromCarepackage            → 보급상자
+ *  - LogParachuteLanding                     → 착지 지점 (지역 ID, 좌표)
+ *  - LogItemPickup* / LogItemDrop / LogItemUse / LogItemPutToVehicleTrunk
+ *                                            → 3페이즈 시작 순간의 회복·부스트템, 투척무기 개수와 주운 총알 수
  *
  * 내가 죽은 뒤의 기록은 보지 않는다. 이벤트를 하나씩 흘려 읽어서(stream) 큰 파일도 메모리를 적게 쓴다.
  */
@@ -53,6 +60,22 @@ public class TelemetryAnalyzer {
     static final double MOVING_DISTANCE_CM = 1_000;
     /** 이 단계(isGame)부터 자기장 위치를 잰다. 3.0 = 3페이즈 */
     static final double ZONE_FROM_PHASE = 3.0;
+
+    /** 회복·부스트템 */
+    static final Set<String> HEAL_ITEMS = Set.of(
+            "Item_Heal_Bandage_C", "Item_Heal_FirstAid_C", "Item_Heal_MedKit_C",
+            "Item_Boost_EnergyDrink_C", "Item_Boost_PainKiller_C", "Item_Boost_AdrenalineSyringe_C");
+
+    /** 투척무기 */
+    static final Set<String> THROWABLE_ITEMS = Set.of(
+            "Item_Weapon_Grenade_C", "Item_Weapon_Grenade_Warmode_C", "Item_Weapon_SmokeBomb_C",
+            "Item_Weapon_Molotov_C", "Item_Weapon_FlashBang_C", "Item_Weapon_StickyGrenade_C",
+            "Item_Weapon_BluezoneGrenade_C", "Item_Weapon_DecoyGrenade_C");
+
+    /** 총알 (조명탄·박격포탄·석궁 화살·40mm 연막탄은 제외) */
+    static final Set<String> AMMO_ITEMS = Set.of(
+            "Item_Ammo_556mm_C", "Item_Ammo_762mm_C", "Item_Ammo_9mm_C", "Item_Ammo_45ACP_C",
+            "Item_Ammo_300Magnum_C", "Item_Ammo_12Guage_C", "Item_Ammo_12GuageSlug_C", "Item_Ammo_57mm_C");
 
     private final ObjectMapper mapper;
 
@@ -114,6 +137,15 @@ public class TelemetryAnalyzer {
         private double zoneRatioSum;
         private int zoneSamples;
 
+        // 착지
+        private Landing landing;
+
+        // 가방 (3페이즈 시작 순간에 기록)
+        private int heldHeals;
+        private int heldThrowables;
+        private int ammoPicked;
+        private Bag phase3;
+
         record Hit(int team, Instant time) {
         }
 
@@ -134,12 +166,18 @@ public class TelemetryAnalyzer {
             }
             learnMyTeam(e);
 
+            // 3페이즈가 처음 시작된 순간의 가방 상태 기록 (이 이벤트를 처리하기 전 상태)
+            if (phase3 == null && e.path("common").path("isGame").asDouble(0) >= ZONE_FROM_PHASE) {
+                phase3 = new Bag(Math.max(0, heldHeals), Math.max(0, heldThrowables), ammoPicked);
+            }
+
             switch (e.path("_T").asText("")) {
                 case "LogItemEquip" -> onEquip(e, time);
                 case "LogItemUnequip" -> onUnequip(e, time);
                 case "LogPlayerUseThrowable" -> {
                     if (isMe(e.path("attacker"))) {
                         throwables++;
+                        heldThrowables--;
                     }
                 }
                 case "LogPlayerTakeDamage" -> onDamage(e, time);
@@ -166,6 +204,34 @@ public class TelemetryAnalyzer {
                 case "LogItemPickupFromCarepackage" -> {
                     if (isMe(e.path("character"))) {
                         carePackageIds.add(e.path("carePackageUniqueId").asText(""));
+                        onBagChange(e.path("item"), +1);
+                    }
+                }
+                case "LogItemPickup", "LogItemPickupFromLootbox",
+                     "LogItemPickupFromCustomPackage", "LogItemPickupFromVehicleTrunk" -> {
+                    if (isMe(e.path("character"))) {
+                        onBagChange(e.path("item"), +1);
+                    }
+                }
+                case "LogItemDrop", "LogItemPutToVehicleTrunk" -> {
+                    if (isMe(e.path("character"))) {
+                        onBagChange(e.path("item"), -1);
+                    }
+                }
+                case "LogItemUse" -> {
+                    if (isMe(e.path("character"))
+                            && HEAL_ITEMS.contains(e.path("item").path("itemId").asText(""))) {
+                        heldHeals--;   // 한 번 쓰면 하나 줄어든다
+                    }
+                }
+                case "LogParachuteLanding" -> {
+                    if (landing == null && isMe(e.path("character"))) {
+                        JsonNode c = e.path("character");
+                        List<String> zones = new ArrayList<>();
+                        c.path("zone").forEach(z -> zones.add(z.asText()));
+                        landing = new Landing(List.copyOf(zones),
+                                c.path("location").path("x").asDouble(),
+                                c.path("location").path("y").asDouble());
                     }
                 }
                 default -> {
@@ -273,6 +339,21 @@ public class TelemetryAnalyzer {
             }
         }
 
+        // ---------- 가방 ----------
+
+        /** 줍기(+1)·버리기(-1) 때 회복템·투척·총알 개수를 바꾼다. 개수는 item.stackCount */
+        private void onBagChange(JsonNode item, int sign) {
+            String itemId = item.path("itemId").asText("");
+            int count = Math.max(1, item.path("stackCount").asInt(1));
+            if (HEAL_ITEMS.contains(itemId)) {
+                heldHeals += sign * count;
+            } else if (THROWABLE_ITEMS.contains(itemId)) {
+                heldThrowables += sign * count;
+            } else if (AMMO_ITEMS.contains(itemId) && sign > 0) {
+                ammoPicked += count;   // 총알은 주운 양만 센다
+            }
+        }
+
         // ---------- 위치, 자기장 ----------
 
         private void onPosition(JsonNode e, Instant time) {
@@ -329,7 +410,9 @@ public class TelemetryAnalyzer {
                     pirate,
                     carePackageIds.size(),
                     zoneRatioSum,
-                    zoneSamples);
+                    zoneSamples,
+                    landing,
+                    phase3);
         }
 
         // ---------- 도우미 ----------

@@ -1,5 +1,7 @@
 package gg.pub.service;
 
+import gg.pub.domain.DropZones;
+import gg.pub.domain.Farming;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
 import gg.pub.domain.Title;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +27,7 @@ import java.util.concurrent.Future;
  * 경쟁전 경기들로 플레이 카드 기본 정보를 계산한다.
  *
  *  - 경기 요약(MatchResponse)으로 계산: KDA, 평균 딜량, FPP/TPP
- *  - 텔레메트리로 계산: 주무기 2개, 평균 투척 개수, 칭호, 게이지
+ *  - 텔레메트리로 계산: 주무기 2개, 평균 투척 개수, 칭호, 게이지, 파밍(착지·3페이즈 가방)
  *
  * 칭호 기준 (실제 데이터를 보고 조정 예정):
  *  - 해적: 10경기에서 해적 성공 3번 이상
@@ -78,7 +81,8 @@ public class PlayCardService {
         String perspective = fpp * 2 >= matches.size() ? "FPP" : "TPP";
 
         // 2) 텔레메트리로 계산
-        List<TelemetryStats> telemetry = loadTelemetry(matches, accountId);
+        List<Analyzed> analyzed = loadTelemetry(matches, accountId);
+        List<TelemetryStats> telemetry = analyzed.stream().map(Analyzed::stats).toList();
         int throwables = telemetry.stream().mapToInt(TelemetryStats::throwables).sum();
         double avgThrowables = telemetry.isEmpty() ? 0 : (double) throwables / telemetry.size();
 
@@ -97,15 +101,21 @@ public class PlayCardService {
                 telemetry.size(),
                 titles(telemetry),
                 started + received == 0 ? null : (int) Math.round(started * 100.0 / (started + received)),
-                zoneEdgePercent(telemetry)
+                zoneEdgePercent(telemetry),
+                farming(analyzed)
         ));
     }
 
+    /** 경기와 그 경기의 텔레메트리 분석 결과 (맵 이름이 필요해서 같이 둔다) */
+    record Analyzed(MatchResponse match, TelemetryStats stats) {
+    }
+
     /** 경기마다 텔레메트리를 동시에 받아 분석한다. 실패한 경기는 건너뛴다. */
-    private List<TelemetryStats> loadTelemetry(List<MatchResponse> matches, String accountId) {
-        List<TelemetryStats> results = new ArrayList<>();
+    private List<Analyzed> loadTelemetry(List<MatchResponse> matches, String accountId) {
+        List<Analyzed> results = new ArrayList<>();
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<MatchResponse> submitted = new ArrayList<>();
             List<Future<TelemetryStats>> futures = new ArrayList<>();
             for (MatchResponse m : matches) {
                 Optional<String> url = m.telemetryUrl();
@@ -113,11 +123,12 @@ public class PlayCardService {
                     continue;
                 }
                 String matchId = m.data().id();
+                submitted.add(m);
                 futures.add(executor.submit(() -> telemetryService.analyze(matchId, url.get(), accountId)));
             }
-            for (Future<TelemetryStats> f : futures) {
+            for (int i = 0; i < futures.size(); i++) {
                 try {
-                    results.add(f.get());
+                    results.add(new Analyzed(submitted.get(i), futures.get(i).get()));
                 } catch (Exception e) {
                     log.warn("텔레메트리 분석 실패, 이 경기는 건너뜀: {}", e.getMessage());
                 }
@@ -188,5 +199,53 @@ public class PlayCardService {
             return null;
         }
         return (int) Math.round(Math.min(1.0, sum / samples) * 100);
+    }
+
+    /**
+     * 파밍 정보.
+     *  - 착지: 대도시에 내린 판이 절반 이상이면 대도시파, 아니면 짤파밍파. 대도시파면 가장 많이 내린 도시도
+     *  - 가방: 3페이즈까지 살아남은 판들의 3페이즈 시작 순간 평균
+     */
+    static Farming farming(List<Analyzed> analyzed) {
+        int drops = 0;
+        int bigDrops = 0;
+        Map<String, Integer> cityCount = new LinkedHashMap<>();
+
+        for (Analyzed a : analyzed) {
+            TelemetryStats.Landing landing = a.stats().landing();
+            if (landing == null) {
+                continue;
+            }
+            drops++;
+            String mapName = a.match().data().attributes().mapName();
+            Optional<String> city = DropZones.bigCity(mapName, landing.zones(), landing.x(), landing.y());
+            if (city.isPresent()) {
+                bigDrops++;
+                cityCount.merge(city.get(), 1, Integer::sum);
+            }
+        }
+
+        String dropStyle = null;
+        String mainCity = null;
+        if (drops > 0) {
+            boolean bigCity = bigDrops * 2 >= drops;
+            dropStyle = bigCity ? Farming.BIG_CITY : Farming.SMALL_TOWN;
+            if (bigCity) {
+                mainCity = cityCount.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse(null);
+            }
+        }
+
+        List<TelemetryStats.Bag> bags = analyzed.stream()
+                .map(a -> a.stats().phase3())
+                .filter(Objects::nonNull)
+                .toList();
+        double avgHeals = bags.stream().mapToInt(TelemetryStats.Bag::heals).average().orElse(0);
+        double avgThrowables = bags.stream().mapToInt(TelemetryStats.Bag::throwables).average().orElse(0);
+        int avgAmmo = (int) Math.round(bags.stream().mapToInt(TelemetryStats.Bag::ammoPicked).average().orElse(0));
+
+        return new Farming(dropStyle, mainCity, bigDrops, drops, bags.size(), avgHeals, avgThrowables, avgAmmo);
     }
 }
