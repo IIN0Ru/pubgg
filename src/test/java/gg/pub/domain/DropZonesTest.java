@@ -24,6 +24,16 @@ class DropZonesTest {
     }
 
     @Test
+    void 추가한_대도시도_찾는다() {
+        assertThat(DropZones.bigCity("Baltic_Main", List.of("severny"), 0, 0)).contains("세베르니");
+        assertThat(DropZones.bigCity("Desert_Main", List.of("lmpala"), 0, 0)).contains("임팔라");   // 공식 목록 표기
+        assertThat(DropZones.bigCity("Tiger_Main", List.of("hosanprison"), 0, 0)).contains("호산 교도소");
+        assertThat(DropZones.bigCity("Neon_Main", List.of(), 592 * CM_PER_PX, 158 * CM_PER_PX)).contains("무호판");
+        // 사용자 목록에서 빠진 곳은 대도시가 아님
+        assertThat(DropZones.bigCity("Desert_Main", List.of("heciendadelpatron"), 0, 0)).isEmpty();
+    }
+
+    @Test
     void 론도는_좌표로_판단한다() {
         // 자데나 시티 중심 (이미지 720, 585 px)
         assertThat(DropZones.bigCity("Neon_Main", List.of(), 720 * CM_PER_PX, 585 * CM_PER_PX)).contains("자데나 시티");

@@ -33,41 +33,72 @@ public final class DropZones {
     }
 
     // 에란겔 (리마스터 Baltic_Main, 옛 Erangel_Main 같은 지역 ID 사용)
-    private static final Map<String, String> ERANGEL = Map.of(
-            "pochinki", "포친키",
-            "school", "학교·아파트",
-            "rozhok", "로족",
-            "yasnayapolyana", "야스나야 폴랴나",
-            "georgopol", "조지폴",
-            "sosnovkamilitarybase", "밀리터리 베이스",
-            "mylta", "밀타");
+    // 아파트는 따로 된 지역 ID 가 없어서 학교(school)에 포함된다
+    private static final Map<String, String> ERANGEL = Map.ofEntries(
+            Map.entry("georgopol", "조지폴"),
+            Map.entry("hospital", "병원"),
+            Map.entry("severny", "세베르니"),
+            Map.entry("kameshki", "카메시키"),
+            Map.entry("yasnayapolyana", "야스나야 폴랴나"),
+            Map.entry("rozhok", "로족"),
+            Map.entry("school", "학교·아파트"),
+            Map.entry("pochinki", "포친키"),
+            Map.entry("mylta", "밀타"),
+            Map.entry("primorsk", "프리모르스크"),
+            Map.entry("sosnovkamilitarybase", "밀리터리 베이스"),
+            Map.entry("novorepnoye", "노보레프노예"));
 
-    // 미라마
-    private static final Map<String, String> MIRAMAR = Map.of(
-            "losleones", "로스 레오네스",
-            "pecado", "페카도",
-            "elpozo", "엘 포조",
-            "sanmartin", "산 마르틴",
-            "heciendadelpatron", "아시엔다 델 파트론",
-            "montenuevo", "몬테 누에보");
+    // 미라마. 임팔라는 공식 목록에 "lmpala"(소문자 L)로 적혀 있어서 두 표기를 다 넣음
+    private static final Map<String, String> MIRAMAR = Map.ofEntries(
+            Map.entry("lacobreria", "라 코브레리아"),
+            Map.entry("elpozo", "엘 포조"),
+            Map.entry("sanmartin", "산 마르틴"),
+            Map.entry("elazahar", "엘 아자하르"),
+            Map.entry("pecado", "페카도"),
+            Map.entry("montenuevo", "몬테 누에보"),
+            Map.entry("lmpala", "임팔라"),
+            Map.entry("impala", "임팔라"),
+            Map.entry("losleones", "로스 레오네스"),
+            Map.entry("valledelmar", "바예 델 마르"),
+            Map.entry("chumacera", "추마세라"));
 
-    // 태이고
-    private static final Map<String, String> TAEGO = Map.of(
-            "hosan", "호산",
-            "godok", "고독",
-            "terminal", "터미널",
-            "kangneung", "강능",
-            "yongcheon", "용천",
-            "airport", "공항");
+    // 태이고. 병원은 공식 지역 ID 목록에 없어서 빠짐 (좌표로 따로 넣어야 함)
+    private static final Map<String, String> TAEGO = Map.ofEntries(
+            Map.entry("wolsong", "월송"),
+            Map.entry("godok", "고독"),
+            Map.entry("armybase", "군기지"),
+            Map.entry("yongcheon", "용천"),
+            Map.entry("shipyard", "조선소"),
+            Map.entry("palace", "궁"),
+            Map.entry("hapo", "하포"),
+            Map.entry("terminal", "터미널"),
+            Map.entry("airport", "공항"),
+            Map.entry("kangneung", "강능"),
+            Map.entry("buksansa", "북산사"),
+            Map.entry("hosan", "호산"),
+            Map.entry("hosanprison", "호산 교도소"),
+            Map.entry("school", "학교"),
+            Map.entry("songam", "송암"),
+            Map.entry("ohyang", "오향"));
 
     // 론도: 맵 이미지(Rondo_Main_Low_Res.png, 819px) 기준 픽셀 좌표와 반경
+    // 겹치는 곳(네옥스 팩토리·테스트 트랙)은 위에 있는 쪽으로 판단
     private static final List<Area> RONDO = List.of(
             px("자데나 시티", 720, 585, 45),
             px("자오틴", 172, 342, 32),
             px("스타디움", 287, 248, 30),
             px("네옥스 팩토리", 485, 362, 30),
+            px("테스트 트랙", 445, 367, 28),
             px("린지앙", 285, 690, 40),
-            px("팀롱 가든", 505, 735, 30));
+            px("팀롱 가든", 505, 735, 30),
+            px("무호판", 592, 158, 22),
+            px("헤메이 타운", 703, 150, 28),
+            px("메이란", 650, 337, 22),
+            px("유린", 305, 447, 25),
+            px("퐁툰", 97, 508, 25),
+            px("훙산", 370, 643, 22),
+            px("롱호", 147, 700, 28),
+            px("단칭", 493, 517, 25));
 
     /**
      * 착지 지점이 대도시면 도시 이름을, 아니면 빈 값.
