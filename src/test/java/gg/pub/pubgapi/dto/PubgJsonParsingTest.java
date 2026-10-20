@@ -56,5 +56,17 @@ class PubgJsonParsingTest {
         MatchResponse match = read(mapper, "/pubg/match.json", MatchResponse.class);
 
         assertThat(match.statsOf("account.nobody")).isEmpty();
+        assertThat(match.teammatesOf("account.nobody")).isEmpty();
+    }
+
+    @Test
+    void 같은_roster_의_팀원만_찾는다() throws IOException {
+        MatchResponse match = read(mapper, "/pubg/match.json", MatchResponse.class);
+
+        // roster-1 = 나(participant-1) + DuoFriend(participant-3). OtherPlayer 는 다른 팀
+        assertThat(match.teammatesOf("account.test0001"))
+                .extracting(MatchResponse.Stats::name)
+                .containsExactly("DuoFriend");
+        assertThat(match.statsOf("account.test0001").orElseThrow().deathType()).isEqualTo("alive");
     }
 }

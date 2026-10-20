@@ -2,12 +2,13 @@ package gg.pub.service;
 
 import gg.pub.domain.DropZones;
 import gg.pub.domain.Farming;
+import gg.pub.domain.MatchPlayer;
+import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
 import gg.pub.domain.Title;
 import gg.pub.domain.WeaponCatalog;
 import gg.pub.domain.WeaponUsage;
-import gg.pub.pubgapi.dto.MatchResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.concurrent.Future;
 /**
  * 경쟁전 경기들로 플레이 카드 기본 정보를 계산한다.
  *
- *  - 경기 요약(MatchResponse)으로 계산: KDA, 평균 딜량, FPP/TPP
+ *  - 경기 기록(MatchRecord)으로 계산: KDA, 평균 딜량, FPP/TPP
  *  - 텔레메트리로 계산: 주무기 2개, 평균 투척 개수, 칭호, 게이지, 파밍(착지·3페이즈 가방)
  *
  * 칭호 기준 (실제 데이터를 보고 조정 예정):
@@ -58,7 +59,7 @@ public class PlayCardService {
      * @param accountId 내 계정 ID
      * @return 경기가 없으면 빈 값
      */
-    public Optional<PlayCard> build(List<MatchResponse> matches, String accountId) {
+    public Optional<PlayCard> build(List<MatchRecord> matches, String accountId) {
         if (matches.isEmpty()) {
             return Optional.empty();
         }
@@ -66,12 +67,12 @@ public class PlayCardService {
         // 1) 경기 요약으로 계산
         int kills = 0, assists = 0, deaths = 0, fpp = 0;
         double damage = 0;
-        for (MatchResponse m : matches) {
-            MatchResponse.Stats me = m.statsOf(accountId).orElseThrow();
+        for (MatchRecord m : matches) {
+            MatchPlayer me = m.me();
             kills += me.kills();
             assists += me.assists();
-            damage += me.damageDealt();
-            if (me.winPlace() != 1) {
+            damage += me.damage();
+            if (me.rank() != 1) {
                 deaths++;
             }
             if (m.isFpp()) {
@@ -107,24 +108,23 @@ public class PlayCardService {
     }
 
     /** 경기와 그 경기의 텔레메트리 분석 결과 (맵 이름이 필요해서 같이 둔다) */
-    record Analyzed(MatchResponse match, TelemetryStats stats) {
+    record Analyzed(MatchRecord match, TelemetryStats stats) {
     }
 
     /** 경기마다 텔레메트리를 동시에 받아 분석한다. 실패한 경기는 건너뛴다. */
-    private List<Analyzed> loadTelemetry(List<MatchResponse> matches, String accountId) {
+    private List<Analyzed> loadTelemetry(List<MatchRecord> matches, String accountId) {
         List<Analyzed> results = new ArrayList<>();
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<MatchResponse> submitted = new ArrayList<>();
+            List<MatchRecord> submitted = new ArrayList<>();
             List<Future<TelemetryStats>> futures = new ArrayList<>();
-            for (MatchResponse m : matches) {
-                Optional<String> url = m.telemetryUrl();
-                if (url.isEmpty()) {
+            for (MatchRecord m : matches) {
+                String url = m.telemetryUrl();
+                if (url == null) {
                     continue;
                 }
-                String matchId = m.data().id();
                 submitted.add(m);
-                futures.add(executor.submit(() -> telemetryService.analyze(matchId, url.get(), accountId)));
+                futures.add(executor.submit(() -> telemetryService.analyze(m.matchId(), url, accountId)));
             }
             for (int i = 0; i < futures.size(); i++) {
                 try {
@@ -217,7 +217,7 @@ public class PlayCardService {
                 continue;
             }
             drops++;
-            String mapName = a.match().data().attributes().mapName();
+            String mapName = a.match().mapName();
             Optional<String> city = DropZones.bigCity(mapName, landing.zones(), landing.x(), landing.y());
             if (city.isPresent()) {
                 bigDrops++;

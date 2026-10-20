@@ -748,15 +748,200 @@ body {
 }
 
 .match {
-    display: grid;
-    grid-template-columns: 96px 1fr auto;
-    align-items: center;
-    gap: 16px;
-    padding: 18px 20px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
     border-radius: 12px;
 }
+
+.match[hidden] { display: none; }
+
+/* 접힌 상태에서 보이는 한 줄. 누르면 펼쳐진다 (<details>) */
+.match__row {
+    display: grid;
+    grid-template-columns: 96px 1fr auto 16px;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.match__row::-webkit-details-marker { display: none; }
+
+.match__row:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+    border-radius: 12px;
+}
+
+/* 펼침 표시: 꺾쇠 */
+.match__chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    justify-self: center;
+}
+
+details[open] .match__chevron { transform: rotate(-135deg); }
+
+/* 펼쳤을 때 */
+.match__more {
+    padding: 4px 20px 20px;
+    border-top: 1px solid var(--hairline);
+}
+
+.match__facts {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+}
+
+.match__facts li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.match__facts span {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.match__facts strong {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.team {
+    width: 100%;
+    margin-top: 18px;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.team th,
+.team td {
+    padding: 10px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--hairline);
+    white-space: nowrap;
+}
+
+.team th:first-child {
+    text-align: left;
+    padding-left: 0;
+}
+
+.team td:last-child { padding-right: 0; }
+
+.team thead th {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.team tbody th { font-weight: 600; }
+
+.team tbody tr:last-child th,
+.team tbody tr:last-child td { border-bottom: 0; }
+
+.team a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-strong);
+    text-underline-offset: 3px;
+}
+
+.team__me th,
+.team__me td { color: var(--body); }
+
+.match__solo {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+/* 목록 머리: 제목 + 필터 */
+.recent__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.recent__head .section-title { margin: 0; }
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* category-tab: 안 고른 건 회색 글씨, 고른 건 카드색 배경 */
+.tabs {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+}
+
+.tab {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.tab.is-active {
+    background: var(--surface-card);
+    color: var(--ink);
+}
+
+.tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+.recent__empty {
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    background: var(--surface-card);
+    border-radius: 12px;
+}
+
+.more {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    height: 44px;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--body);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.more[hidden] { display: none; }
+
+.more:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .match__rank strong {
     display: block;
@@ -823,10 +1008,18 @@ body {
 }
 
 @media (max-width: 640px) {
-    .match {
-        grid-template-columns: 64px 1fr;
+    .match__row {
+        grid-template-columns: 64px 1fr 16px;
         padding: 16px;
     }
+    .match__chevron { grid-column: 3; grid-row: 1; }
+    .match__more { padding: 4px 16px 16px; }
+    /* 좁은 화면: 생존 시간 칸은 빼고 글씨를 줄여서 표가 카드 밖으로 안 나가게 */
+    .team { font-size: 13px; }
+    .team th,
+    .team td { padding: 9px 4px; }
+    .team th:nth-child(5),
+    .team td:nth-child(5) { display: none; }
     .match__rank strong { font-size: 26px; }
     .match__stats {
         grid-column: 1 / -1;

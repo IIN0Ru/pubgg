@@ -171,45 +171,108 @@
         <p class="notice__text">최근 14일 안에 한 경기가 없어요. PUBG API는 최근 14일 경기만 알려줘요.</p>
     </section>
 
-    <!-- 3) 경기 목록 -->
-    <section class="recent" th:if="${result != null and result.hasMatches()}">
-        <h2 class="section-title">
-            최근 <span th:text="${result.matches().size()}">10</span>경기
-        </h2>
+    <!-- 3) 경기 목록 (14일 전체, 필터 + 더 보기 + 펼쳐보기) -->
+    <section class="recent" th:if="${result != null and result.hasMatches()}" data-match-list>
+        <div class="recent__head">
+            <h2 class="section-title">
+                최근 14일 <span data-match-count th:text="${result.matches().size()}">42</span>경기
+            </h2>
+            <div class="filters" role="group" aria-label="경기 필터">
+                <div class="tabs" data-filter="type">
+                    <button type="button" class="tab is-active" data-value="all" aria-pressed="true">전체</button>
+                    <button type="button" class="tab" data-value="competitive" aria-pressed="false">경쟁</button>
+                    <button type="button" class="tab" data-value="official" aria-pressed="false">일반</button>
+                </div>
+                <div class="tabs" data-filter="pov">
+                    <button type="button" class="tab is-active" data-value="all" aria-pressed="true">전체</button>
+                    <button type="button" class="tab" data-value="fpp" aria-pressed="false">FPP</button>
+                    <button type="button" class="tab" data-value="tpp" aria-pressed="false">TPP</button>
+                </div>
+            </div>
+        </div>
 
         <ol class="matches">
             <li class="match" th:each="m : ${result.matches()}"
-                th:classappend="${m.isWin()} ? 'match--win'">
+                th:classappend="${m.isWin()} ? 'match--win'"
+                th:attr="data-type=${m.typeKey()},data-pov=${m.perspectiveKey()}">
+              <details>
+                <summary class="match__row">
+                    <div class="match__rank">
+                        <strong th:text="'#' + ${m.rank()}">#1</strong>
+                        <span th:text="'/ ' + ${m.teams()}">/ 25</span>
+                    </div>
 
-                <div class="match__rank">
-                    <strong th:text="'#' + ${m.rank()}">#1</strong>
-                    <span th:text="'/ ' + ${m.teams()}">/ 25</span>
+                    <div class="match__info">
+                        <p class="match__mode">
+                            <span th:text="${m.mode()}">스쿼드 FPP</span>
+                            <span th:text="${m.map()}">에란겔</span>
+                            <span class="match__type" th:if="${!m.matchTypeLabel().isEmpty()}"
+                                  th:text="${m.matchTypeLabel()}">일반</span>
+                        </p>
+                        <p class="match__date" th:text="${m.playedAtText()}">10월 19일 21:34</p>
+                    </div>
+
+                    <dl class="match__stats">
+                        <div><dt>킬</dt><dd th:text="${m.kills()}">5</dd></div>
+                        <div><dt>기절</dt><dd th:text="${m.knocks()}">6</dd></div>
+                        <div><dt>딜량</dt><dd th:text="${m.damage()}">612</dd></div>
+                        <div><dt>생존</dt><dd th:text="${m.survivedText()}">31분 2초</dd></div>
+                    </dl>
+                    <span class="match__chevron" aria-hidden="true"></span>
+                </summary>
+
+                <div class="match__more">
+                    <ul class="match__facts">
+                        <li><span>헤드샷 킬</span><strong th:text="${m.me().headshotKills()}">2</strong></li>
+                        <li><span>최장 킬</span><strong th:text="${m.me().longestKill()} + 'm'">212m</strong></li>
+                        <li><span>어시스트</span><strong th:text="${m.me().assists()}">1</strong></li>
+                        <li><span>팀원 부활</span><strong th:text="${m.me().revives()}">1</strong></li>
+                        <li><span>결과</span><strong th:text="${m.me().deathTypeLabel()}">끝까지 생존</strong></li>
+                    </ul>
+
+                    <table class="team" th:if="${m.hasTeammates()}">
+                        <caption class="sr-only">이 경기 팀원 기록</caption>
+                        <thead>
+                            <tr><th scope="col">팀</th><th scope="col">킬</th><th scope="col">기절</th>
+                                <th scope="col">딜량</th><th scope="col">생존</th><th scope="col">결과</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="team__me">
+                                <th scope="row" th:text="${result.nickname()}">N0-RU</th>
+                                <td th:text="${m.me().kills()}">5</td>
+                                <td th:text="${m.me().knocks()}">6</td>
+                                <td th:text="${m.me().damage()}">612</td>
+                                <td th:text="${m.me().survivedText()}">31분 2초</td>
+                                <td th:text="${m.me().deathTypeLabel()}">끝까지 생존</td>
+                            </tr>
+                            <tr th:each="t : ${m.teammates()}">
+                                <th scope="row">
+                                    <a th:href="@{/search(platform=${result.platform().getShard()},nickname=${t.name()})}"
+                                       th:text="${t.name()}">DuoFriend</a>
+                                </th>
+                                <td th:text="${t.kills()}">2</td>
+                                <td th:text="${t.knocks()}">2</td>
+                                <td th:text="${t.damage()}">410</td>
+                                <td th:text="${t.survivedText()}">25분 0초</td>
+                                <td th:text="${t.deathTypeLabel()}">적에게 사망</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="match__solo" th:unless="${m.hasTeammates()}">혼자 한 경기예요.</p>
                 </div>
-
-                <div class="match__info">
-                    <p class="match__mode">
-                        <span th:text="${m.mode()}">스쿼드 FPP</span>
-                        <span th:text="${m.map()}">에란겔</span>
-                        <span class="match__type" th:if="${!m.matchType().isEmpty()}"
-                              th:text="${m.matchType()}">일반</span>
-                    </p>
-                    <p class="match__date" th:text="${m.playedAtText()}">10월 19일 21:34</p>
-                </div>
-
-                <dl class="match__stats">
-                    <div><dt>킬</dt><dd th:text="${m.kills()}">5</dd></div>
-                    <div><dt>기절</dt><dd th:text="${m.knocks()}">6</dd></div>
-                    <div><dt>딜량</dt><dd th:text="${m.damage()}">612</dd></div>
-                    <div><dt>생존</dt><dd th:text="${m.survivedText()}">31분 2초</dd></div>
-                </dl>
+              </details>
             </li>
         </ol>
+
+        <p class="recent__empty" data-match-empty hidden>이 조건에 맞는 경기가 없어요.</p>
+        <button type="button" class="more" data-match-more hidden>더 보기</button>
     </section>
   </div>
 
 </main>
 
 <script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/matches.js" th:src="@{/js/matches.js}"></script>
 <script>
   // 링크 복사: 지금 보고 있는 주소(/search?platform=...&nickname=...)를 복사
   document.querySelectorAll('[data-copy-link]').forEach(function (btn) {

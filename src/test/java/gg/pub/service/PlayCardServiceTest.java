@@ -1,16 +1,18 @@
 package gg.pub.service;
 
 import gg.pub.domain.Farming;
+import gg.pub.domain.MatchPlayer;
+import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
 import gg.pub.domain.Title;
 import gg.pub.domain.WeaponClass;
 import gg.pub.domain.WeaponUsage;
 import gg.pub.pubgapi.PubgApiException;
-import gg.pub.pubgapi.dto.MatchResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +50,7 @@ class PlayCardServiceTest {
 
     @Test
     void 경쟁전_경기로_플레이_카드를_계산한다() {
-        List<MatchResponse> matches = List.of(
+        List<MatchRecord> matches = List.of(
                 match("m1", "squad-fpp", 4, 1, 400, 1),
                 match("m2", "squad-fpp", 2, 2, 300, 5),
                 match("m3", "squad", 1, 0, 200, 10));
@@ -165,18 +167,11 @@ class PlayCardServiceTest {
     }
 
     /** 테스트용 경쟁전 경기 하나 만들기 (나 한 명 + 텔레메트리 주소) */
-    private static MatchResponse match(String id, String gameMode, int kills, int assists,
-                                       double damage, int winPlace) {
-        MatchResponse.Stats me = new MatchResponse.Stats(
-                "N0-RU", ME, kills, 0, assists, 0, damage, 0, 0, 0, 0, 0, 0, 1500, winPlace);
-
-        return new MatchResponse(
-                new MatchResponse.Match(id, new MatchResponse.MatchAttributes(
-                        "2026-10-19T14:00:00Z", 1800, gameMode, "Baltic_Main", "competitive")),
-                List.of(
-                        new MatchResponse.Included("participant", "p-" + id,
-                                new MatchResponse.IncludedAttributes(me, null)),
-                        new MatchResponse.Included("asset", "a-" + id,
-                                new MatchResponse.IncludedAttributes(null, "https://telemetry.example/" + id))));
+    private static MatchRecord match(String id, String gameMode, int kills, int assists,
+                                     double damage, int winPlace) {
+        MatchPlayer me = new MatchPlayer("N0-RU", ME, kills, 0, assists, (int) damage, winPlace,
+                1500, 0, 0, 0, winPlace == 1 ? "alive" : "byplayer");
+        return new MatchRecord(id, Instant.parse("2026-10-19T14:00:00Z"), gameMode, "Baltic_Main",
+                "competitive", 16, "https://telemetry.example/" + id, me, List.of());
     }
 }

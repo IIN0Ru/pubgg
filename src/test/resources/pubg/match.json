@@ -16,8 +16,26 @@
       "titleId": "bluehole-pubg"
     },
     "relationships": {
-      "assets": { "data": [ { "type": "asset", "id": "asset-0001" } ] },
-      "rosters": { "data": [ { "type": "roster", "id": "roster-1" }, { "type": "roster", "id": "roster-2" } ] }
+      "assets": {
+        "data": [
+          {
+            "type": "asset",
+            "id": "asset-0001"
+          }
+        ]
+      },
+      "rosters": {
+        "data": [
+          {
+            "type": "roster",
+            "id": "roster-1"
+          },
+          {
+            "type": "roster",
+            "id": "roster-2"
+          }
+        ]
+      }
     }
   },
   "included": [
@@ -72,14 +90,74 @@
       }
     },
     {
+      "type": "participant",
+      "id": "participant-3",
+      "attributes": {
+        "actor": "",
+        "shardId": "steam",
+        "stats": {
+          "DBNOs": 2,
+          "assists": 3,
+          "damageDealt": 410.5,
+          "deathType": "byplayer",
+          "headshotKills": 1,
+          "kills": 2,
+          "longestKill": 88.9,
+          "name": "DuoFriend",
+          "playerId": "account.friend",
+          "revives": 2,
+          "timeSurvived": 1500,
+          "winPlace": 1
+        }
+      }
+    },
+    {
       "type": "roster",
       "id": "roster-1",
-      "attributes": { "shardId": "steam", "stats": { "rank": 1, "teamId": 3 }, "won": "true" }
+      "attributes": {
+        "shardId": "steam",
+        "stats": {
+          "rank": 1,
+          "teamId": 3
+        },
+        "won": "true"
+      },
+      "relationships": {
+        "participants": {
+          "data": [
+            {
+              "type": "participant",
+              "id": "participant-1"
+            },
+            {
+              "type": "participant",
+              "id": "participant-3"
+            }
+          ]
+        }
+      }
     },
     {
       "type": "roster",
       "id": "roster-2",
-      "attributes": { "shardId": "steam", "stats": { "rank": 2, "teamId": 7 }, "won": "false" }
+      "attributes": {
+        "shardId": "steam",
+        "stats": {
+          "rank": 2,
+          "teamId": 7
+        },
+        "won": "false"
+      },
+      "relationships": {
+        "participants": {
+          "data": [
+            {
+              "type": "participant",
+              "id": "participant-2"
+            }
+          ]
+        }
+      }
     },
     {
       "type": "asset",
@@ -92,6 +170,8 @@
       }
     }
   ],
-  "links": { "self": "https://api.pubg.com/shards/steam/matches/match-0001" },
+  "links": {
+    "self": "https://api.pubg.com/shards/steam/matches/match-0001"
+  },
   "meta": {}
 }

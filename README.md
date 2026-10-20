@@ -10,14 +10,15 @@
 
 - [x] 첫 화면(히어로): 로고, 스팀/카카오 선택, 닉네임 검색창
 - [x] 검색 요청 처리: 빈 닉네임·잘못된 플랫폼이면 첫 화면으로 돌려보냄
-- [x] PUBG API 연결: 닉네임 검색 → 최근 10경기 목록
+- [x] PUBG API 연결: 닉네임 검색 → 최근 14일 전체 경기 목록
 - [x] 플레이 카드 기본 정보: 경쟁전 최근 10경기 KDA, 평균 딜량, 평균 투척, 시점, 주무기 2개
 - [x] 칭호(해적, 하이에나, 보급러), 게이지(싸움걸기 ↔ 걸리기, 센터 ↔ 외곽)
 - [x] 파밍: 대도시파/짤파밍파, 3페이즈 시작 때 힐템·투척 보유량, 주운 총알
 - [x] 결과 화면: 왼쪽 공유용 요약 카드(링크 복사) + 오른쪽 상세 패널 4개 + 최근 경기
 - [x] 즐겨찾기·최근 검색 (브라우저 저장)
 - [x] 검색 결과 저장 + 전적 갱신 버튼 (2분 대기)
-- [ ] 경기 필터·펼쳐보기, 함께한 팀원, 활동 시간대, 시즌 비교
+- [x] 경기 필터(경쟁/일반, FPP/TPP)·더 보기·펼쳐보기(팀원 기록)
+- [ ] 함께한 팀원, 활동 시간대, 시즌 비교
 - [ ] 카드 이미지 공유(디스코드), 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -48,7 +49,8 @@ src/main/java/gg/pub/
 │   └── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
-│   ├── PlayerService.java     검색 결과 만들기: 최근 경기 + 경쟁전 경기 모으기
+│   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
+│   ├── MatchRecordService.java 경기 하나 → 작은 기록(MatchRecord)으로 줄이고 캐시
 │   ├── PlayCardService.java   플레이 카드 계산 (기본 정보 + 칭호·게이지)
 │   ├── TelemetryService.java  텔레메트리 받기 + 분석 결과 캐시
 │   └── TelemetryAnalyzer.java 텔레메트리 분석: 주무기, 투척, 교전, 해적, 하이에나, 보급, 자기장 위치
@@ -59,7 +61,8 @@ src/main/java/gg/pub/
 │   └── dto/                   API 응답 JSON 그릇
 ├── domain/
 │   ├── Platform.java          스팀/카카오 (PUBG API shard 값)
-│   ├── MatchSummary.java      경기 목록 한 줄
+│   ├── MatchRecord.java       경기 하나 기록 (나 + 팀원). 목록·카드·팀원·시간대가 같이 씀
+│   ├── MatchPlayer.java       경기 하나에서 한 사람 기록
 │   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
 │   ├── PlayCard.java          플레이 카드
 │   ├── Title.java             칭호 (이름은 여기서 바꿈)
