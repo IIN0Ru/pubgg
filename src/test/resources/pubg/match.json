@@ -1,0 +1,97 @@
+{
+  "data": {
+    "type": "match",
+    "id": "match-0001",
+    "attributes": {
+      "createdAt": "2026-10-19T14:12:30Z",
+      "duration": 1865,
+      "gameMode": "squad-fpp",
+      "isCustomMatch": false,
+      "mapName": "Baltic_Main",
+      "matchType": "competitive",
+      "seasonState": "progress",
+      "shardId": "steam",
+      "stats": null,
+      "tags": null,
+      "titleId": "bluehole-pubg"
+    },
+    "relationships": {
+      "assets": { "data": [ { "type": "asset", "id": "asset-0001" } ] },
+      "rosters": { "data": [ { "type": "roster", "id": "roster-1" }, { "type": "roster", "id": "roster-2" } ] }
+    }
+  },
+  "included": [
+    {
+      "type": "participant",
+      "id": "participant-1",
+      "attributes": {
+        "actor": "",
+        "shardId": "steam",
+        "stats": {
+          "DBNOs": 9,
+          "assists": 2,
+          "boosts": 6,
+          "damageDealt": 1024.73,
+          "deathType": "alive",
+          "headshotKills": 3,
+          "heals": 4,
+          "killPlace": 1,
+          "killStreaks": 2,
+          "kills": 8,
+          "longestKill": 212.4,
+          "name": "N0-RU",
+          "playerId": "account.test0001",
+          "revives": 1,
+          "rideDistance": 2310.5,
+          "roadKills": 0,
+          "swimDistance": 0,
+          "teamKills": 0,
+          "timeSurvived": 1862.3,
+          "vehicleDestroys": 0,
+          "walkDistance": 2875.1,
+          "weaponsAcquired": 7,
+          "winPlace": 1
+        }
+      }
+    },
+    {
+      "type": "participant",
+      "id": "participant-2",
+      "attributes": {
+        "actor": "",
+        "shardId": "steam",
+        "stats": {
+          "DBNOs": 1,
+          "damageDealt": 130.0,
+          "kills": 0,
+          "name": "OtherPlayer",
+          "playerId": "account.other",
+          "timeSurvived": 600,
+          "winPlace": 2
+        }
+      }
+    },
+    {
+      "type": "roster",
+      "id": "roster-1",
+      "attributes": { "shardId": "steam", "stats": { "rank": 1, "teamId": 3 }, "won": "true" }
+    },
+    {
+      "type": "roster",
+      "id": "roster-2",
+      "attributes": { "shardId": "steam", "stats": { "rank": 2, "teamId": 7 }, "won": "false" }
+    },
+    {
+      "type": "asset",
+      "id": "asset-0001",
+      "attributes": {
+        "URL": "https://telemetry-cdn.pubg.com/example-telemetry.json",
+        "createdAt": "2026-10-19T14:12:30Z",
+        "description": "",
+        "name": "telemetry"
+      }
+    }
+  ],
+  "links": { "self": "https://api.pubg.com/shards/steam/matches/match-0001" },
+  "meta": {}
+}

@@ -10,7 +10,7 @@
 
 - [x] 첫 화면(히어로): 로고, 스팀/카카오 선택, 닉네임 검색창
 - [x] 검색 요청 처리: 빈 닉네임·잘못된 플랫폼이면 첫 화면으로 돌려보냄
-- [ ] PUBG API 연결
+- [x] PUBG API 연결: 닉네임 검색 → 최근 10경기 목록
 - [ ] 플레이 카드 (칭호, 게이지, 기본 정보)
 - [ ] 2D 리플레이
 
@@ -21,8 +21,11 @@
    - **File → Project Structure → Project → SDK** → **Add SDK → Download JDK**
    - Version **21**, Vendor는 아무거나 (예: Eclipse Temurin) → Download
 3. 오른쪽 **Maven** 탭에서 새로고침 버튼을 눌러 라이브러리를 받는다 (처음 한 번만, 몇 분 걸릴 수 있음)
-4. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
-5. 브라우저에서 http://localhost:8080 접속
+4. PUBG API 키를 환경 변수 `PUBG_API_KEY`로 등록 (developer.pubg.com에서 발급)
+   - Windows: 시작 메뉴 → "환경 변수" 검색 → 시스템 환경 변수 편집 → 환경 변수 → 사용자 변수 새로 만들기
+   - 등록 후 IntelliJ를 완전히 껐다 켜야 반영됨
+5. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
+6. 브라우저에서 http://localhost:8080 접속
 
 테스트는 `src/test/java/gg/pub/web/HomeControllerTest.java`에서 ▶ 버튼으로 실행한다.
 
@@ -31,15 +34,28 @@
 ```
 src/main/java/gg/pub/
 ├── PubggApplication.java      앱 시작점
-└── web/
-    ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리
-    └── Platform.java          스팀/카카오 (PUBG API shard 값)
+├── web/
+│   └── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
+├── service/
+│   └── PlayerService.java     최근 경기 가져와서 정리 (Service)
+├── pubgapi/
+│   ├── PubgApiClient.java     PUBG API 호출 (Client)
+│   ├── PubgApiException.java  API 오류 (화면에 보여줄 문장 포함)
+│   ├── PlayerNotFoundException.java
+│   └── dto/                   API 응답 JSON 그릇
+├── domain/
+│   ├── Platform.java          스팀/카카오 (PUBG API shard 값)
+│   ├── MatchSummary.java      경기 목록 한 줄
+│   ├── PlayerMatches.java     검색 결과 묶음
+│   └── GameLabels.java        맵·모드 한글 이름
+└── config/
+    └── PubgApiProperties.java API 주소·키·경기 수 설정
 
 src/main/resources/
 ├── application.properties     설정
 ├── templates/
 │   ├── index.html             첫 화면(히어로)
-│   └── search.html            검색 후 화면 (지금은 준비 중 안내)
+│   └── search.html            검색 결과: 최근 경기 목록
 └── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 
 DESIGN.md                      디자인 기준 파일

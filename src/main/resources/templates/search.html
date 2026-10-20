@@ -6,25 +6,74 @@
     <title th:text="${nickname} + ' - 펍지지'">닉네임 - 펍지지</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
 </head>
 <body>
 
-<main class="pending">
-    <a class="pending__home" href="/" th:href="@{/}">
+<header class="topbar">
+    <a class="topbar__home" href="/" th:href="@{/}">
         <span class="logo logo--small">PUB<span class="logo__dot">.</span>GG</span>
     </a>
+</header>
 
-    <p class="pending__who">
-        <span th:text="${platform.label}">스팀</span>
-        <strong th:text="${nickname}">닉네임</strong>
-    </p>
+<main class="page">
 
-    <p class="pending__msg">플레이 분석은 아직 만드는 중이에요. PUBG API를 연결하면 이 자리에 플레이 카드가 나와요.</p>
+    <!-- 누구를 검색했는지 -->
+    <section class="profile">
+        <span class="profile__platform" th:text="${platform.label}">스팀</span>
+        <h1 class="profile__name"
+            th:text="${result != null} ? ${result.nickname()} : ${nickname}">N0-RU</h1>
+    </section>
 
-    <a class="pending__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
+    <!-- 1) 오류: 플레이어 없음, 키 문제, 요청 초과 등 -->
+    <section class="notice" th:if="${errorMessage != null}">
+        <p class="notice__text" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
+        <a class="notice__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
+    </section>
+
+    <!-- 2) 경기 없음 -->
+    <section class="notice" th:if="${result != null and !result.hasMatches()}">
+        <p class="notice__text">최근 14일 안에 한 경기가 없어요. PUBG API는 최근 14일 경기만 알려줘요.</p>
+    </section>
+
+    <!-- 3) 경기 목록 -->
+    <section th:if="${result != null and result.hasMatches()}">
+        <h2 class="section-title">
+            최근 <span th:text="${result.matches().size()}">10</span>경기
+        </h2>
+
+        <ol class="matches">
+            <li class="match" th:each="m : ${result.matches()}"
+                th:classappend="${m.isWin()} ? 'match--win'">
+
+                <div class="match__rank">
+                    <strong th:text="'#' + ${m.rank()}">#1</strong>
+                    <span th:text="'/ ' + ${m.teams()}">/ 25</span>
+                </div>
+
+                <div class="match__info">
+                    <p class="match__mode">
+                        <span th:text="${m.mode()}">스쿼드 FPP</span>
+                        <span th:text="${m.map()}">에란겔</span>
+                        <span class="match__type" th:if="${!m.matchType().isEmpty()}"
+                              th:text="${m.matchType()}">일반</span>
+                    </p>
+                    <p class="match__date" th:text="${m.playedAtText()}">10월 19일 21:34</p>
+                </div>
+
+                <dl class="match__stats">
+                    <div><dt>킬</dt><dd th:text="${m.kills()}">5</dd></div>
+                    <div><dt>기절</dt><dd th:text="${m.knocks()}">6</dd></div>
+                    <div><dt>딜량</dt><dd th:text="${m.damage()}">612</dd></div>
+                    <div><dt>생존</dt><dd th:text="${m.survivedText()}">31분 2초</dd></div>
+                </dl>
+            </li>
+        </ol>
+    </section>
+
+    <a class="page__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
 </main>
 
 </body>

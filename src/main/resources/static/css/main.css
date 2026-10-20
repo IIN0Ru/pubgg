@@ -208,37 +208,42 @@ body {
     color: var(--primary);
 }
 
-/* ---------- 검색 결과(준비 중) 화면 ---------- */
-.pending {
-    min-height: 100vh;
-    max-width: 600px;
+/* ---------- 검색 결과 화면 ---------- */
+.topbar {
+    height: 64px;
+    padding: 0 16px;
+    max-width: 880px;
     margin: 0 auto;
-    padding: 48px 16px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 20px;
+    align-items: center;
 }
 
-.pending__home {
-    align-self: flex-start;
+.topbar__home {
     text-decoration: none;
+    border-radius: 4px;
 }
 
 .logo--small {
-    font-size: 32px;
+    font-size: 24px;
     line-height: 1;
+    letter-spacing: -0.04em;
 }
 
-.pending__who {
-    margin: 24px 0 0;
+.page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 16px 96px;
+}
+
+.profile {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
     flex-wrap: wrap;
+    margin-bottom: 48px;
 }
 
-.pending__who span {
+.profile__platform {
     padding: 4px 12px;
     border: 1px solid var(--hairline);
     border-radius: 6px;
@@ -247,21 +252,146 @@ body {
     color: var(--body);
 }
 
-.pending__who strong {
-    font-size: clamp(28px, 7vw, 40px);
-    font-weight: 800;
+.profile__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
     word-break: break-all;
 }
 
-.pending__msg {
+.section-title {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--body);
+}
+
+/* 경기 목록 */
+.matches {
+    list-style: none;
     margin: 0;
-    font-size: 16px;
-    line-height: 1.6;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.match {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+}
+
+.match__rank strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+}
+
+.match__rank span {
+    font-size: 13px;
     color: var(--muted);
 }
 
-.pending__back {
-    align-self: flex-start;
+/* 1등 판: 등수만 노랑 */
+.match--win .match__rank strong { color: var(--primary); }
+
+.match__mode {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.match__type {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--surface-elevated);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--body);
+    align-self: center;
+}
+
+.match__date {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.match__stats {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 40px 40px 56px 84px;   /* 칸 너비를 고정해서 줄마다 숫자 위치를 맞춤 */
+    gap: 20px;
+    text-align: right;
+}
+
+.match__stats dt {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.match__stats dd {
+    margin: 4px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .match {
+        grid-template-columns: 64px 1fr;
+        padding: 16px;
+    }
+    .match__rank strong { font-size: 26px; }
+    .match__stats {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        text-align: left;
+        padding-top: 14px;
+        border-top: 1px solid var(--hairline);
+    }
+}
+
+/* 안내 문구 (오류, 경기 없음) */
+.notice {
+    padding: 24px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+}
+
+.notice__text {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--body);
+}
+
+.notice__back {
+    display: inline-block;
+    margin-top: 16px;
+}
+
+.notice__back,
+.page__back {
     color: var(--ink);
     font-weight: 600;
     text-underline-offset: 4px;
@@ -269,8 +399,14 @@ body {
     text-decoration-thickness: 2px;
 }
 
-.pending__back:focus-visible,
-.pending__home:focus-visible {
+.page__back {
+    display: inline-block;
+    margin-top: 32px;
+}
+
+.notice__back:focus-visible,
+.page__back:focus-visible,
+.topbar__home:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 4px;
     border-radius: 4px;

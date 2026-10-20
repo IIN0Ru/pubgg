@@ -47,6 +47,53 @@
 - `DESIGN.md`에 기준 파일을 넣고 `CLAUDE.md`에서 불러오게 해서, 이후 화면도 같은 규칙을 따르게 함
 
 ### 다음 할 일
-- [ ] IntelliJ에서 JDK 21로 실행 확인
-- [ ] PUBG API 키 발급, 키를 코드 밖(환경 변수)에 두는 방식으로 연결
-- [ ] 닉네임 → 플레이어 조회 → 최근 매치 목록 가져오기
+- [x] IntelliJ에서 JDK 21로 실행 확인 (localhost:8080에서 첫 화면 확인)
+- [x] PUBG API 키 발급, 키는 환경 변수 PUBG_API_KEY에 저장
+- [x] 닉네임 → 플레이어 조회 → 최근 매치 목록 가져오기
+
+---
+
+## 2026-10-20 · PUBG API 연결, 최근 경기 목록
+
+### 목표
+닉네임 검색 → 최근 경기 목록(날짜, 모드, 맵, 등수, 킬, 기절, 딜량, 생존 시간) 표시.
+칭호·게이지 분석은 다음 단계.
+
+### 구조: 역할별로 나눔
+| 계층 | 파일 | 하는 일 |
+|---|---|---|
+| Controller | `web/HomeController` | 요청 받기, 오류면 안내 문구, 정상이면 결과 화면 |
+| Service | `service/PlayerService` | 플레이어 조회 → 경기 10개 조회 → 내 기록만 골라 정리 |
+| Client | `pubgapi/PubgApiClient` | PUBG API 호출, 상태 코드별 오류 문장 만들기 |
+| DTO | `pubgapi/dto/PlayerResponse`, `MatchResponse` | API 응답 JSON을 담는 그릇 |
+| Domain | `domain/MatchSummary`, `PlayerMatches`, `GameLabels`, `Platform` | 화면에 보여줄 데이터, 맵·모드 한글 이름 |
+| Config | `config/PubgApiProperties` | API 주소, 키, 가져올 경기 수 |
+
+- `Platform`을 `web`에서 `domain`으로 옮김: Client도 쓰게 되면서 화면 전용이 아니게 됐기 때문
+
+### 정한 것과 이유
+- **API 키는 환경 변수로**: 코드·GitHub에 키가 남지 않게. `application.properties`에는 `${PUBG_API_KEY:}`만 적음
+- **RestClient 사용**: Spring 6.1부터 들어간 HTTP 클라이언트. 별도 라이브러리 없이 쓸 수 있음
+- **경기 응답의 included 처리**: participant(선수), roster(팀), asset(텔레메트리) 세 종류가 한 배열에 섞여 옴 → type으로 구분. 팀 수 = roster 개수, 내 기록 = playerId가 내 계정 ID인 participant
+- **오류는 문장으로**: 404 → 플레이어 없음(대소문자 안내), 401 → 키 문제, 429 → 1분 뒤 재시도. 화면에 그대로 보여줌
+- **최근 10경기만**: 플레이어 조회는 1분에 10번 제한이 있고, 경기 조회는 제한이 없음. 경기는 하나씩 순서대로 받음 (느리면 나중에 병렬 처리 고려)
+- **시간은 한국 시간으로**: API는 UTC(예: 14:12Z)로 주므로 Asia/Seoul로 바꿔 표시
+
+### 확인한 자료
+- API 응답 필드 이름: PUBG 공식 문서와 api-assets 저장소, 오픈소스 클라이언트(pubg-typescript-api)의 타입 정의를 대조
+- 맵 이름: github.com/pubg/api-assets `dictionaries/telemetry/mapName.json`
+
+### AI 작업 메모
+- AI 작업 환경에서는 PUBG API와 Maven 저장소 접속이 막혀 있어서 직접 실행 확인을 못 함 → 응답 구조를 문서로 대조하고, 실제 응답 모양의 예시 JSON으로 테스트를 만들어 둠. 실제 실행 확인은 내 컴퓨터에서
+- 결과 화면은 예시 데이터로 미리보기를 찍어 확인 → 모바일에서 생존 시간 줄바꿈, 데스크톱에서 숫자 칸 어긋남을 발견해서 수정
+
+### 테스트
+- `PubgJsonParsingTest`: 예시 JSON을 DTO로 제대로 읽는지
+- `PlayerServiceTest`: 가짜 Client로 화면용 데이터 변환 확인 (딜량 소수점 버림, UTC → 한국 시간 등)
+- `GameLabelsTest`: 맵·모드 한글 이름
+- `HomeControllerTest`: 정상 검색, 플레이어 없음 안내
+
+### 다음 할 일
+- [ ] 내 컴퓨터에서 N0-RU(스팀) 검색해서 실제 데이터 확인
+- [ ] 기본 정보 계산: KDA, 평균 딜량, 주무기/보조무기, 평균 투척 사용 개수
+- [ ] 텔레메트리 받아서 칭호·게이지 계산 시작

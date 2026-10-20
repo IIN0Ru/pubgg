@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "type": "player",
+      "id": "account.test0001",
+      "attributes": {
+        "name": "N0-RU",
+        "shardId": "steam",
+        "patchVersion": "",
+        "titleId": "pubg",
+        "stats": null
+      },
+      "relationships": {
+        "assets": { "data": [] },
+        "matches": {
+          "data": [
+            { "type": "match", "id": "match-0001" },
+            { "type": "match", "id": "match-0002" }
+          ]
+        }
+      },
+      "links": { "self": "https://api.pubg.com/shards/steam/players/account.test0001" }
+    }
+  ],
+  "links": { "self": "https://api.pubg.com/shards/steam/players?filter[playerNames]=N0-RU" },
+  "meta": {}
+}

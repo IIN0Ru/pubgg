@@ -1,4 +1,4 @@
-package gg.pub.web;
+package gg.pub.domain;
 
 import java.util.Arrays;
 import java.util.Optional;
