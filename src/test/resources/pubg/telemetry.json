@@ -1,0 +1,49 @@
+[
+  { "_D": "2026-10-19T14:12:00.000Z", "_T": "LogMatchStart", "common": { "isGame": 0 }, "mapName": "Baltic_Main" },
+
+  { "_D": "2026-10-19T14:13:00.000Z", "_T": "LogItemEquip",
+    "character": { "name": "N0-RU", "accountId": "account.test0001" },
+    "item": { "itemId": "Item_Weapon_HK416_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+
+  { "_D": "2026-10-19T14:13:10.000Z", "_T": "LogItemEquip",
+    "character": { "name": "N0-RU", "accountId": "account.test0001" },
+    "item": { "itemId": "Item_Weapon_Kar98k_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+
+  { "_D": "2026-10-19T14:13:15.000Z", "_T": "LogItemEquip",
+    "character": { "name": "N0-RU", "accountId": "account.test0001" },
+    "item": { "itemId": "Item_Weapon_Pan_C", "stackCount": 1, "category": "Weapon", "subCategory": "Melee" } },
+
+  { "_D": "2026-10-19T14:13:20.000Z", "_T": "LogItemEquip",
+    "character": { "name": "OtherPlayer", "accountId": "account.other" },
+    "item": { "itemId": "Item_Weapon_AWM_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+
+  { "_D": "2026-10-19T14:14:10.000Z", "_T": "LogItemUnequip",
+    "character": { "name": "N0-RU", "accountId": "account.test0001" },
+    "item": { "itemId": "Item_Weapon_Kar98k_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+
+  { "_D": "2026-10-19T14:14:20.000Z", "_T": "LogItemEquip",
+    "character": { "name": "N0-RU", "accountId": "account.test0001" },
+    "item": { "itemId": "Item_Weapon_Mini14_C", "stackCount": 1, "category": "Weapon", "subCategory": "Main" } },
+
+  { "_D": "2026-10-19T14:15:00.000Z", "_T": "LogPlayerUseThrowable",
+    "attacker": { "name": "N0-RU", "accountId": "account.test0001" },
+    "weapon": { "itemId": "Item_Weapon_Grenade_C", "category": "Weapon", "subCategory": "Throwable" } },
+
+  { "_D": "2026-10-19T14:15:30.000Z", "_T": "LogPlayerUseThrowable",
+    "attacker": { "name": "N0-RU", "accountId": "account.test0001" },
+    "weapon": { "itemId": "Item_Weapon_SmokeBomb_C", "category": "Weapon", "subCategory": "Throwable" } },
+
+  { "_D": "2026-10-19T14:15:40.000Z", "_T": "LogPlayerUseThrowable",
+    "attacker": { "name": "OtherPlayer", "accountId": "account.other" },
+    "weapon": { "itemId": "Item_Weapon_Molotov_C", "category": "Weapon", "subCategory": "Throwable" } },
+
+  { "_D": "2026-10-19T14:16:20.000Z", "_T": "LogPlayerKillV2",
+    "victim": { "name": "N0-RU", "accountId": "account.test0001" },
+    "killer": { "name": "OtherPlayer", "accountId": "account.other" } },
+
+  { "_D": "2026-10-19T14:16:30.000Z", "_T": "LogPlayerUseThrowable",
+    "attacker": { "name": "N0-RU", "accountId": "account.test0001" },
+    "weapon": { "itemId": "Item_Weapon_Grenade_C", "category": "Weapon", "subCategory": "Throwable" } },
+
+  { "_D": "2026-10-19T14:40:00.000Z", "_T": "LogMatchEnd", "characters": [] }
+]

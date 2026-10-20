@@ -14,12 +14,16 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -30,12 +34,16 @@ class PlayerServiceTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private PubgApiClient client;
+    private PlayCardService playCardService;
     private PlayerService service;
 
     @BeforeEach
     void setUp() {
         client = mock(PubgApiClient.class);
-        service = new PlayerService(client, new PubgApiProperties("test-key", "https://api.pubg.com", 10));
+        playCardService = mock(PlayCardService.class);
+        when(playCardService.build(any(), anyString())).thenReturn(Optional.empty());
+        service = new PlayerService(client, playCardService,
+                new PubgApiProperties("test-key", "https://api.pubg.com", 10));
     }
 
     private <T> T read(String path, Class<T> type) throws IOException {
@@ -68,6 +76,18 @@ class PlayerServiceTest {
         assertThat(first.survivedText()).isEqualTo("31분 2초");
         assertThat(first.playedAtText()).isEqualTo("10월 19일 23:12");  // UTC 14:12 → 한국 23:12
         assertThat(first.isWin()).isTrue();
+    }
+
+    @Test
+    void 경쟁전_경기만_플레이_카드_계산에_넘긴다() throws IOException {
+        PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
+        MatchResponse competitive = read("/pubg/match.json", MatchResponse.class);   // 예시 경기는 경쟁전
+        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.getMatch(any(), anyString())).thenReturn(competitive);
+
+        service.getRecentMatches(Platform.STEAM, "N0-RU");
+
+        verify(playCardService).build(argThat(list -> list.size() == 2), eq("account.test0001"));
     }
 
     @Test

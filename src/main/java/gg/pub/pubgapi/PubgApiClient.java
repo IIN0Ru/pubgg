@@ -10,12 +10,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.util.function.Function;
+import java.util.zip.GZIPInputStream;
+
 /**
  * PUBG 공식 API 를 호출하는 클래스. (외부 데이터 담당)
  *
- * 하는 일은 딱 두 가지:
+ * 하는 일:
  *  1. 닉네임으로 플레이어 찾기  → findPlayer
  *  2. 경기 ID로 경기 기록 받기  → getMatch
+ *  3. 텔레메트리(경기 상세 기록 파일) 읽기 → readTelemetry
  *
  * 받은 데이터를 계산하거나 화면에 맞게 바꾸는 일은 여기서 하지 않고 Service 가 한다.
  *
@@ -27,16 +36,18 @@ public class PubgApiClient {
 
     private static final String JSON_API = "application/vnd.api+json";
 
-    private final RestClient restClient;
+    private final RestClient restClient;      // api.pubg.com 용
+    private final RestClient telemetryClient; // 텔레메트리 파일 주소용 (다른 서버, 키 필요 없음)
     private final PubgApiProperties properties;
 
     /** RestClient.Builder 는 Spring Boot 가 미리 만들어서 넣어준다 */
     public PubgApiClient(RestClient.Builder builder, PubgApiProperties properties) {
         this.properties = properties;
-        this.restClient = builder
+        this.restClient = builder.clone()
                 .baseUrl(properties.baseUrl())
                 .defaultHeader(HttpHeaders.ACCEPT, JSON_API)
                 .build();
+        this.telemetryClient = builder.clone().build();
     }
 
     /** 닉네임으로 플레이어를 찾는다. 없으면 PlayerNotFoundException. */
@@ -98,5 +109,45 @@ public class PubgApiClient {
             case 429 -> new PubgApiException("검색이 너무 많아요. 1분 뒤에 다시 시도해 주세요.");
             default -> new PubgApiException("PUBG 서버에서 오류가 났어요. (상태 코드 " + status + ")");
         };
+    }
+
+    /**
+     * 텔레메트리 파일을 내려받아 reader 에게 넘긴다.
+     *
+     * 텔레메트리는 한 경기에 수 MB 짜리 JSON 이라 통째로 메모리에 올리지 않고
+     * 흘려보내면서(stream) 읽는다. 파일이 gzip 으로 압축되어 오면 풀어서 넘긴다.
+     *
+     * @param url    경기 응답(asset)에 들어 있는 텔레메트리 주소
+     * @param reader 내용을 읽어서 결과를 만드는 함수 (TelemetryAnalyzer)
+     */
+    public <T> T readTelemetry(String url, Function<InputStream, T> reader) {
+        try {
+            return telemetryClient.get()
+                    .uri(URI.create(url))
+                    .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
+                    .exchange((req, res) -> {
+                        if (res.getStatusCode().isError()) {
+                            throw new PubgApiException("텔레메트리를 받지 못했어요. (상태 코드 " + res.getStatusCode().value() + ")");
+                        }
+                        try (InputStream body = unzipIfNeeded(res.getBody())) {
+                            return reader.apply(body);
+                        }
+                    });
+        } catch (ResourceAccessException | UncheckedIOException e) {
+            throw new PubgApiException("텔레메트리를 받는 중 연결이 끊겼어요.", e);
+        }
+    }
+
+    /** 앞 2바이트가 gzip 표시(0x1f 0x8b)면 압축을 풀고, 아니면 그대로 돌려준다 */
+    static InputStream unzipIfNeeded(InputStream raw) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(raw);
+        in.mark(2);
+        int b1 = in.read();
+        int b2 = in.read();
+        in.reset();
+        if (b1 == 0x1f && b2 == 0x8b) {
+            return new GZIPInputStream(in);
+        }
+        return in;
     }
 }

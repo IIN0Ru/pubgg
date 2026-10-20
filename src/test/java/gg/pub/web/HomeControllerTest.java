@@ -50,7 +50,7 @@ class HomeControllerTest {
 
     @Test
     void 정상_검색이면_경기_목록을_보여준다() throws Exception {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, List.of());
+        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
         when(playerService.getRecentMatches(Platform.STEAM, "N0-RU")).thenReturn(result);
 
         mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))

@@ -13,6 +13,7 @@
     --surface-card: #1A1A1A;     /* 입력창 */
     --surface-elevated: #242424; /* 선택된 탭 */
     --hairline: #2A2A2A;         /* 테두리 */
+    --hairline-strong: #3A3A3A;  /* 조금 더 진한 테두리 */
 
     --ink: #FFFFFF;
     --body: #CCCCCC;
@@ -269,6 +270,109 @@ body {
     color: var(--body);
 }
 
+/* 플레이 카드 */
+.card {
+    margin-bottom: 48px;
+    padding: 28px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+}
+
+.card .section-title { margin-bottom: 24px; }
+
+.card__stats {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.stat dt {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.stat dd {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.card__weapons {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+}
+
+.card__label {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.weapons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.weapon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--surface-elevated);
+    border-radius: 8px;
+}
+
+.weapon__name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.weapon__type {
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--body);
+}
+
+.weapon__share {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.card__empty,
+.card__note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.card__note { margin-top: 16px; }
+
+@media (max-width: 640px) {
+    .card { padding: 20px; }
+    .card__stats { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
+    .stat dd { font-size: 32px; }
+    .weapons { grid-template-columns: 1fr; }
+}
+
 /* 경기 목록 */
 .matches {
     list-style: none;
@@ -372,6 +476,7 @@ body {
 
 /* 안내 문구 (오류, 경기 없음) */
 .notice {
+    margin-bottom: 32px;
     padding: 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);

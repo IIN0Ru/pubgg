@@ -11,7 +11,8 @@
 - [x] 첫 화면(히어로): 로고, 스팀/카카오 선택, 닉네임 검색창
 - [x] 검색 요청 처리: 빈 닉네임·잘못된 플랫폼이면 첫 화면으로 돌려보냄
 - [x] PUBG API 연결: 닉네임 검색 → 최근 10경기 목록
-- [ ] 플레이 카드 (칭호, 게이지, 기본 정보)
+- [x] 플레이 카드 기본 정보: 경쟁전 최근 10경기 KDA, 평균 딜량, 평균 투척, 시점, 주무기 2개
+- [ ] 플레이 카드 칭호·게이지·파밍·포지션
 - [ ] 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -41,7 +42,10 @@ src/main/java/gg/pub/
 ├── web/
 │   └── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 ├── service/
-│   └── PlayerService.java     최근 경기 가져와서 정리 (Service)
+│   ├── PlayerService.java     검색 결과 만들기: 최근 경기 + 경쟁전 경기 모으기
+│   ├── PlayCardService.java   플레이 카드 계산 (KDA, 딜량, 시점, 주무기, 투척)
+│   ├── TelemetryService.java  텔레메트리 받기 + 분석 결과 캐시
+│   └── TelemetryAnalyzer.java 텔레메트리에서 주무기 보유 시간·투척 수 계산
 ├── pubgapi/
 │   ├── PubgApiClient.java     PUBG API 호출 (Client)
 │   ├── PubgApiException.java  API 오류 (화면에 보여줄 문장 포함)
@@ -50,16 +54,20 @@ src/main/java/gg/pub/
 ├── domain/
 │   ├── Platform.java          스팀/카카오 (PUBG API shard 값)
 │   ├── MatchSummary.java      경기 목록 한 줄
-│   ├── PlayerMatches.java     검색 결과 묶음
+│   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
+│   ├── PlayCard.java          플레이 카드 기본 정보
+│   ├── WeaponCatalog.java     무기 ID → 이름·분류 (5.56 AR, DMR, SR ...)
+│   ├── WeaponClass.java, WeaponUsage.java, TelemetryStats.java
 │   └── GameLabels.java        맵·모드 한글 이름
 └── config/
-    └── PubgApiProperties.java API 주소·키·경기 수 설정
+    ├── PubgApiProperties.java API 주소·키·경기 수 설정
+    └── CacheConfig.java       캐시 켜기
 
 src/main/resources/
 ├── application.properties     설정
 ├── templates/
 │   ├── index.html             첫 화면(히어로)
-│   └── search.html            검색 결과: 최근 경기 목록
+│   └── search.html            검색 결과: 플레이 카드 + 최근 경기 목록
 └── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 
 DESIGN.md                      디자인 기준 파일

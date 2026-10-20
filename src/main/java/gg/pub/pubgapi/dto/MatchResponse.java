@@ -26,7 +26,7 @@ import java.util.Optional;
  * included 에는 종류가 다른 항목이 섞여 있어서 type 으로 구분한다.
  *  - participant: 경기에 나온 플레이어 한 명의 기록
  *  - roster: 한 팀 (팀 수 = roster 개수)
- *  - asset: 텔레메트리 파일 주소 (2D 리플레이 만들 때 사용 예정)
+ *  - asset: 텔레메트리 파일 주소 (주무기·투척 계산, 나중에 2D 리플레이에 사용)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MatchResponse(Match data, List<Included> included) {
@@ -36,6 +36,29 @@ public record MatchResponse(Match data, List<Included> included) {
         return (int) safeIncluded().stream()
                 .filter(i -> "roster".equals(i.type()))
                 .count();
+    }
+
+    /** 경쟁전인지 */
+    public boolean isCompetitive() {
+        return data != null && data.attributes() != null
+                && "competitive".equals(data.attributes().matchType());
+    }
+
+    /** FPP 경기인지 (gameMode 가 "-fpp" 로 끝남) */
+    public boolean isFpp() {
+        return data != null && data.attributes() != null
+                && data.attributes().gameMode() != null
+                && data.attributes().gameMode().endsWith("-fpp");
+    }
+
+    /** 텔레메트리 파일 주소 (asset 항목의 URL). 없으면 빈 값 */
+    public Optional<String> telemetryUrl() {
+        return safeIncluded().stream()
+                .filter(i -> "asset".equals(i.type()))
+                .map(Included::attributes)
+                .filter(a -> a != null && a.url() != null)
+                .map(IncludedAttributes::url)
+                .findFirst();
     }
 
     /** accountId(account.xxx)로 이 경기에서의 내 기록을 찾는다 */
@@ -70,7 +93,8 @@ public record MatchResponse(Match data, List<Included> included) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record IncludedAttributes(Stats stats) {
+    public record IncludedAttributes(Stats stats,
+                                     @JsonProperty("URL") String url) {   // asset 에만 있음
     }
 
     /**

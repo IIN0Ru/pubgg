@@ -33,13 +33,59 @@
         <a class="notice__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
     </section>
 
+    <!-- 플레이 카드: 경쟁전 최근 경기 기준 -->
+    <section class="card" th:if="${result != null and result.hasCard()}" th:with="c=${result.card()}">
+        <h2 class="section-title">
+            경쟁전 최근 <span th:text="${c.matches()}">10</span>경기
+        </h2>
+
+        <dl class="card__stats">
+            <div class="stat">
+                <dt>KDA</dt>
+                <dd th:text="${c.kdaText()}">3.42</dd>
+            </div>
+            <div class="stat">
+                <dt>평균 딜량</dt>
+                <dd th:text="${c.avgDamage()}">412</dd>
+            </div>
+            <div class="stat">
+                <dt>평균 투척</dt>
+                <dd th:text="${c.avgThrowablesText()}">2.3</dd>
+            </div>
+            <div class="stat">
+                <dt>시점</dt>
+                <dd th:text="${c.perspective()}">FPP</dd>
+            </div>
+        </dl>
+
+        <div class="card__weapons">
+            <h3 class="card__label">주무기</h3>
+            <ul class="weapons" th:if="${c.hasWeapons()}">
+                <li class="weapon" th:each="w : ${c.mainWeapons()}">
+                    <span class="weapon__name" th:text="${w.name()}">Beryl M762</span>
+                    <span class="weapon__type" th:text="${w.typeLabel()}">7.62 AR</span>
+                    <span class="weapon__share" th:text="${w.sharePercent()} + '%'">48%</span>
+                </li>
+            </ul>
+            <p class="card__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
+        </div>
+
+        <p class="card__note" th:if="${c.analyzedMatches() lt c.matches()}">
+            주무기와 투척은 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
+        </p>
+    </section>
+
+    <section class="notice" th:if="${result != null and !result.hasCard()}">
+        <p class="notice__text">최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.</p>
+    </section>
+
     <!-- 2) 경기 없음 -->
     <section class="notice" th:if="${result != null and !result.hasMatches()}">
         <p class="notice__text">최근 14일 안에 한 경기가 없어요. PUBG API는 최근 14일 경기만 알려줘요.</p>
     </section>
 
     <!-- 3) 경기 목록 -->
-    <section th:if="${result != null and result.hasMatches()}">
+    <section class="recent" th:if="${result != null and result.hasMatches()}">
         <h2 class="section-title">
             최근 <span th:text="${result.matches().size()}">10</span>경기
         </h2>

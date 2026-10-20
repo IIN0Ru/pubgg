@@ -45,6 +45,10 @@ class PubgJsonParsingTest {
         assertThat(me.dbnos()).isEqualTo(9);
         assertThat(me.damageDealt()).isEqualTo(1024.73);
         assertThat(me.winPlace()).isEqualTo(1);
+
+        assertThat(match.isCompetitive()).isTrue();
+        assertThat(match.isFpp()).isTrue();
+        assertThat(match.telemetryUrl()).contains("https://telemetry-cdn.pubg.com/example-telemetry.json");
     }
 
     @Test
