@@ -42,6 +42,12 @@
             경쟁전 최근 <span th:text="${c.matches()}">10</span>경기
         </h2>
 
+        <!-- 칭호 -->
+        <ul class="titles" th:if="${c.hasTitles()}">
+            <li class="title-badge" th:each="t : ${c.titles()}"
+                th:title="${t.getDescription()}" th:text="${t.getLabel()}">해적</li>
+        </ul>
+
         <dl class="card__stats">
             <div class="stat">
                 <dt>KDA</dt>
@@ -60,6 +66,37 @@
                 <dd th:text="${c.perspective()}">FPP</dd>
             </div>
         </dl>
+
+        <!-- 게이지 -->
+        <div class="gauges" th:if="${c.hasFightGauge() or c.hasZoneGauge()}">
+
+            <div class="gauge" th:if="${c.hasFightGauge()}">
+                <div class="gauge__ends">
+                    <span>싸움걸기 <b th:text="${c.fightStartPercent()} + '%'">65%</b></span>
+                    <span>싸움걸리기 <b th:text="${c.fightReceivePercent()} + '%'">35%</b></span>
+                </div>
+                <div class="gauge__track" role="img"
+                     th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트'">
+                    <span class="gauge__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'"
+                          style="width:65%"></span>
+                </div>
+            </div>
+
+            <div class="gauge" th:if="${c.hasZoneGauge()}">
+                <div class="gauge__ends">
+                    <span>센터운영</span>
+                    <span>외곽운영</span>
+                </div>
+                <div class="gauge__track" role="img"
+                     th:aria-label="'자기장 중심에서 ' + ${c.zoneEdgePercent()} + '퍼센트 지점'">
+                    <span class="gauge__marker" th:style="'left:' + ${c.zoneEdgePercent()} + '%'"
+                          style="left:38%"></span>
+                </div>
+                <p class="gauge__caption">
+                    3페이즈부터 평균 위치: 중심에서 <b th:text="${c.zoneEdgePercent()} + '%'">38%</b>
+                </p>
+            </div>
+        </div>
 
         <div class="card__weapons">
             <h3 class="card__label">주무기</h3>

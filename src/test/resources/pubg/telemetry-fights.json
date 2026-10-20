@@ -1,0 +1,99 @@
+[
+  { "_D": "2026-10-19T14:00:00Z", "_T": "LogPlayerCreate", "common": { "isGame": 0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "location": { "x": 0, "y": 0, "z": 0 } } },
+
+  { "_D": "2026-10-19T14:10:00Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 1.5 },
+    "attacker": { "name": "B1", "teamId": 3, "accountId": "account.b1" },
+    "victim":   { "name": "A1", "teamId": 2, "accountId": "account.a1" }, "damage": 20 },
+
+  { "_D": "2026-10-19T14:10:05Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 1.5 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "A1", "teamId": 2, "accountId": "account.a1" }, "damage": 30 },
+
+  { "_D": "2026-10-19T14:10:20Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 1.5 },
+    "attacker": { "name": "A1", "teamId": 2, "accountId": "account.a1" },
+    "victim":   { "name": "N0-RU", "teamId": 1, "accountId": "account.me" }, "damage": 10 },
+
+  { "_D": "2026-10-19T14:11:00Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 1.5 },
+    "attacker": { "name": "B1", "teamId": 3, "accountId": "account.b1" },
+    "victim":   { "name": "Mate", "teamId": 1, "accountId": "account.mate" }, "damage": 25 },
+
+  { "_D": "2026-10-19T14:11:10Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 1.5 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "B1", "teamId": 3, "accountId": "account.b1" }, "damage": 15 },
+
+  { "_D": "2026-10-19T14:12:00Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 2.0 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "B1", "teamId": 3, "accountId": "account.b1" }, "damage": 40 },
+
+  { "_D": "2026-10-19T14:12:30Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 2.0 },
+    "attacker": { "accountId": "" },
+    "victim":   { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "damageTypeCategory": "Damage_BlueZone", "damage": 5 },
+
+  { "_D": "2026-10-19T14:13:00Z", "_T": "LogVehicleRide", "common": { "isGame": 2.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" }, "vehicle": { "vehicleId": "Dacia_A_01_v2_C" } },
+
+  { "_D": "2026-10-19T14:13:05Z", "_T": "LogVehicleRide", "common": { "isGame": 2.0 },
+    "character": { "name": "A1", "teamId": 2, "accountId": "account.a1" }, "vehicle": { "vehicleId": "Uaz_A_01_C" } },
+
+  { "_D": "2026-10-19T14:13:10Z", "_T": "LogVehicleLeave", "common": { "isGame": 2.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" }, "vehicle": { "vehicleId": "Dacia_A_01_v2_C" } },
+
+  { "_D": "2026-10-19T14:13:15Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 2.0 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "A1", "teamId": 2, "accountId": "account.a1" }, "damage": 35 },
+
+  { "_D": "2026-10-19T14:13:30Z", "_T": "LogPlayerMakeGroggy", "common": { "isGame": 2.0 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "A1", "teamId": 2, "accountId": "account.a1" } },
+
+  { "_D": "2026-10-19T14:13:40Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 2.0 },
+    "attacker": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "victim":   { "name": "B1", "teamId": 3, "accountId": "account.b1" }, "damage": 20 },
+
+  { "_D": "2026-10-19T14:14:00Z", "_T": "LogItemPickupFromCarepackage", "common": { "isGame": 2.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "item": { "itemId": "Item_Weapon_AWM_C" }, "carePackageUniqueId": 77 },
+
+  { "_D": "2026-10-19T14:14:01Z", "_T": "LogItemPickupFromCarepackage", "common": { "isGame": 2.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "item": { "itemId": "Item_Head_G_01_Lv3_C" }, "carePackageUniqueId": 77 },
+
+  { "_D": "2026-10-19T14:14:30Z", "_T": "LogItemPickupFromCarepackage", "common": { "isGame": 2.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "item": { "itemId": "Item_Armor_C_01_Lv3_C" }, "carePackageUniqueId": 88 },
+
+  { "_D": "2026-10-19T14:14:40Z", "_T": "LogItemPickupFromCarepackage", "common": { "isGame": 2.0 },
+    "character": { "name": "Mate", "teamId": 1, "accountId": "account.mate" },
+    "item": { "itemId": "Item_Weapon_Groza_C" }, "carePackageUniqueId": 99 },
+
+  { "_D": "2026-10-19T14:15:00Z", "_T": "LogGameStatePeriodic", "common": { "isGame": 2.5 },
+    "gameState": { "poisonGasWarningPosition": { "x": 100000, "y": 100000, "z": 0 }, "poisonGasWarningRadius": 50000,
+                   "safetyZonePosition": { "x": 100000, "y": 100000, "z": 0 }, "safetyZoneRadius": 90000 } },
+
+  { "_D": "2026-10-19T14:15:10Z", "_T": "LogPlayerPosition", "common": { "isGame": 2.5 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "location": { "x": 100000, "y": 100000, "z": 0 } } },
+
+  { "_D": "2026-10-19T14:16:00Z", "_T": "LogGameStatePeriodic", "common": { "isGame": 3.0 },
+    "gameState": { "poisonGasWarningPosition": { "x": 200000, "y": 200000, "z": 0 }, "poisonGasWarningRadius": 40000,
+                   "safetyZonePosition": { "x": 200000, "y": 200000, "z": 0 }, "safetyZoneRadius": 70000 } },
+
+  { "_D": "2026-10-19T14:16:10Z", "_T": "LogPlayerPosition", "common": { "isGame": 3.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "location": { "x": 200000, "y": 200000, "z": 0 } } },
+
+  { "_D": "2026-10-19T14:16:20Z", "_T": "LogPlayerPosition", "common": { "isGame": 3.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "location": { "x": 230000, "y": 200000, "z": 0 } } },
+
+  { "_D": "2026-10-19T14:17:00Z", "_T": "LogPlayerKillV2", "common": { "isGame": 3.0 },
+    "victim": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "killer": { "name": "B1", "teamId": 3, "accountId": "account.b1" } },
+
+  { "_D": "2026-10-19T14:17:10Z", "_T": "LogPlayerTakeDamage", "common": { "isGame": 3.0 },
+    "attacker": { "name": "Mate", "teamId": 1, "accountId": "account.mate" },
+    "victim":   { "name": "B1", "teamId": 3, "accountId": "account.b1" }, "damage": 50 },
+
+  { "_D": "2026-10-19T14:17:20Z", "_T": "LogItemPickupFromCarepackage", "common": { "isGame": 3.0 },
+    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me" },
+    "item": { "itemId": "Item_Weapon_Mk14_C" }, "carePackageUniqueId": 55 }
+]

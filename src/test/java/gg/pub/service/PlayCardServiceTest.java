@@ -2,6 +2,7 @@ package gg.pub.service;
 
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
+import gg.pub.domain.Title;
 import gg.pub.domain.WeaponClass;
 import gg.pub.domain.WeaponUsage;
 import gg.pub.pubgapi.PubgApiException;
@@ -85,6 +86,40 @@ class PlayCardServiceTest {
 
         assertThat(card.kdaText()).isEqualTo("8.00");
         assertThat(card.hasWeapons()).isFalse();
+    }
+
+    @Test
+    void 칭호와_게이지를_기준대로_매긴다() {
+        // 경기 2개: 해적 2 + 1 = 3번 → 해적 O
+        //          건 교전 6 + 4 = 10, 하이에나 2 + 1 = 3 → 30% → 하이에나 O
+        //          보급 1 + 0 = 1, 2판 평균 0.5 → 보급러 O
+        //          걸기 10, 걸리기 5 + 5 = 10 → 싸움걸기 50%
+        //          자기장 (1.0 + 0.2) ÷ (2 + 2) = 0.3 → 30%
+        TelemetryStats a = new TelemetryStats(Map.of(), 0, 6, 5, 2, 2, 1, 1.0, 2);
+        TelemetryStats b = new TelemetryStats(Map.of(), 0, 4, 5, 1, 1, 0, 0.2, 2);
+
+        assertThat(PlayCardService.titles(List.of(a, b)))
+                .containsExactly(Title.PIRATE, Title.HYENA, Title.SUPPLY_HUNTER);
+        assertThat(PlayCardService.zoneEdgePercent(List.of(a, b))).isEqualTo(30);
+
+        when(telemetryService.analyze(eq("m1"), anyString(), eq(ME))).thenReturn(a);
+        when(telemetryService.analyze(eq("m2"), anyString(), eq(ME))).thenReturn(b);
+        PlayCard card = service.build(List.of(
+                match("m1", "squad-fpp", 1, 0, 100, 3),
+                match("m2", "squad-fpp", 1, 0, 100, 3)), ME).orElseThrow();
+
+        assertThat(card.fightStartPercent()).isEqualTo(50);
+        assertThat(card.zoneEdgePercent()).isEqualTo(30);
+        assertThat(card.titles()).hasSize(3);
+    }
+
+    @Test
+    void 기준에_못_미치면_칭호가_없다() {
+        // 해적 2번(3번 미만), 하이에나 1/2(교전 3번 미만이라 판단 안 함), 보급 0
+        TelemetryStats t = new TelemetryStats(Map.of(), 0, 2, 0, 1, 2, 0, 0, 0);
+
+        assertThat(PlayCardService.titles(List.of(t))).isEmpty();
+        assertThat(PlayCardService.zoneEdgePercent(List.of(t))).isNull();
     }
 
     /** 테스트용 경쟁전 경기 하나 만들기 (나 한 명 + 텔레메트리 주소) */
