@@ -34,6 +34,17 @@
                     data-favorite-toggle aria-pressed="false" aria-label="즐겨찾기에 추가"
                     th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}">☆</button>
         </div>
+        <!-- 마지막 갱신 + 전적 갱신 버튼 -->
+        <form class="refresh" th:if="${result != null}" action="/refresh" th:action="@{/refresh}" method="post">
+            <input type="hidden" name="platform" th:value="${platform.shard}">
+            <input type="hidden" name="nickname" th:value="${result.nickname()}">
+            <span class="refresh__ago" th:text="'마지막 갱신 ' + ${updatedAgo}">마지막 갱신 3분 전</span>
+            <button class="refresh__button" type="submit"
+                    th:disabled="${refreshWait > 0}"
+                    th:text="${refreshWait > 0} ? '갱신 대기 ' + ${refreshWait / 60} + ':' + ${#numbers.formatInteger(refreshWait % 60, 2)} : '전적 갱신'">전적 갱신</button>
+        </form>
+        <p class="refresh__message" role="status" th:if="${refreshMessage != null}" th:text="${refreshMessage}">방금 갱신했어요.</p>
+
         <!-- 이 플레이어를 최근 검색에 기록 -->
         <span hidden th:if="${result != null}" data-remember-search
               th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}"></span>

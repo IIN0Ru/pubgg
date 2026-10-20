@@ -16,7 +16,8 @@
 - [x] 파밍: 대도시파/짤파밍파, 3페이즈 시작 때 힐템·투척 보유량, 주운 총알
 - [x] 결과 화면: 왼쪽 공유용 요약 카드(링크 복사) + 오른쪽 상세 패널 4개 + 최근 경기
 - [x] 즐겨찾기·최근 검색 (브라우저 저장)
-- [ ] 갱신 버튼, 경기 필터·펼쳐보기, 함께한 팀원, 활동 시간대, 시즌 비교
+- [x] 검색 결과 저장 + 전적 갱신 버튼 (2분 대기)
+- [ ] 경기 필터·펼쳐보기, 함께한 팀원, 활동 시간대, 시즌 비교
 - [ ] 카드 이미지 공유(디스코드), 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -46,6 +47,7 @@ src/main/java/gg/pub/
 ├── web/
 │   └── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 ├── service/
+│   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 최근 경기 + 경쟁전 경기 모으기
 │   ├── PlayCardService.java   플레이 카드 계산 (기본 정보 + 칭호·게이지)
 │   ├── TelemetryService.java  텔레메트리 받기 + 분석 결과 캐시
@@ -68,7 +70,8 @@ src/main/java/gg/pub/
 │   └── GameLabels.java        맵·모드 한글 이름
 └── config/
     ├── PubgApiProperties.java API 주소·키·경기 수 설정
-    └── CacheConfig.java       캐시 켜기
+    ├── CacheConfig.java       캐시 켜기
+    └── ClockConfig.java       현재 시각 (테스트에서 바꿀 수 있게)
 
 src/main/resources/
 ├── application.properties     설정
