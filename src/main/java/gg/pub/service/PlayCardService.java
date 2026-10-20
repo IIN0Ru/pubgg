@@ -87,9 +87,6 @@ public class PlayCardService {
         int throwables = telemetry.stream().mapToInt(TelemetryStats::throwables).sum();
         double avgThrowables = telemetry.isEmpty() ? 0 : (double) throwables / telemetry.size();
 
-        int started = telemetry.stream().mapToInt(TelemetryStats::engagementsStarted).sum();
-        int received = telemetry.stream().mapToInt(TelemetryStats::engagementsReceived).sum();
-
         return Optional.of(new PlayCard(
                 matches.size(),
                 kills,
@@ -101,8 +98,8 @@ public class PlayCardService {
                 avgThrowables,
                 telemetry.size(),
                 titles(telemetry),
-                started + received == 0 ? null : (int) Math.round(started * 100.0 / (started + received)),
                 zoneEdgePercent(telemetry),
+                zoneMatchPercents(telemetry),
                 farming(analyzed)
         ));
     }
@@ -199,6 +196,14 @@ public class PlayCardService {
             return null;
         }
         return (int) Math.round(Math.min(1.0, sum / samples) * 100);
+    }
+
+    /** 경기마다 3페이즈부터 자기장 안 평균 위치 (%). 3페이즈까지 못 간 경기는 빠진다 */
+    static List<Integer> zoneMatchPercents(List<TelemetryStats> telemetry) {
+        return telemetry.stream()
+                .filter(t -> t.zoneSamples() > 0)
+                .map(t -> (int) Math.round(Math.min(1.0, t.zoneRatioSum() / t.zoneSamples()) * 100))
+                .toList();
     }
 
     /**

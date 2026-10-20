@@ -17,8 +17,8 @@ import java.util.Locale;
  * @param avgThrowables     한 판 평균 투척 개수
  * @param analyzedMatches   텔레메트리 분석에 성공한 경기 수 (아래 항목들은 이 경기들 기준)
  * @param titles            받은 칭호 (해적, 하이에나, 보급러)
- * @param fightStartPercent 교전 중 우리 팀이 먼저 건 비율 (%). 교전이 없으면 null
  * @param zoneEdgePercent   3페이즈부터 자기장 안 평균 위치 (0 = 중심, 100 = 경계). 기록이 없으면 null
+ * @param zoneMatchPercents 위 값을 경기마다 (3페이즈까지 간 경기만)
  * @param farming           착지 성향, 3페이즈 시작 가방 상태
  */
 public record PlayCard(int matches,
@@ -31,8 +31,8 @@ public record PlayCard(int matches,
                        double avgThrowables,
                        int analyzedMatches,
                        List<Title> titles,
-                       Integer fightStartPercent,
                        Integer zoneEdgePercent,
+                       List<Integer> zoneMatchPercents,
                        Farming farming) {
 
     /** KDA = (킬 + 어시스트) ÷ 죽은 판 수. 한 번도 안 죽었으면 (킬 + 어시스트) 그대로 */
@@ -59,31 +59,40 @@ public record PlayCard(int matches,
         return !titles.isEmpty();
     }
 
-    public boolean hasFightGauge() {
-        return fightStartPercent != null;
-    }
-
     public boolean hasZoneGauge() {
         return zoneEdgePercent != null;
     }
 
-    /** 싸움걸리기 비율 = 100 - 싸움걸기 비율 */
-    public int fightReceivePercent() {
-        return fightStartPercent == null ? 0 : 100 - fightStartPercent;
+    // ---------- 자기장 미니맵 그리기용 (220×220 그림, 안전구역 중심 110,110 · 반지름 92) ----------
+
+    static final double MAP_CENTER = 110;
+    static final double MAP_RADIUS = 92;
+    /** 판별 점을 고르게 흩어 찍으려고 쓰는 각도 (황금각). 방향 자체는 의미 없음 */
+    private static final double GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+    /** 그림 위의 한 점 */
+    public record Dot(double x, double y) {
     }
 
-    // ---------- 자기장 지도 그리기용 (120×120 그림, 안전구역 반지름 56) ----------
-
-    private static final double MAP_RADIUS = 56;
-
-    /** 내 평균 위치까지의 거리를 그림 크기로 바꾼 값 */
-    public double zoneRingRadius() {
-        return zoneEdgePercent == null ? 0 : MAP_RADIUS * zoneEdgePercent / 100.0;
+    /** 중심에서 percent% 거리, angle 방향의 점 (소수 첫째 자리까지) */
+    private static Dot dotAt(int percent, double angle) {
+        double r = MAP_RADIUS * Math.min(percent, 100) / 100.0;
+        return new Dot(Math.round((MAP_CENTER + r * Math.cos(angle)) * 10) / 10.0,
+                Math.round((MAP_CENTER + r * Math.sin(angle)) * 10) / 10.0);
     }
 
-    /** 점을 오른쪽 위 45도 방향에 찍을 때 x·y 로 얼마나 움직일지 */
-    public double zoneMarkerOffset() {
-        return zoneRingRadius() / Math.sqrt(2);
+    /** 한 판마다 점 하나. 거리만 진짜이고, 방향은 겹치지 않게 돌려가며 찍는다 */
+    public List<Dot> zoneMatchDots() {
+        List<Dot> dots = new ArrayList<>();
+        for (int i = 0; i < zoneMatchPercents.size(); i++) {
+            dots.add(dotAt(zoneMatchPercents.get(i), i * GOLDEN_ANGLE - Math.PI / 2 + 0.6));
+        }
+        return dots;
+    }
+
+    /** 평균 위치 표시(노란 화살표). 오른쪽 위 45도 방향 */
+    public Dot zoneMarker() {
+        return dotAt(zoneEdgePercent == null ? 0 : zoneEdgePercent, -Math.PI / 4);
     }
 
     // ---------- 스타일 요약 (공유 카드의 한 단어 태그) ----------
@@ -92,16 +101,9 @@ public record PlayCard(int matches,
     static final int LEAN_HIGH = 55;
     static final int LEAN_LOW = 45;
 
-    /** 예: ["먼저 거는 편", "센터 운영", "대도시파"] — 성향이 반반이면 그 항목은 빠진다 */
+    /** 예: ["센터 운영", "대도시파"] — 성향이 반반이면 그 항목은 빠진다 */
     public List<String> styleTags() {
         List<String> tags = new ArrayList<>();
-        if (fightStartPercent != null) {
-            if (fightStartPercent >= LEAN_HIGH) {
-                tags.add("먼저 거는 편");
-            } else if (fightStartPercent <= LEAN_LOW) {
-                tags.add("받아치는 편");
-            }
-        }
         if (zoneEdgePercent != null) {
             if (zoneEdgePercent <= LEAN_LOW) {
                 tags.add("센터 운영");

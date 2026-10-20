@@ -597,83 +597,69 @@ body {
     color: var(--muted);
 }
 
-/* 교전: 양쪽 대결형 막대 */
-.tug__sides {
+/* 자기장 운영: 인게임 미니맵형. 위에 가로 전체로 */
+.detail--wide { grid-column: 1 / -1; }
+
+.zone {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 10px;
+    align-items: center;
+    gap: 40px;
+}
+
+.zone__map {
+    flex: none;
+    width: 220px;
+    height: 220px;
+}
+
+.zone__ground { fill: var(--surface-soft); }
+.zone__grid   { stroke: var(--surface-elevated); stroke-width: 1; fill: none; }
+.zone__hatch  { stroke: var(--hairline-strong); stroke-width: 2; }
+.zone__safe   { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+.zone__match  { fill: var(--ink); opacity: 0.5; }
+.zone__halo   { fill: var(--primary); opacity: 0.2; }
+.zone__me     { fill: var(--primary); stroke: var(--canvas); stroke-width: 1.5; stroke-linejoin: round; }
+.zone__label  { font-size: 10px; fill: var(--muted); }
+.zone__border { fill: none; stroke: var(--hairline); }
+
+.zone__side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.zone__caption {
+    margin: 0;
     font-size: 13px;
     color: var(--muted);
 }
 
-.tug__side b {
-    margin-left: 4px;
+.zone__value {
+    margin: 0;
+    font-size: 15px;
+    color: var(--body);
+}
+
+.zone__value b {
+    margin-left: 6px;
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: 40px;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 
-.tug__bar {
-    position: relative;
-    height: 12px;
-    border-radius: 4px;
-    background: var(--hairline-strong);
-    overflow: hidden;
-}
-
-.tug__fill {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    background: var(--primary);
-}
-
-/* 가운데(50%) 기준선 */
-.tug__bar::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    margin-left: -1px;
-    background: var(--surface-card);
-}
-
-/* 자기장 운영: 지도형 */
-.zone-map__body {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.zone-map__svg {
-    flex: none;
-    width: 104px;
-    height: 104px;
-}
-
-.zone-map__safe   { fill: var(--surface-soft); stroke: var(--ink); stroke-width: 2; }
-.zone-map__half   { fill: none; stroke: var(--hairline-strong); stroke-dasharray: 3 4; }
-.zone-map__center { fill: var(--muted); }
-.zone-map__ring   { fill: none; stroke: var(--primary); stroke-opacity: 0.35; }
-.zone-map__me     { fill: var(--primary); stroke: var(--surface-card); stroke-width: 3; }
-
-.zone-map__text {
-    margin: 0;
+.zone__legend {
+    margin: 4px 0 0;
     font-size: 12px;
     line-height: 1.6;
-    color: var(--muted);
+    color: var(--muted-soft);
 }
 
-.zone-map__text b {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
+@media (max-width: 640px) {
+    .zone { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .zone__map { width: 100%; max-width: 260px; height: auto; }
 }
 
 /* 주무기 */

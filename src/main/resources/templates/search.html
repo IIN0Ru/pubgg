@@ -163,42 +163,48 @@
     <!-- 상세 분석 패널 (경쟁전 기준) -->
     <section class="details" th:if="${result != null and result.hasCard()}" th:with="c=${result.card()}">
 
-        <article class="detail">
-            <h2 class="detail__title">교전</h2>
-            <div th:if="${c.hasFightGauge()}">
-                <div class="tug__sides">
-                    <div class="tug__side">싸움걸기 <b th:text="${c.fightStartPercent()} + '%'">65%</b></div>
-                    <div class="tug__side tug__side--right">싸움걸리기 <b th:text="${c.fightReceivePercent()} + '%'">35%</b></div>
-                </div>
-                <div class="tug__bar" role="img"
-                     th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트, 싸움걸리기 ' + ${c.fightReceivePercent()} + '퍼센트'">
-                    <span class="tug__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'" style="width:65%"></span>
-                </div>
-            </div>
-            <p class="detail__empty" th:unless="${c.hasFightGauge()}">교전 기록이 없어요.</p>
-            <p class="detail__sub">판당 투척 사용 <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
-        </article>
-
-        <article class="detail">
+        <article class="detail detail--wide">
             <h2 class="detail__title">자기장 운영 <span>3페이즈부터</span></h2>
-            <div class="zone-map__body" th:if="${c.hasZoneGauge()}">
-                <!-- 흰 원 = 안전구역, 노란 점 = 내 평균 위치 (방향은 의미 없고 중심에서의 거리만 의미 있음) -->
-                <svg class="zone-map__svg" viewBox="0 0 120 120" role="img"
-                     th:aria-label="'자기장 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리'">
-                    <circle class="zone-map__safe" cx="60" cy="60" r="56"/>
-                    <circle class="zone-map__half" cx="60" cy="60" r="28"/>
-                    <circle class="zone-map__center" cx="60" cy="60" r="2.5"/>
-                    <circle class="zone-map__ring" cx="60" cy="60"
-                            th:attr="r=${c.zoneRingRadius()}" r="21.3"/>
-                    <circle class="zone-map__me" r="7"
-                            th:attr="cx=${60 + c.zoneMarkerOffset()},cy=${60 - c.zoneMarkerOffset()}"
-                            cx="75" cy="45"/>
+            <div class="zone" th:if="${c.hasZoneGauge()}">
+                <!-- 인게임 미니맵 느낌: 격자, 자기장 밖 빗금, 흰 원 = 안전구역.
+                     흰 점 = 한 판, 노란 화살표 = 평균. 중심에서의 거리만 의미 있고 방향은 의미 없음 -->
+                <svg class="zone__map" viewBox="0 0 220 220" role="img"
+                     th:attr="aria-label='3페이즈부터 자기장 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리, ' + ${c.zoneMatchPercents().size()} + '판 기준'">
+                    <defs>
+                        <pattern id="zone-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                            <line class="zone__hatch" x1="0" y1="0" x2="0" y2="6"/>
+                        </pattern>
+                        <mask id="zone-outside">
+                            <rect width="220" height="220" fill="white"/>
+                            <circle cx="110" cy="110" r="92" fill="black"/>
+                        </mask>
+                        <clipPath id="zone-frame"><rect width="220" height="220" rx="10"/></clipPath>
+                    </defs>
+                    <g clip-path="url(#zone-frame)">
+                        <rect class="zone__ground" width="220" height="220"/>
+                        <path class="zone__grid"
+                              d="M27.5 0V220M55 0V220M82.5 0V220M110 0V220M137.5 0V220M165 0V220M192.5 0V220M0 27.5H220M0 55H220M0 82.5H220M0 110H220M0 137.5H220M0 165H220M0 192.5H220"/>
+                        <rect width="220" height="220" fill="url(#zone-hatch)" mask="url(#zone-outside)"/>
+                    </g>
+                    <circle class="zone__safe" cx="110" cy="110" r="92"/>
+                    <circle class="zone__match" r="3.5" th:each="d : ${c.zoneMatchDots()}"
+                            th:attr="cx=${d.x()},cy=${d.y()}" cx="90" cy="70"/>
+                    <g th:with="mk=${c.zoneMarker()}" th:attr="transform='translate(' + ${mk.x()} + ',' + ${mk.y()} + ')'"
+                       transform="translate(142,78)">
+                        <circle class="zone__halo" r="11"/>
+                        <path class="zone__me" d="M0,-8 L6,6 L0,3 L-6,6 Z"/>
+                    </g>
+                    <text class="zone__label" x="10" y="210">자기장 밖</text>
+                    <rect class="zone__border" x="0.5" y="0.5" width="219" height="219" rx="10"/>
                 </svg>
-                <p class="zone-map__text">
-                    평균 위치<br>
-                    <b th:text="'중심에서 ' + ${c.zoneEdgePercent()} + '%'">중심에서 38%</b><br>
-                    흰 원 = 안전구역
-                </p>
+                <div class="zone__side">
+                    <p class="zone__caption">3페이즈부터 평균 위치</p>
+                    <p class="zone__value">중심에서 <b th:text="${c.zoneEdgePercent()} + '%'">38%</b></p>
+                    <p class="zone__legend">
+                        흰 점 = 한 판 (<span th:text="${c.zoneMatchPercents().size()}">9</span>판) · 노란 화살표 = 평균<br>
+                        방향은 의미 없고 중심에서의 거리만 봐요
+                    </p>
+                </div>
             </div>
             <p class="detail__empty" th:unless="${c.hasZoneGauge()}">3페이즈까지 살아남은 기록이 없어요.</p>
         </article>
@@ -213,6 +219,7 @@
                 </li>
             </ul>
             <p class="detail__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
+            <p class="detail__sub">판당 투척 사용 <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
         </article>
 
         <article class="detail" th:with="f=${c.farming()}">
@@ -233,7 +240,7 @@
         </article>
 
         <p class="details__note" th:if="${c.analyzedMatches() lt c.matches()}">
-            교전·자기장·주무기·파밍은 상세 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
+            자기장·주무기·파밍은 상세 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
         </p>
     </section>
 

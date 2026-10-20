@@ -104,6 +104,7 @@ class PlayCardServiceTest {
         assertThat(PlayCardService.titles(List.of(a, b)))
                 .containsExactly(Title.PIRATE, Title.HYENA, Title.SUPPLY_HUNTER);
         assertThat(PlayCardService.zoneEdgePercent(List.of(a, b))).isEqualTo(30);
+        assertThat(PlayCardService.zoneMatchPercents(List.of(a, b))).containsExactly(50, 10);   // 1.0÷2, 0.2÷2
 
         when(telemetryService.analyze(eq("m1"), anyString(), eq(ME))).thenReturn(a);
         when(telemetryService.analyze(eq("m2"), anyString(), eq(ME))).thenReturn(b);
@@ -111,7 +112,6 @@ class PlayCardServiceTest {
                 match("m1", "squad-fpp", 1, 0, 100, 3),
                 match("m2", "squad-fpp", 1, 0, 100, 3)), ME).orElseThrow();
 
-        assertThat(card.fightStartPercent()).isEqualTo(50);
         assertThat(card.zoneEdgePercent()).isEqualTo(30);
         assertThat(card.titles()).hasSize(3);
     }
