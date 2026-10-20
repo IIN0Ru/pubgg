@@ -216,25 +216,25 @@ body {
     border-bottom: 1px solid var(--hairline);
 }
 
+/* 로고 | 검색창(가운데) | 빈 칸 — 양옆 칸 너비를 같게 해서 검색창이 화면 정가운데에 오게 */
 .topbar__inner {
     max-width: 1280px;
     margin: 0 auto;
     padding: 12px 24px;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 560px) 1fr;
     align-items: center;
     gap: 24px;
 }
 
 .topbar__home {
-    flex: none;
+    justify-self: start;
     text-decoration: none;
     border-radius: 4px;
 }
 
 .topsearch {
-    flex: 1;
-    max-width: 520px;
-    margin-left: auto;
+    width: 100%;
     display: flex;
     gap: 8px;
 }
@@ -322,14 +322,9 @@ body {
 /* 좁은 화면: 로고 한 줄, 검색 한 줄 */
 @media (max-width: 640px) {
     .topbar__inner {
-        flex-wrap: wrap;
+        grid-template-columns: 1fr;
         gap: 12px;
         padding: 12px 16px;
-    }
-    .topsearch {
-        flex-basis: 100%;
-        max-width: none;
-        margin-left: 0;
     }
 }
 
