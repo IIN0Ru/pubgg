@@ -597,53 +597,54 @@ body {
     color: var(--muted);
 }
 
-/* 자기장 운영: 인게임 미니맵형. 위에 가로 전체로 */
+/* 패널 3개: 자기장 | 주무기, 그 아래 파밍은 가로 전체 */
 .detail--wide { grid-column: 1 / -1; }
 
+/* 자기장 운영: 인게임 미니맵형 */
 .zone {
     display: flex;
     align-items: center;
-    gap: 40px;
+    gap: 16px;
 }
 
+/* 크기는 예전 원 그림과 같은 104px. 작게 그려도 보이도록 선·점을 viewBox 기준으로 굵게 */
 .zone__map {
     flex: none;
-    width: 220px;
-    height: 220px;
+    width: 104px;
+    height: 104px;
 }
 
 .zone__ground { fill: var(--surface-soft); }
-.zone__grid   { stroke: var(--surface-elevated); stroke-width: 1; fill: none; }
-.zone__hatch  { stroke: var(--hairline-strong); stroke-width: 2; }
-.zone__safe   { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+.zone__grid   { stroke: var(--surface-elevated); stroke-width: 2; fill: none; }
+.zone__hatch  { stroke: var(--hairline-strong); stroke-width: 4; }
+.zone__safe   { fill: none; stroke: var(--ink); stroke-width: 4.5; }
 .zone__match  { fill: var(--ink); opacity: 0.5; }
 .zone__halo   { fill: var(--primary); opacity: 0.2; }
-.zone__me     { fill: var(--primary); stroke: var(--canvas); stroke-width: 1.5; stroke-linejoin: round; }
-.zone__label  { font-size: 10px; fill: var(--muted); }
-.zone__border { fill: none; stroke: var(--hairline); }
+.zone__me     { fill: var(--primary); stroke: var(--canvas); stroke-width: 3; stroke-linejoin: round; }
+.zone__border { fill: none; stroke: var(--hairline); stroke-width: 2; }
 
 .zone__side {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
 }
 
 .zone__caption {
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--muted);
 }
 
 .zone__value {
     margin: 0;
-    font-size: 15px;
-    color: var(--body);
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .zone__value b {
-    margin-left: 6px;
+    margin-left: 4px;
     font-family: var(--font-display);
-    font-size: 40px;
+    font-size: 18px;
     font-weight: 700;
     letter-spacing: -0.03em;
     color: var(--ink);
@@ -652,14 +653,9 @@ body {
 
 .zone__legend {
     margin: 4px 0 0;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.6;
     color: var(--muted-soft);
-}
-
-@media (max-width: 640px) {
-    .zone { flex-direction: column; align-items: flex-start; gap: 20px; }
-    .zone__map { width: 100%; max-width: 260px; height: auto; }
 }
 
 /* 주무기 */
