@@ -23,9 +23,13 @@
                     <span th:text="${p.label}">스팀</span>
                 </label>
             </fieldset>
-            <label for="top-nickname" class="sr-only">배그 닉네임</label>
-            <input id="top-nickname" class="topsearch__input" name="nickname" type="text"
-                   placeholder="배그 닉네임" maxlength="24" autocomplete="off" spellcheck="false" required>
+            <div class="topsearch__field">
+                <label for="top-nickname" class="sr-only">배그 닉네임</label>
+                <input id="top-nickname" class="topsearch__input" name="nickname" type="text"
+                       placeholder="배그 닉네임" maxlength="24" autocomplete="off" spellcheck="false" required>
+                <!-- 입력창을 누르면 즐겨찾기·최근 검색이 펼쳐짐 (static/js/players.js) -->
+                <div class="pdrop" data-player-dropdown data-for="top-nickname" hidden></div>
+            </div>
             <button class="topsearch__button" type="submit">검색</button>
         </form>
     </div>

@@ -276,10 +276,15 @@ body {
     outline-offset: 2px;
 }
 
-.topsearch__input {
+.topsearch__field {
+    position: relative;
     flex: 1;
     width: 0;          /* 기본 너비를 없애고 남는 공간만 채움 (좁은 화면에서 버튼이 밀려나지 않게) */
     min-width: 0;
+}
+
+.topsearch__input {
+    width: 100%;
     height: 40px;
     padding: 0 14px;
     background: var(--surface-card);
@@ -400,8 +405,16 @@ body {
     color: var(--muted);
 }
 
+.idcard__head {
+    margin-top: 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .idcard__name {
-    margin: 14px 0 0;
+    margin: 0;
     font-family: var(--font-display);
     font-size: clamp(32px, 6vw, 44px);
     font-weight: 700;
@@ -846,3 +859,121 @@ body {
     outline-offset: 4px;
     border-radius: 4px;
 }
+
+/* ---------- 즐겨찾기 ☆ ---------- */
+.fav {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.fav[aria-pressed="true"] {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.fav:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ---------- 즐겨찾기·최근 검색 목록 ---------- */
+.plist + .plist { margin-top: 16px; }
+
+.plist__title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.plist__empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted-soft);
+}
+
+.plist__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pchip {
+    display: flex;
+    align-items: center;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+}
+
+.pchip__link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px 6px 12px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pchip__platform {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.pchip__remove {
+    width: 28px;
+    height: 28px;
+    margin-right: 2px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.pchip__remove:hover { color: var(--ink); }
+
+.pchip__link:focus-visible,
+.pchip__remove:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    border-radius: 999px;
+}
+
+/* 첫 화면: 검색창 아래 */
+.home-lists {
+    width: 100%;
+    margin-top: 28px;
+    text-align: left;
+}
+
+/* 상단 검색창 아래 펼쳐지는 목록 */
+.pdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    padding: 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.pdrop[hidden] { display: none; }

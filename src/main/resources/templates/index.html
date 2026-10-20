@@ -55,10 +55,14 @@
                th:if="${error == 'platform'}">스팀이나 카카오 중 하나를 골라 주세요.</p>
         </form>
 
+        <!-- 즐겨찾기·최근 검색 (브라우저에 저장, static/js/players.js) -->
+        <div class="home-lists" data-player-lists></div>
+
     </div>
 
     <p class="hero__note">펍지지는 개인 포트폴리오 프로젝트로, KRAFTON·PUBG와 관련이 없습니다.</p>
 </main>
 
+<script src="/js/players.js" th:src="@{/js/players.js}"></script>
 </body>
 </html>
