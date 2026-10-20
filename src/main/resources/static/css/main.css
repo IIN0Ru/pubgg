@@ -737,6 +737,141 @@ body {
     .details { grid-template-columns: 1fr; }
 }
 
+/* ---------- 왼쪽 아래 작은 상자: 자주 같이 한 팀원, 활동 시간대 ---------- */
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sidebox {
+    padding: 20px 24px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+}
+
+.sidebox__title {
+    margin: 0 0 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.sidebox__title span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.sidebox__empty {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.mates {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mate {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--hairline);
+}
+
+.mate:first-child { border-top: 0; padding-top: 0; }
+
+.mate__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.mate__name:hover { text-decoration: underline; }
+
+.mate__games {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mate__meta {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 활동 시간대: 요일 이름 칸 + 24칸 */
+.heat {
+    display: grid;
+    grid-template-columns: 16px repeat(24, 1fr);
+    gap: 2px;
+    align-items: center;
+}
+
+.heat__day {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* 새 색을 만들지 않으려고 흰 글자색(--ink)의 진하기만 바꿔서 칠한다 */
+.heat__cell {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--surface-elevated);
+    position: relative;
+}
+
+.heat__cell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ink);
+    opacity: 0;
+}
+
+.heat__cell--1::after { opacity: 0.18; }
+.heat__cell--2::after { opacity: 0.38; }
+.heat__cell--3::after { opacity: 0.62; }
+.heat__cell--4::after { opacity: 0.9; }
+
+.heat__hour {
+    padding-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.heat__legend {
+    margin: 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.heat__legend .heat__cell { width: 10px; }
+.heat__legend .heat__cell:first-of-type { margin-left: 4px; }
+.heat__legend .heat__cell:last-of-type { margin-right: 4px; }
+
 /* 경기 목록 */
 .matches {
     list-style: none;

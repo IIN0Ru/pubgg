@@ -84,6 +84,49 @@
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">링크 복사</button>
     </section>
 
+    <!-- 자주 같이 한 팀원 (14일 전체) -->
+    <section class="sidebox" th:if="${result != null and result.hasMatches()}">
+        <h2 class="sidebox__title">자주 같이 한 팀원 <span>최근 14일</span></h2>
+        <ol class="mates" th:if="${result.hasTeammates()}">
+            <li class="mate" th:each="t : ${result.teammates()}">
+                <a class="mate__name"
+                   th:href="@{/search(platform=${result.platform().getShard()},nickname=${t.name()})}"
+                   th:text="${t.name()}">DuoFriend</a>
+                <span class="mate__games" th:text="${t.games()} + '경기'">12경기</span>
+                <span class="mate__meta">
+                    <span th:text="'평균 ' + ${t.avgRankText()}">평균 #4.3</span>
+                    <span th:if="${t.wins() > 0}" th:text="'치킨 ' + ${t.wins()}">치킨 2</span>
+                </span>
+            </li>
+        </ol>
+        <p class="sidebox__empty" th:unless="${result.hasTeammates()}">2판 이상 같이 한 팀원이 없어요.</p>
+    </section>
+
+    <!-- 활동 시간대 (14일 전체, 한국 시간) -->
+    <section class="sidebox" th:if="${result != null and result.hasMatches()}"
+             th:with="act=${result.activity()}">
+        <h2 class="sidebox__title">활동 시간대 <span th:text="${act.summaryText()}">주로 21~24시 · 주말 40%</span></h2>
+        <div class="heat" role="img"
+             th:attr="aria-label='요일·시간별 경기 수. ' + ${act.summaryText()}">
+            <th:block th:each="row : ${act.rows()}">
+                <span class="heat__day" th:text="${row.day()}">월</span>
+                <span class="heat__cell" th:each="c : ${row.cells()}"
+                      th:classappend="'heat__cell--' + ${c.level()}"
+                      th:title="${row.day()} + ' ' + ${c.title()}"></span>
+            </th:block>
+            <span></span>
+            <span class="heat__hour" style="grid-column: span 6">0</span>
+            <span class="heat__hour" style="grid-column: span 6">6</span>
+            <span class="heat__hour" style="grid-column: span 6">12</span>
+            <span class="heat__hour" style="grid-column: span 6">18</span>
+        </div>
+        <p class="heat__legend">
+            적음
+            <span class="heat__cell heat__cell--0"></span><span class="heat__cell heat__cell--1"></span><span class="heat__cell heat__cell--2"></span><span class="heat__cell heat__cell--3"></span><span class="heat__cell heat__cell--4"></span>
+            많음 · 한국 시간
+        </p>
+    </section>
+
   </aside>
 
   <!-- 가운데~오른쪽: 최근 경기 -->

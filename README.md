@@ -18,7 +18,8 @@
 - [x] 즐겨찾기·최근 검색 (브라우저 저장)
 - [x] 검색 결과 저장 + 전적 갱신 버튼 (2분 대기)
 - [x] 경기 필터(경쟁/일반, FPP/TPP)·더 보기·펼쳐보기(팀원 기록)
-- [ ] 함께한 팀원, 활동 시간대, 시즌 비교
+- [x] 자주 같이 한 팀원, 활동 시간대(요일 × 시간)
+- [ ] 시즌 티어 + 최근 vs 시즌 비교
 - [ ] 카드 이미지 공유(디스코드), 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -63,6 +64,8 @@ src/main/java/gg/pub/
 │   ├── Platform.java          스팀/카카오 (PUBG API shard 값)
 │   ├── MatchRecord.java       경기 하나 기록 (나 + 팀원). 목록·카드·팀원·시간대가 같이 씀
 │   ├── MatchPlayer.java       경기 하나에서 한 사람 기록
+│   ├── Teammate.java          자주 같이 한 팀원 계산
+│   ├── ActivityMap.java       활동 시간대(요일 × 시간) 계산
 │   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
 │   ├── PlayCard.java          플레이 카드
 │   ├── Title.java             칭호 (이름은 여기서 바꿈)
