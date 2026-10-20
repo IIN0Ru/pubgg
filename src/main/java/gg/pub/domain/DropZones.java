@@ -9,7 +9,7 @@ import java.util.Optional;
  *
  * 1) 에란겔·미라마·태이고: 텔레메트리 Character 의 zone(지역 ID)으로 판단한다.
  *    지역 ID 출처: github.com/pubg/api-assets (enums/telemetry/regionId.json)
- * 2) 론도: 지역 ID 목록이 없어서, 공식 맵 이미지(지명 포함)에서 도시 위치를 읽어 좌표 원으로 판단한다.
+ * 2) 론도(와 태이고 병원): 지역 ID 가 없어서, 공식 맵 이미지(지명 포함)에서 도시 위치를 읽어 좌표 원으로 판단한다.
  *    이미지 819px = 맵 816,000cm → 1px ≈ 996cm(약 10m). 맵 크기 8km는 확인 필요.
  *
  * 어디를 대도시로 볼지는 직접 정했다. 바꾸려면 여기 목록만 고치면 된다.
@@ -60,9 +60,10 @@ public final class DropZones {
             Map.entry("impala", "임팔라"),
             Map.entry("losleones", "로스 레오네스"),
             Map.entry("valledelmar", "바예 델 마르"),
-            Map.entry("chumacera", "추마세라"));
+            Map.entry("chumacera", "추마세라"),
+            Map.entry("heciendadelpatron", "아시엔다 델 파트론"));
 
-    // 태이고. 병원은 공식 지역 ID 목록에 없어서 빠짐 (좌표로 따로 넣어야 함)
+    // 태이고. 병원은 공식 지역 ID 가 없어서 아래 TAEGO_AREAS 에 좌표 원으로 넣음
     private static final Map<String, String> TAEGO = Map.ofEntries(
             Map.entry("wolsong", "월송"),
             Map.entry("godok", "고독"),
@@ -80,6 +81,10 @@ public final class DropZones {
             Map.entry("school", "학교"),
             Map.entry("songam", "송암"),
             Map.entry("ohyang", "오향"));
+
+    // 태이고 지역 ID 로 못 잡는 곳: 맵 이미지(Taego_Main_Low_Res.png, 819px) 기준 좌표 원
+    private static final List<Area> TAEGO_AREAS = List.of(
+            px("병원", 558, 680, 18));
 
     // 론도: 맵 이미지(Rondo_Main_Low_Res.png, 819px) 기준 픽셀 좌표와 반경
     // 겹치는 곳(네옥스 팩토리·테스트 트랙)은 위에 있는 쪽으로 판단
@@ -115,10 +120,14 @@ public final class DropZones {
         return switch (mapName) {
             case "Baltic_Main", "Erangel_Main" -> byZone(ERANGEL, zones);
             case "Desert_Main" -> byZone(MIRAMAR, zones);
-            case "Tiger_Main" -> byZone(TAEGO, zones);
-            case "Neon_Main" -> RONDO.stream().filter(a -> a.contains(x, y)).map(Area::name).findFirst();
+            case "Tiger_Main" -> byZone(TAEGO, zones).or(() -> byArea(TAEGO_AREAS, x, y));
+            case "Neon_Main" -> byArea(RONDO, x, y);
             default -> Optional.empty();   // 랭크 맵이 아니면 판단하지 않음
         };
+    }
+
+    private static Optional<String> byArea(List<Area> areas, double x, double y) {
+        return areas.stream().filter(a -> a.contains(x, y)).map(Area::name).findFirst();
     }
 
     private static Optional<String> byZone(Map<String, String> cities, List<String> zones) {

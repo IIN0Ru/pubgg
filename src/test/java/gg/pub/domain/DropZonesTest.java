@@ -29,8 +29,10 @@ class DropZonesTest {
         assertThat(DropZones.bigCity("Desert_Main", List.of("lmpala"), 0, 0)).contains("임팔라");   // 공식 목록 표기
         assertThat(DropZones.bigCity("Tiger_Main", List.of("hosanprison"), 0, 0)).contains("호산 교도소");
         assertThat(DropZones.bigCity("Neon_Main", List.of(), 592 * CM_PER_PX, 158 * CM_PER_PX)).contains("무호판");
-        // 사용자 목록에서 빠진 곳은 대도시가 아님
-        assertThat(DropZones.bigCity("Desert_Main", List.of("heciendadelpatron"), 0, 0)).isEmpty();
+        assertThat(DropZones.bigCity("Desert_Main", List.of("heciendadelpatron"), 0, 0)).contains("아시엔다 델 파트론");
+        // 태이고 병원은 지역 ID 가 없어서 좌표로 (이미지 558, 680 px)
+        assertThat(DropZones.bigCity("Tiger_Main", List.of(), 558 * CM_PER_PX, 680 * CM_PER_PX)).contains("병원");
+        assertThat(DropZones.bigCity("Tiger_Main", List.of(), 400 * CM_PER_PX, 400 * CM_PER_PX)).isEmpty();
     }
 
     @Test
