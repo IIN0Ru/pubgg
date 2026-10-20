@@ -94,9 +94,13 @@
 
   // ---------- 목록 그리기 ----------
 
-  function chip(player, onRemove) {
+  // 즐겨찾기에서 방금 뺀 것 (잠깐 "되돌리기"를 보여준다)
+  var undo = null;
+  var undoTimer = null;
+
+  function chip(player, onRemove, starred) {
     var li = document.createElement('li');
-    li.className = 'pchip';
+    li.className = 'pchip' + (starred ? ' pchip--fav' : '');
 
     var a = document.createElement('a');
     a.className = 'pchip__link';
@@ -105,7 +109,11 @@
     tag.className = 'pchip__platform';
     tag.textContent = player.label || player.platform;
     a.appendChild(tag);
-    a.appendChild(document.createTextNode(player.nickname));
+    var name = document.createElement('span');
+    name.className = 'pchip__name';   // 긴 닉네임은 말줄임
+    name.textContent = player.nickname;
+    a.title = player.nickname;
+    a.appendChild(name);
     li.appendChild(a);
 
     var x = document.createElement('button');
@@ -138,19 +146,55 @@
       p.className = 'plist__empty';
       p.textContent = emptyText;
       wrap.appendChild(p);
+      if (key === FAVORITES) {
+        appendUndo(wrap, rerender);
+      }
       return wrap;
     }
 
     var ul = document.createElement('ul');
     ul.className = 'plist__items';
-    list.forEach(function (player) {
+    list.forEach(function (player, index) {
       ul.appendChild(chip(player, function (removed) {
         save(key, without(load(key), removed));
+        // 즐겨찾기는 일부러 모은 거라 실수로 지웠을 때 되돌릴 수 있게 (최근 검색은 바로 삭제)
+        if (key === FAVORITES) {
+          undo = { player: removed, index: index };
+          clearTimeout(undoTimer);
+          undoTimer = setTimeout(function () { undo = null; rerender(); }, 5000);
+        }
         rerender();
-      }));
+      }, key === FAVORITES));
     });
     wrap.appendChild(ul);
+    if (key === FAVORITES) {
+      appendUndo(wrap, rerender);
+    }
     return wrap;
+  }
+
+  function appendUndo(wrap, rerender) {
+    if (!undo) {
+      return;
+    }
+    var bar = document.createElement('p');
+    bar.className = 'plist__undo';
+    bar.setAttribute('role', 'status');
+    bar.appendChild(document.createTextNode(undo.player.nickname + ' 님을 즐겨찾기에서 뺐어요. '));
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '되돌리기';
+    btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    btn.addEventListener('click', function () {
+      var list = without(load(FAVORITES), undo.player);
+      list.splice(Math.min(undo.index, list.length), 0, undo.player);
+      save(FAVORITES, list);
+      undo = null;
+      clearTimeout(undoTimer);
+      rerender();
+    });
+    bar.appendChild(btn);
+    wrap.appendChild(bar);
   }
 
   function render(container) {
@@ -179,7 +223,10 @@
     function close() {
       panel.hidden = true;
     }
-    input.addEventListener('focus', open);
+    // 검색창에 지금 닉네임이 채워져 있으면 목록은 열지 않고, 비어 있을 때만 연다
+    input.addEventListener('focus', function () {
+      if (!input.value) { open(); }
+    });
     input.addEventListener('input', function () {
       if (input.value) { close(); } else { open(); }
     });

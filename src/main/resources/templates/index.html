@@ -5,27 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>펍지지 PUB.GG</title>
     <meta name="description" content="스팀·카카오 닉네임 하나로 내 배그 플레이 스타일 확인">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="펍지지 PUB.GG">
+    <meta property="og:title" content="펍지지 PUB.GG">
+    <meta property="og:description" content="자기장 운영 · 파밍 · 주무기로 보는 배그 플레이 스타일 카드">
+    <meta name="twitter:card" content="summary">
+    <meta name="theme-color" content="#FFD02F">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <script th:replace="~{fragments/theme :: init}"></script>
     <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
 </head>
 <body>
 
-<button th:replace="~{fragments/theme :: toggle('theme-toggle--floating')}"></button>
-
 <main class="hero">
 
     <p class="band">스팀·카카오 닉네임 하나로 내 배그 플레이 스타일 확인</p>
+
+    <!-- 다크/라이트 전환: 노란 띠를 가리지 않게 띠 아래 오른쪽 -->
+    <div class="hero__tools">
+        <button th:replace="~{fragments/theme :: toggle('')}"></button>
+    </div>
 
     <div class="hero__inner">
 
         <h1 class="logo">PUB<span class="logo__dot">.</span>GG</h1>
         <p class="logo-ko">펍지지</p>
+        <!-- 다른 전적 사이트와 다른 점을 한 줄로 -->
+        <p class="hero__lead">자기장 운영 · 파밍 · 주무기로 보는 플레이 스타일 카드</p>
 
-        <form class="search" action="/search" th:action="@{/search}" method="get">
+        <form class="search" action="/search" th:action="@{/search}" method="get" data-loading>
 
             <fieldset class="platform">
                 <legend class="sr-only">플랫폼</legend>
@@ -49,8 +60,13 @@
                 <input id="nickname" name="nickname" type="text"
                        placeholder="배그 닉네임"
                        maxlength="24" autocomplete="off" spellcheck="false" required>
-                <button type="submit">분석하기</button>
+                <button type="submit" data-loading-button data-loading-text="분석 중…">분석하기</button>
             </div>
+
+            <!-- 검색을 보내면 보이는 안내 (static/js/loading.js) -->
+            <p class="search__status" role="status" data-loading-status hidden>
+                최근 14일 경기를 불러오는 중이에요. 처음 검색하는 닉네임은 시간이 조금 걸려요.
+            </p>
 
             <p class="search__error" role="alert"
                th:if="${error == 'nickname'}">닉네임을 입력해 주세요.</p>
@@ -67,6 +83,7 @@
 </main>
 
 <script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
 <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 </body>
 </html>

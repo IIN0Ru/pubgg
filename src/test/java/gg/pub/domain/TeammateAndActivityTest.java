@@ -67,6 +67,18 @@ class TeammateAndActivityTest {
     }
 
     @Test
+    void 좁은_화면용은_3시간씩_묶는다() {
+        ActivityMap act = ActivityMap.fromMatches(matches);
+        List<ActivityMap.Row> rows = act.rowsByThreeHours();
+
+        assertThat(rows).hasSize(7);
+        assertThat(rows.get(0).cells()).hasSize(8);
+        assertThat(rows.get(0).cells().get(7).count()).isEqualTo(1);   // 월 22시 → 21~24시 칸
+        assertThat(rows.get(0).cells().get(7).hour()).isEqualTo(21);
+        assertThat(rows.get(4).cells().get(4).count()).isEqualTo(1);   // 금 14시 → 12~15시 칸
+    }
+
+    @Test
     void 자정을_넘는_시간대도_찾는다() {
         ActivityMap act = ActivityMap.fromMatches(List.of(
                 m("2026-10-19T15:10:00Z", 5), m("2026-10-19T16:10:00Z", 5), m("2026-10-19T17:10:00Z", 5)));

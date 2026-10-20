@@ -55,6 +55,14 @@ class PlayCardTest {
     }
 
     @Test
+    void 자기장_판정_단어() {
+        assertThat(card(38).zoneVerdict()).isEqualTo("센터 운영");
+        assertThat(card(50).zoneVerdict()).isEqualTo("중간");
+        assertThat(card(70).zoneVerdict()).isEqualTo("외곽 운영");
+        assertThat(card(null).zoneVerdict()).isEmpty();
+    }
+
+    @Test
     void 반반이면_그_항목은_태그가_없다() {
         assertThat(card(50).styleTags()).isEmpty();
     }

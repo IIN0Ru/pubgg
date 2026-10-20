@@ -80,6 +80,24 @@ public record MatchRecord(String matchId,
         return me.rank() == 1;
     }
 
+    /** TOP 10 안에 든 판 (치킨 포함) */
+    public boolean isTop10() {
+        return me.rank() >= 1 && me.rank() <= 10;
+    }
+
+    /** 결과 표시 글자: 치킨 / TOP 10 / 없음 (색만으로 구분하지 않게 글자도 같이 보여준다) */
+    public String resultBadge() {
+        if (isWin()) {
+            return "치킨";
+        }
+        return isTop10() ? "TOP 10" : "";
+    }
+
+    /** 화면에서 "3시간 전"을 계산하려고 넘기는 시각 (ISO-8601, 없으면 빈 문자열) */
+    public String playedAtIso() {
+        return playedAt == null ? "" : playedAt.toString();
+    }
+
     public String survivedText() {
         return me.survivedText();
     }

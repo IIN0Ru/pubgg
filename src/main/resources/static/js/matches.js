@@ -15,6 +15,7 @@
   var countEl = list.querySelector('[data-match-count]');
   var emptyEl = list.querySelector('[data-match-empty]');
   var moreBtn = list.querySelector('[data-match-more]');
+  var summaryEl = list.querySelector('[data-match-summary]');
 
   var filter = { type: 'all', pov: 'all' };
   var shown = PAGE;
@@ -31,6 +32,7 @@
 
     countEl.textContent = hits.length;
     emptyEl.hidden = hits.length > 0;
+    summarize(hits);
 
     var left = hits.length - shown;
     moreBtn.hidden = left <= 0;
@@ -38,6 +40,39 @@
       moreBtn.textContent = '더 보기 (' + left + '경기 남음)';
     }
   }
+
+  // "42판 · 평균 #8.2 · 치킨 2 · TOP 10 40%"
+  function summarize(hits) {
+    if (!summaryEl) return;
+    var ranks = hits.map(function (item) { return Number(item.dataset.rank); })
+        .filter(function (r) { return r > 0; });
+    if (ranks.length === 0) {
+      summaryEl.textContent = '';
+      return;
+    }
+    var sum = ranks.reduce(function (a, b) { return a + b; }, 0);
+    var wins = ranks.filter(function (r) { return r === 1; }).length;
+    var top10 = ranks.filter(function (r) { return r <= 10; }).length;
+    summaryEl.textContent = ranks.length + '판 · 평균 #' + (sum / ranks.length).toFixed(1) +
+        ' · 치킨 ' + wins + ' · TOP 10 ' + Math.round(top10 * 100 / ranks.length) + '%';
+  }
+
+  // 경기 시각을 "방금 전 / 3시간 전 / 2일 전"으로. 정확한 시각은 title(마우스 올림)에 그대로 남김
+  function relative(iso) {
+    var t = Date.parse(iso);
+    if (isNaN(t)) return null;
+    var min = Math.floor((Date.now() - t) / 60000);
+    if (min < 1) return '방금 전';
+    if (min < 60) return min + '분 전';
+    var hour = Math.floor(min / 60);
+    if (hour < 24) return hour + '시간 전';
+    return Math.floor(hour / 24) + '일 전';
+  }
+
+  list.querySelectorAll('[data-relative-time]').forEach(function (el) {
+    var text = relative(el.getAttribute('datetime'));
+    if (text) el.textContent = text;
+  });
 
   list.querySelectorAll('[data-filter]').forEach(function (group) {
     group.addEventListener('click', function (e) {

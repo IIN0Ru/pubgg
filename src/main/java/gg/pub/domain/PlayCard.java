@@ -117,6 +117,17 @@ public record PlayCard(int matches,
         return tags;
     }
 
+    /** 자기장 위치 판정 한 단어: 센터 운영 / 외곽 운영 / 중간 (태그와 같은 기준) */
+    public String zoneVerdict() {
+        if (zoneEdgePercent == null) {
+            return "";
+        }
+        if (zoneEdgePercent <= LEAN_LOW) {
+            return "센터 운영";
+        }
+        return zoneEdgePercent >= LEAN_HIGH ? "외곽 운영" : "중간";
+    }
+
     /** 주무기 이름만 이어 붙인 것: "Beryl M762 · Mini 14" */
     public String weaponNames() {
         return String.join(" · ", mainWeapons.stream().map(WeaponUsage::name).toList());

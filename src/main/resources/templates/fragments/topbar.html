@@ -4,17 +4,18 @@
 
 <!--
     모든 페이지 상단 바: 로고 + 닉네임 검색.
-    사용법: <header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform})}"></header>
+    사용법: <header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
       - platforms: 플랫폼 목록 (Platform.values())
       - selected : 지금 보고 있는 플랫폼 (검색창에서 미리 선택됨). 없으면 첫 번째(스팀)
+      - query    : 지금 보고 있는 닉네임 (검색창에 미리 채움. 오타를 고쳐 다시 검색하기 쉽게)
 -->
-<header class="topbar" th:fragment="topbar(platforms, selected)">
+<header class="topbar" th:fragment="topbar(platforms, selected, query)">
     <div class="topbar__inner">
         <a class="topbar__home" href="/" th:href="@{/}" aria-label="펍지지 첫 화면">
             <span class="logo logo--small">PUB<span class="logo__dot">.</span>GG</span>
         </a>
 
-        <form class="topsearch" action="/search" th:action="@{/search}" method="get" role="search">
+        <form class="topsearch" action="/search" th:action="@{/search}" method="get" role="search" data-loading>
             <fieldset class="topsearch__platform">
                 <legend class="sr-only">플랫폼</legend>
                 <label th:each="p, stat : ${platforms}">
@@ -26,11 +27,12 @@
             <div class="topsearch__field">
                 <label for="top-nickname" class="sr-only">배그 닉네임</label>
                 <input id="top-nickname" class="topsearch__input" name="nickname" type="text"
-                       placeholder="배그 닉네임" maxlength="24" autocomplete="off" spellcheck="false" required>
+                       placeholder="배그 닉네임" maxlength="24" autocomplete="off" spellcheck="false" required
+                       th:value="${query}">
                 <!-- 입력창을 누르면 즐겨찾기·최근 검색이 펼쳐짐 (static/js/players.js) -->
                 <div class="pdrop" data-player-dropdown data-for="top-nickname" hidden></div>
             </div>
-            <button class="topsearch__button" type="submit">검색</button>
+            <button class="topsearch__button" type="submit" data-loading-button data-loading-text="분석 중…">분석하기</button>
         </form>
 
         <div class="topbar__tools">

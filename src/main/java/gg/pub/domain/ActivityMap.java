@@ -68,6 +68,34 @@ public record ActivityMap(int[][] counts, int total) {
         return rows;
     }
 
+    /**
+     * 좁은 화면용: 3시간씩 묶은 8칸 (0~3시, 3~6시 ... 21~24시).
+     * 24칸은 폰에서 한 칸이 너무 작아져서 따로 그린다. 진하기는 묶은 칸끼리 다시 비교한다.
+     */
+    public List<Row> rowsByThreeHours() {
+        int[][] grouped = new int[7][8];
+        int max = 0;
+        for (int d = 0; d < 7; d++) {
+            for (int h = 0; h < 24; h++) {
+                grouped[d][h / WINDOW_HOURS] += counts[d][h];
+            }
+            for (int g = 0; g < 8; g++) {
+                max = Math.max(max, grouped[d][g]);
+            }
+        }
+        List<Row> rows = new ArrayList<>();
+        for (int d = 0; d < 7; d++) {
+            List<Cell> cells = new ArrayList<>();
+            for (int g = 0; g < 8; g++) {
+                int c = grouped[d][g];
+                int level = c == 0 ? 0 : Math.max(1, (int) Math.ceil(c * 4.0 / max));
+                cells.add(new Cell(g * WINDOW_HOURS, c, level));
+            }
+            rows.add(new Row(DAY_LABELS[d], cells));
+        }
+        return rows;
+    }
+
     public record Row(String day, List<Cell> cells) {
     }
 
@@ -104,15 +132,19 @@ public record ActivityMap(int[][] counts, int total) {
             }
         }
         // 자정을 넘는 묶음(23~2시)도 셀 수 있게 24시를 한 바퀴 돌며 센다
+        // 합이 같으면 가운데 시간이 가장 많은 묶음 (22시에만 했으면 20~23시가 아니라 21~24시)
         int bestStart = 0;
         int best = -1;
+        int bestMiddle = -1;
         for (int start = 0; start < 24; start++) {
             int sum = 0;
             for (int i = 0; i < WINDOW_HOURS; i++) {
                 sum += byHour[(start + i) % 24];
             }
-            if (sum > best) {
+            int middle = byHour[(start + 1) % 24];
+            if (sum > best || (sum == best && middle > bestMiddle)) {
                 best = sum;
+                bestMiddle = middle;
                 bestStart = start;
             }
         }

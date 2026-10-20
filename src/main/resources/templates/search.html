@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${nickname} + ' - 펍지지'">닉네임 - 펍지지</title>
+    <title th:text="${result != null} ? ${result.shareTitle()} + ' | 펍지지' : ${nickname} + ' | 펍지지'">닉네임 | 펍지지</title>
+    <!-- 링크 미리보기 (디스코드·카톡 등). 문구는 PlayerMatches.shareTitle / shareDescription -->
+    <meta name="description" th:content="${result != null} ? ${result.shareDescription()} : '배그 플레이 스타일 분석'">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="펍지지 PUB.GG">
+    <meta property="og:title" th:content="${result != null} ? ${result.shareTitle()} : ${nickname}">
+    <meta property="og:description" th:content="${result != null} ? ${result.shareDescription()} : '배그 플레이 스타일 분석'">
+    <meta name="twitter:card" content="summary">
+    <!-- 디스코드는 이 색을 미리보기 카드 왼쪽 띠 색으로 쓴다 -->
+    <meta name="theme-color" content="#FFD02F">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
@@ -13,12 +22,12 @@
 </head>
 <body>
 
-<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform})}"></header>
+<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
 
 <main class="page">
 
-  <!-- 왼쪽: 공유용 요약 카드 -->
-  <aside class="side">
+  <!-- 1) 공유용 요약 카드 (PC: 왼쪽 위 / 폰: 맨 위) -->
+  <aside class="side side--card">
 
     <section class="idcard" th:with="c=${result != null ? result.card() : null}">
         <div class="idcard__meta">
@@ -42,12 +51,13 @@
             <span class="rank__scope" th:text="'이번 시즌 ' + ${sr.modeLabel()} + ' ' + ${sr.rounds()} + '판'">이번 시즌 스쿼드 FPP 120판</span>
         </p>
         <!-- 마지막 갱신 + 전적 갱신 버튼 -->
-        <form class="refresh" th:if="${result != null}" action="/refresh" th:action="@{/refresh}" method="post">
+        <form class="refresh" th:if="${result != null}" action="/refresh" th:action="@{/refresh}" method="post" data-loading>
             <input type="hidden" name="platform" th:value="${platform.shard}">
             <input type="hidden" name="nickname" th:value="${result.nickname()}">
             <span class="refresh__ago" th:text="'마지막 갱신 ' + ${updatedAgo}">마지막 갱신 3분 전</span>
+            <span class="refresh__ago" role="status" data-loading-status hidden>· 갱신 중…</span>
             <!-- 작은 새로고침 아이콘. 2분 대기 중이면 흐려지고, 마우스를 올리면 남은 시간 -->
-            <button class="refresh__button" type="submit" aria-label="전적 갱신" title="전적 갱신"
+            <button class="refresh__button" type="submit" aria-label="전적 갱신" title="전적 갱신" data-loading-button
                     th:disabled="${refreshWait > 0}"
                     th:title="${refreshWait > 0} ? ${refreshWait / 60} + ':' + ${#numbers.formatInteger(refreshWait % 60, 2)} + ' 뒤에 다시 갱신할 수 있어요' : '전적 갱신'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -63,20 +73,44 @@
         <span hidden th:if="${result != null}" data-remember-search
               th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}"></span>
 
-        <!-- 칭호(노랑) + 스타일 요약(테두리) -->
+        <!-- 칭호(노랑, 누르면 설명) + 스타일 요약(테두리) -->
         <ul class="tags" th:if="${c != null and (c.hasTitles() or !c.styleTags().isEmpty())}">
-            <li class="tag tag--title" th:each="t : ${c.titles()}"
-                th:title="${t.getDescription()}" th:text="${t.getLabel()}">해적</li>
+            <li th:each="t : ${c.titles()}">
+                <button class="tag tag--title" type="button" data-title-toggle aria-expanded="false"
+                        th:attr="aria-controls='title-' + ${t.name()}" th:text="${t.getLabel()}">해적</button>
+            </li>
             <li class="tag" th:each="s : ${c.styleTags()}" th:text="${s}">센터 운영</li>
         </ul>
+        <th:block th:if="${c != null and c.hasTitles()}">
+            <p class="title-note" th:each="t : ${c.titles()}" th:id="'title-' + ${t.name()}" hidden>
+                <b th:text="${t.getLabel()}">해적</b>
+                <span th:text="${t.getDescription()}">차를 타고 움직이는 적을 쫓아가서 잡아요</span>
+                <span class="title-note__criteria" th:text="'기준: ' + ${t.getCriteria()} + ' · 실력 점수가 아니라 플레이 습관이에요'">기준</span>
+            </p>
+        </th:block>
 
-        <dl class="idcard__lines" th:if="${c != null}">
+        <!-- 핵심 수치. 시즌 기록이 있으면 라벨 아래에 "시즌 2.76 ▲" -->
+        <dl class="idcard__lines" th:if="${c != null}" th:with="cmp=${result.seasonComparison()}">
             <div class="idcard__line idcard__line--key">
-                <dt>KDA</dt>
+                <dt>KDA
+                    <span class="idcard__vs" th:if="${cmp.size() > 0}" th:with="r=${cmp[0]}">
+                        시즌 <span th:text="${r.season()}">2.76</span>
+                        <span class="idcard__arrow" th:if="${r.trend() != 0}" th:classappend="${r.trend() > 0} ? 'idcard__arrow--up'"
+                              th:text="${r.arrow()}" aria-hidden="true">▲</span>
+                        <span class="sr-only" th:text="${r.trendText()}">시즌보다 높음</span>
+                    </span>
+                </dt>
                 <dd th:text="${c.kdaText()}">3.42</dd>
             </div>
             <div class="idcard__line">
-                <dt>평균 딜량</dt>
+                <dt>평균 딜량
+                    <span class="idcard__vs" th:if="${cmp.size() > 1}" th:with="r=${cmp[1]}">
+                        시즌 <span th:text="${r.season()}">330</span>
+                        <span class="idcard__arrow" th:if="${r.trend() != 0}" th:classappend="${r.trend() > 0} ? 'idcard__arrow--up'"
+                              th:text="${r.arrow()}" aria-hidden="true">▼</span>
+                        <span class="sr-only" th:text="${r.trendText()}">시즌보다 낮음</span>
+                    </span>
+                </dt>
                 <dd th:text="${c.avgDamage()}">412</dd>
             </div>
             <div class="idcard__line" th:if="${c.hasWeapons()}">
@@ -87,6 +121,10 @@
                 <dt>주 착지</dt>
                 <dd th:text="${c.farming().mainCity()}">포친키</dd>
             </div>
+            <div class="idcard__line" th:if="${result.activity().hasData()}">
+                <dt>주 활동 시간</dt>
+                <dd th:text="${result.activity().peakText()}">21~24시</dd>
+            </div>
         </dl>
 
         <!-- 오류: 플레이어 없음, 키 문제, 요청 초과 등 -->
@@ -95,77 +133,12 @@
             최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.
         </p>
 
-        <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">링크 복사</button>
-    </section>
-
-    <!-- 최근 경쟁전 10경기 vs 이번 시즌 -->
-    <section class="sidebox" th:if="${result != null and !result.seasonComparison().isEmpty()}">
-        <h2 class="sidebox__title">최근 vs 이번 시즌 <span th:text="'최근 경쟁전 ' + ${result.card().matches()} + '경기 기준'">최근 경쟁전 10경기 기준</span></h2>
-        <table class="compare">
-            <thead>
-                <tr><th scope="col"></th><th scope="col">최근</th><th scope="col">시즌</th></tr>
-            </thead>
-            <tbody>
-                <tr th:each="row : ${result.seasonComparison()}">
-                    <th scope="row" th:text="${row.label()}">KDA</th>
-                    <td>
-                        <span th:text="${row.recent()}">3.25</span>
-                        <span class="compare__arrow" th:classappend="${row.trend() > 0} ? 'compare__arrow--up'"
-                              th:if="${row.trend() != 0}" th:text="${row.arrow()}" aria-hidden="true">▲</span>
-                        <span class="sr-only" th:text="${row.trendText()}">시즌보다 높음</span>
-                    </td>
-                    <td th:text="${row.season()}">2.76</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-
-    <!-- 자주 같이 한 팀원 (14일 전체) -->
-    <section class="sidebox" th:if="${result != null and result.hasMatches()}">
-        <h2 class="sidebox__title">자주 같이 한 팀원 <span>최근 14일</span></h2>
-        <ol class="mates" th:if="${result.hasTeammates()}">
-            <li class="mate" th:each="t : ${result.teammates()}">
-                <a class="mate__name"
-                   th:href="@{/search(platform=${result.platform().getShard()},nickname=${t.name()})}"
-                   th:text="${t.name()}">DuoFriend</a>
-                <span class="mate__games" th:text="${t.games()} + '경기'">12경기</span>
-                <span class="mate__meta">
-                    <span th:text="'평균 ' + ${t.avgRankText()}">평균 #4.3</span>
-                    <span th:if="${t.wins() > 0}" th:text="'치킨 ' + ${t.wins()}">치킨 2</span>
-                </span>
-            </li>
-        </ol>
-        <p class="sidebox__empty" th:unless="${result.hasTeammates()}">2판 이상 같이 한 팀원이 없어요.</p>
-    </section>
-
-    <!-- 활동 시간대 (14일 전체, 한국 시간) -->
-    <section class="sidebox" th:if="${result != null and result.hasMatches()}"
-             th:with="act=${result.activity()}">
-        <h2 class="sidebox__title">활동 시간대 <span th:text="${act.summaryText()}">주로 21~24시 · 주말 40%</span></h2>
-        <div class="heat" role="img"
-             th:attr="aria-label='요일·시간별 경기 수. ' + ${act.summaryText()}">
-            <th:block th:each="row : ${act.rows()}">
-                <span class="heat__day" th:text="${row.day()}">월</span>
-                <span class="heat__cell" th:each="c : ${row.cells()}"
-                      th:classappend="'heat__cell--' + ${c.level()}"
-                      th:title="${row.day()} + ' ' + ${c.title()}"></span>
-            </th:block>
-            <span></span>
-            <span class="heat__hour" style="grid-column: span 6">0</span>
-            <span class="heat__hour" style="grid-column: span 6">6</span>
-            <span class="heat__hour" style="grid-column: span 6">12</span>
-            <span class="heat__hour" style="grid-column: span 6">18</span>
-        </div>
-        <p class="heat__legend">
-            적음
-            <span class="heat__cell heat__cell--0"></span><span class="heat__cell heat__cell--1"></span><span class="heat__cell heat__cell--2"></span><span class="heat__cell heat__cell--3"></span><span class="heat__cell heat__cell--4"></span>
-            많음 · 한국 시간
-        </p>
+        <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">공유 링크 복사</button>
     </section>
 
   </aside>
 
-  <!-- 가운데~오른쪽: 최근 경기 -->
+  <!-- 2) 상세 분석 + 경기 목록 (PC: 오른쪽 / 폰: 카드 다음) -->
   <div class="feed">
 
     <!-- 상세 분석 패널 (경쟁전 기준) -->
@@ -205,10 +178,13 @@
                     <rect class="zone__border" x="0.5" y="0.5" width="219" height="219" rx="10"/>
                 </svg>
                 <div class="zone__side">
-                    <p class="zone__caption">3페이즈부터 평균 위치</p>
-                    <p class="zone__value">중심에서 <b th:text="${c.zoneEdgePercent()} + '%'">38%</b></p>
+                    <p class="zone__value">
+                        <b th:text="${c.zoneEdgePercent()} + '%'">38%</b>
+                        <span class="zone__verdict" th:text="${c.zoneVerdict()}">센터 운영</span>
+                    </p>
+                    <p class="zone__caption">안전구역 중심에서 떨어진 평균 거리<br>0% 중심 · 100% 경계</p>
                     <p class="zone__legend">
-                        흰 점 = 한 판 (<span th:text="${c.zoneMatchPercents().size()}">9</span>판)<br>노란 화살표 = 평균<br>빗금 = 자기장 밖
+                        흰 점 한 판 (<span th:text="${c.zoneMatchPercents().size()}">9</span>판) · 노란 화살표 평균 · 빗금 자기장 밖
                     </p>
                 </div>
             </div>
@@ -225,7 +201,7 @@
                 </li>
             </ul>
             <p class="detail__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
-            <p class="detail__sub">판당 투척 사용 <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
+            <p class="detail__sub">투척 사용 (판당) <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
         </article>
 
         <article class="detail detail--wide" th:with="f=${c.farming()}">
@@ -235,9 +211,9 @@
                 <span th:text="${f.bigCityDrops()} + '/' + ${f.drops()} + '판 대도시 착지'">7/10판 대도시 착지</span>
             </p>
             <dl class="farming__bag" th:if="${f != null and f.hasBag()}">
-                <div><dt>힐템</dt><dd th:text="${f.avgHealsText()}">7.5</dd></div>
-                <div><dt>투척 보유</dt><dd th:text="${f.avgThrowablesText()}">3.2</dd></div>
-                <div><dt>주운 총알</dt><dd th:text="${f.avgAmmo()}">214</dd></div>
+                <div><dt>힐템</dt><dd><span th:text="${f.avgHealsText()}">7.5</span><small>개</small></dd></div>
+                <div><dt>투척</dt><dd><span th:text="${f.avgThrowablesText()}">3.2</span><small>개</small></dd></div>
+                <div><dt>주운 총알</dt><dd><span th:text="${f.avgAmmo()}">214</span><small>발</small></dd></div>
             </dl>
             <p class="detail__sub" th:if="${f != null and f.hasBag()}">
                 살아남은 <span th:text="${f.phase3Matches()}">8</span>경기 평균
@@ -275,10 +251,13 @@
             </div>
         </div>
 
+        <!-- 지금 필터에 걸린 경기 요약 (matches.js 가 채움) -->
+        <p class="recent__summary" data-match-summary aria-live="polite"></p>
+
         <ol class="matches">
             <li class="match" th:each="m : ${result.matches()}"
-                th:classappend="${m.isWin()} ? 'match--win'"
-                th:attr="data-type=${m.typeKey()},data-pov=${m.perspectiveKey()}">
+                th:classappend="${m.isWin()} ? 'match--win' : (${m.isTop10()} ? 'match--top10' : '')"
+                th:attr="data-type=${m.typeKey()},data-pov=${m.perspectiveKey()},data-rank=${m.rank()}">
               <details>
                 <summary class="match__row">
                     <div class="match__rank">
@@ -292,8 +271,15 @@
                             <span th:text="${m.map()}">에란겔</span>
                             <span class="match__type" th:if="${!m.matchTypeLabel().isEmpty()}"
                                   th:text="${m.matchTypeLabel()}">일반</span>
+                            <span class="match__badge" th:if="${!m.resultBadge().isEmpty()}"
+                                  th:classappend="${m.isWin()} ? 'match__badge--win'"
+                                  th:text="${m.resultBadge()}">치킨</span>
                         </p>
-                        <p class="match__date" th:text="${m.playedAtText()}">10월 19일 21:34</p>
+                        <!-- 처음엔 날짜, 화면에서 "3시간 전"으로 바꾸고 정확한 시각은 마우스를 올리면 (matches.js) -->
+                        <p class="match__date">
+                            <time th:attr="datetime=${m.playedAtIso()}" th:text="${m.playedAtText()}"
+                                  th:title="${m.playedAtText()}" data-relative-time>10월 19일 21:34</time>
+                        </p>
                     </div>
 
                     <dl class="match__stats">
@@ -353,23 +339,104 @@
     </section>
   </div>
 
+  <!-- 3) 보조 정보: 시즌 비교, 팀원, 활동 시간대 (PC: 왼쪽 카드 아래 / 폰: 맨 아래) -->
+  <aside class="side side--extra">
+
+    <!-- 최근 경쟁전 10경기 vs 이번 시즌 -->
+    <section class="sidebox" th:if="${result != null and !result.seasonComparison().isEmpty()}">
+        <h2 class="sidebox__title">최근 vs 이번 시즌 <span>경쟁전만</span></h2>
+        <table class="compare">
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">최근 <small th:text="${result.card().matches()} + '판'">10판</small></th>
+                    <th scope="col">시즌 <small th:text="${result.season().rounds()} + '판'">120판</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="row : ${result.seasonComparison()}">
+                    <th scope="row" th:text="${row.label()}">KDA</th>
+                    <td>
+                        <span th:text="${row.recent()}">3.25</span>
+                        <span class="compare__arrow" th:classappend="${row.trend() > 0} ? 'compare__arrow--up'"
+                              th:if="${row.trend() != 0}" th:text="${row.arrow()}" aria-hidden="true">▲</span>
+                        <span class="sr-only" th:text="${row.trendText()}">시즌보다 높음</span>
+                    </td>
+                    <td th:text="${row.season()}">2.76</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="compare__note" th:if="${result.season().isSmallSample()}">
+            시즌 판 수가 적어서 비교가 정확하지 않을 수 있어요.
+        </p>
+    </section>
+
+    <!-- 자주 같이 한 팀원 (14일 전체) -->
+    <section class="sidebox" th:if="${result != null and result.hasMatches()}">
+        <h2 class="sidebox__title">자주 같이 한 팀원 <span>최근 14일</span></h2>
+        <ol class="mates" th:if="${result.hasTeammates()}">
+            <li class="mate" th:each="t : ${result.teammates()}">
+                <a class="mate__name"
+                   th:href="@{/search(platform=${result.platform().getShard()},nickname=${t.name()})}"
+                   th:text="${t.name()}">DuoFriend</a>
+                <span class="mate__games" th:text="${t.games()} + '경기'">12경기</span>
+                <span class="mate__meta">
+                    <span th:text="'평균 ' + ${t.avgRankText()}">평균 #4.3</span>
+                    <span th:if="${t.wins() > 0}" th:text="'치킨 ' + ${t.wins()}">치킨 2</span>
+                </span>
+            </li>
+        </ol>
+        <p class="sidebox__empty" th:unless="${result.hasTeammates()}">2판 이상 같이 한 팀원이 없어요.</p>
+    </section>
+
+    <!-- 활동 시간대 (14일 전체, 한국 시간) -->
+    <section class="sidebox" th:if="${result != null and result.hasMatches()}"
+             th:with="act=${result.activity()}">
+        <h2 class="sidebox__title">활동 시간대 <span th:text="${act.summaryText()}">주로 21~24시 · 주말 40%</span></h2>
+        <div class="heat" role="img"
+             th:attr="aria-label='요일·시간별 경기 수. ' + ${act.summaryText()}">
+            <th:block th:each="row : ${act.rows()}">
+                <span class="heat__day" th:text="${row.day()}">월</span>
+                <span class="heat__cell" th:each="c : ${row.cells()}"
+                      th:classappend="'heat__cell--' + ${c.level()}"
+                      th:title="${row.day()} + ' ' + ${c.title()}"></span>
+            </th:block>
+            <span></span>
+            <span class="heat__hour" style="grid-column: span 6">0</span>
+            <span class="heat__hour" style="grid-column: span 6">6</span>
+            <span class="heat__hour" style="grid-column: span 6">12</span>
+            <span class="heat__hour" style="grid-column: span 6">18</span>
+        </div>
+        <!-- 좁은 화면: 3시간씩 묶은 8칸 (24칸은 칸이 너무 작아져서) -->
+        <div class="heat heat--coarse" role="img"
+             th:attr="aria-label='요일·3시간별 경기 수. ' + ${act.summaryText()}">
+            <th:block th:each="row : ${act.rowsByThreeHours()}">
+                <span class="heat__day" th:text="${row.day()}">월</span>
+                <span class="heat__cell" th:each="c : ${row.cells()}"
+                      th:classappend="'heat__cell--' + ${c.level()}"
+                      th:title="${row.day()} + ' ' + ${c.hour()} + '~' + ${c.hour() + 3} + '시 · ' + ${c.count()} + '경기'"></span>
+            </th:block>
+            <span></span>
+            <span class="heat__hour" style="grid-column: span 2">0</span>
+            <span class="heat__hour" style="grid-column: span 2">6</span>
+            <span class="heat__hour" style="grid-column: span 2">12</span>
+            <span class="heat__hour" style="grid-column: span 2">18</span>
+        </div>
+        <p class="heat__legend">
+            적음
+            <span class="heat__cell heat__cell--0"></span><span class="heat__cell heat__cell--1"></span><span class="heat__cell heat__cell--2"></span><span class="heat__cell heat__cell--3"></span><span class="heat__cell heat__cell--4"></span>
+            많음 · 한국 시간
+        </p>
+    </section>
+
+  </aside>
+
 </main>
 
 <script src="/js/players.js" th:src="@{/js/players.js}"></script>
 <script src="/js/matches.js" th:src="@{/js/matches.js}"></script>
-<script>
-  // 링크 복사: 지금 보고 있는 주소(/search?platform=...&nickname=...)를 복사
-  document.querySelectorAll('[data-copy-link]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      navigator.clipboard.writeText(location.href).then(function () {
-        btn.textContent = '링크 복사됨';
-        setTimeout(function () { btn.textContent = '링크 복사'; }, 1500);
-      }, function () {
-        btn.textContent = '복사하지 못했어요';
-      });
-    });
-  });
-</script>
+<script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
+<script src="/js/card.js" th:src="@{/js/card.js}"></script>
 
 <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 </body>

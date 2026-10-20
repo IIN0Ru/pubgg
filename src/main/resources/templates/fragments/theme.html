@@ -22,7 +22,6 @@
 <!--
     전환 버튼 (해 = 라이트로 바꾸기, 달 = 다크로 바꾸기). 누르면 static/js/theme.js 가 처리.
     사용법: <button th:replace="~{fragments/theme :: toggle('')}"></button>
-            첫 화면처럼 상단 바가 없으면 toggle('theme-toggle--floating')
 -->
 <button class="theme-toggle" type="button" data-theme-toggle aria-label="라이트 모드로 바꾸기"
         th:fragment="toggle(extraClass)" th:classappend="${extraClass}">

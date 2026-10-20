@@ -37,6 +37,13 @@ public record SeasonRank(String gameMode,
             "Master", "마스터",
             "Survivor", "서바이버");
 
+    /** 시즌 판 수가 이보다 적으면 비교 표에 "표본 적음"을 붙인다 */
+    public static final int SMALL_SAMPLE = 20;
+
+    public boolean isSmallSample() {
+        return rounds < SMALL_SAMPLE;
+    }
+
     /** 배치를 끝내서 티어가 있는지 */
     public boolean isPlaced() {
         return tier != null && TIER_NAMES.containsKey(tier);

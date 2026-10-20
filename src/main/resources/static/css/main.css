@@ -11,6 +11,7 @@
     --primary: #FFD02F;          /* 강조색: 버튼, 로고 점, 상단 띠, 칭호 배지 (면) */
     --primary-active: #FCB900;   /* 버튼 눌림·hover */
     --primary-text: #FFD02F;     /* 노랑을 글자·선으로 쓸 때 (KDA 숫자, 1등, 포커스 테두리) */
+    --primary-disabled: #3A3A1F; /* 막힌 버튼 (DESIGN.md primary-disabled) */
     --on-primary: #0A0A0A;
 
     --canvas: #0A0A0A;           /* 배경 */
@@ -30,7 +31,12 @@
     --font-display: "Inter", "Pretendard", system-ui, sans-serif;
     --font-ui: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
-    --radius: 8px;
+    /* 모서리 둥글기: DESIGN.md 의 4단계 + 알약형만 쓴다 */
+    --radius-xs: 4px;            /* 아주 작은 표시 */
+    --radius-sm: 6px;            /* 안쪽 작은 버튼·배지 (8px 상자 안에 들어가는 것) */
+    --radius: 8px;               /* 버튼·입력창·작은 상자 */
+    --radius-lg: 12px;           /* 카드 */
+    --radius-pill: 999px;        /* 태그·칩 */
 }
 
 /* ---------- 라이트 ----------
@@ -42,6 +48,7 @@
 
     --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
     --primary-active: #F2BE00;
+    --primary-disabled: #EDE6C6;
 
     --canvas: #F5F5F2;
     --surface-soft: #ECECE8;
@@ -64,6 +71,7 @@
 
         --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
         --primary-active: #F2BE00;
+        --primary-disabled: #EDE6C6;
 
         --canvas: #F5F5F2;
         --surface-soft: #ECECE8;
@@ -89,6 +97,8 @@ body {
     color: var(--ink);
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
+    word-break: keep-all;        /* 한국어를 단어 단위로 줄바꿈 ("주무기 / 로" 처럼 끊기지 않게) */
+    overflow-wrap: anywhere;     /* 아주 긴 영어 닉네임은 그래도 줄을 넘기지 않게 */
 }
 
 .sr-only {
@@ -115,7 +125,7 @@ body {
     padding: 10px 16px;
     background: var(--primary);
     color: var(--on-primary);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     text-align: center;
 }
@@ -147,10 +157,25 @@ body {
 .logo__dot { color: var(--primary-text); }
 
 .logo-ko {
-    margin: 18px 0 48px;
+    margin: 18px 0 0;
     font-size: 18px;
     font-weight: 600;
     color: var(--muted);
+}
+
+.hero__lead {
+    margin: 12px 0 44px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--body);
+    text-wrap: balance;
+}
+
+/* 노란 띠 바로 아래 오른쪽: 다크/라이트 전환 버튼 */
+.hero__tools {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 16px 0;
 }
 
 .hero__note {
@@ -159,7 +184,7 @@ body {
     margin: 0;
     text-align: center;
     font-size: 12px;
-    color: var(--muted-soft);
+    color: var(--muted);
 }
 
 /* ---------- 검색 ---------- */
@@ -191,7 +216,7 @@ body {
 .platform__option span {
     display: block;
     padding: 7px 16px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 600;
     color: var(--muted);
@@ -227,7 +252,7 @@ body {
     color: var(--ink);
 }
 
-.search__field input::placeholder { color: var(--muted-soft); }
+.search__field input::placeholder { color: var(--muted); }
 
 .search__field input:focus {
     outline: none;
@@ -255,6 +280,22 @@ body {
 .search__field button:focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
+}
+
+.search__status {
+    margin: 0;
+    font-size: 14px;
+    color: var(--body);
+}
+
+.search__status[hidden] { display: none; }
+
+/* 보내는 중: 버튼이 막혀 있다는 게 보이게 */
+.search__field button:disabled,
+.topsearch__button:disabled {
+    background: var(--primary-disabled);
+    color: var(--muted);
+    cursor: progress;
 }
 
 .search__error {
@@ -290,7 +331,7 @@ body {
 .topbar__home {
     justify-self: start;
     text-decoration: none;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
 }
 
 .topsearch {
@@ -319,7 +360,7 @@ body {
 .topsearch__platform span {
     display: block;
     padding: 6px 10px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 600;
     color: var(--muted);
@@ -351,11 +392,11 @@ body {
     border: 1px solid var(--hairline);
     border-radius: var(--radius);
     font: inherit;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--ink);
 }
 
-.topsearch__input::placeholder { color: var(--muted-soft); }
+.topsearch__input::placeholder { color: var(--muted); }
 
 .topsearch__input:focus {
     outline: none;
@@ -404,21 +445,36 @@ body {
     letter-spacing: -0.04em;
 }
 
-/* 데스크톱: 왼쪽(이름·카드) | 가운데~오른쪽(최근 경기) */
+/* PC: 왼쪽 위 공유 카드, 왼쪽 아래 보조 상자 | 오른쪽 분석·경기 목록
+   폰: 공유 카드 → 분석·경기 목록 → 보조 상자 (공유 링크를 폰으로 연 사람이 핵심부터 보게)
+   마크업 순서도 이 순서라서 키보드 탭 순서와 화면 읽기 순서가 같다 */
 .page {
     max-width: 1280px;
     margin: 0 auto;
     padding: 32px 24px 96px;
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
-    gap: 32px;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "card  feed"
+        "extra feed";
+    gap: 16px 32px;
     align-items: start;
 }
 
-/* 모바일·좁은 화면: 위아래로 쌓기 */
+.side--card  { grid-area: card; }
+.feed        { grid-area: feed; min-width: 0; }
+.side--extra { grid-area: extra; }
+
 @media (max-width: 960px) {
     .page {
         grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+            "card"
+            "feed"
+            "extra";
+        gap: 32px;
         padding: 24px 16px 96px;
     }
 }
@@ -434,10 +490,10 @@ body {
 .idcard {
     position: relative;
     overflow: hidden;
-    padding: 26px 24px 24px;
+    padding: 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
 }
 
 /* 카드 맨 위 노란 띠: 펍지지 카드라는 표시 */
@@ -459,7 +515,7 @@ body {
 .idcard__platform {
     padding: 3px 10px;
     border: 1px solid var(--hairline);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 600;
     color: var(--body);
@@ -499,7 +555,7 @@ body {
 
 .rank__tier {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
@@ -529,7 +585,7 @@ body {
 
 .tag {
     padding: 5px 12px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: 13px;
     font-weight: 600;
@@ -537,11 +593,42 @@ body {
 }
 
 .tag--title {
+    display: block;
+    border: 0;
     background: var(--primary);
     box-shadow: none;
     color: var(--on-primary);
+    font: inherit;
+    font-size: 13px;
     font-weight: 700;
-    cursor: default;
+    cursor: pointer;
+}
+
+.tag--title:hover,
+.tag--title[aria-expanded="true"] { background: var(--primary-active); }
+
+.tag--title:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* 칭호를 누르면 보이는 설명 */
+.title-note {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    background: var(--surface-elevated);
+    border-radius: var(--radius);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--body);
+}
+
+.title-note[hidden] { display: none; }
+
+.title-note b { color: var(--ink); margin-right: 4px; }
+
+.title-note__criteria {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .idcard__lines {
@@ -566,9 +653,22 @@ body {
     color: var(--muted);
 }
 
+/* 라벨 아래 작은 "시즌 2.76 ▲" */
+.idcard__vs {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 올랐으면 흰(라이트는 검정) ▲, 내렸으면 회색 ▼. 색만이 아니라 화살표 모양으로도 구분 */
+.idcard__arrow { margin-left: 2px; }
+.idcard__arrow--up { color: var(--ink); }
+
 .idcard__line dd {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     text-align: right;
 }
@@ -618,10 +718,10 @@ body {
 }
 
 .detail {
-    padding: 20px;
+    padding: 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 .detail__title {
@@ -701,26 +801,34 @@ body {
 }
 
 .zone__value {
-    margin: 0;
-    font-size: 12px;
-    color: var(--muted);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.zone__verdict {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
 }
 
 .zone__value b {
-    margin-left: 4px;
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.03em;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 
+.zone__caption + .zone__legend { margin-top: 6px; }
+
 .zone__legend {
-    margin: 4px 0 0;
-    font-size: 11px;
+    margin: 0;
+    font-size: 12px;
     line-height: 1.6;
-    color: var(--muted-soft);
+    color: var(--muted);
 }
 
 /* 주무기 */
@@ -739,7 +847,7 @@ body {
     gap: 8px;
     padding: 11px 14px;
     background: var(--surface-elevated);
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 .weapon__name {
@@ -749,7 +857,7 @@ body {
 
 .weapon__type {
     padding: 1px 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: 12px;
     font-weight: 600;
@@ -773,7 +881,7 @@ body {
 }
 
 .farming__style b {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
@@ -793,11 +901,11 @@ body {
 .farming__bag div {
     padding: 10px 12px;
     background: var(--surface-elevated);
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 .farming__bag dt {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
 }
 
@@ -809,11 +917,19 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+.farming__bag dd small {
+    margin-left: 2px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
 @media (max-width: 640px) {
     .details { grid-template-columns: 1fr; }
 }
 
-/* ---------- 왼쪽 아래 작은 상자: 자주 같이 한 팀원, 활동 시간대 ---------- */
+/* ---------- 보조 상자: 최근 vs 시즌, 자주 같이 한 팀원, 활동 시간대 ---------- */
 .side {
     display: flex;
     flex-direction: column;
@@ -821,10 +937,10 @@ body {
 }
 
 .sidebox {
-    padding: 20px 24px;
+    padding: 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 .sidebox__title {
@@ -834,7 +950,7 @@ body {
     align-items: baseline;
     justify-content: space-between;
     gap: 4px 12px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
 }
 
@@ -936,11 +1052,23 @@ body {
 /* 올랐으면 흰색, 내렸으면 회색 (새 색을 쓰지 않음) */
 .compare__arrow {
     margin-left: 2px;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
 }
 
 .compare__arrow--up { color: var(--ink); }
+
+.compare thead small {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.compare__note {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+}
 
 /* 활동 시간대: 요일 이름 칸 + 24칸 */
 .heat {
@@ -950,8 +1078,22 @@ body {
     align-items: center;
 }
 
+/* 3시간 묶음 표는 좁은 화면에서만 */
+.heat--coarse {
+    display: none;
+    grid-template-columns: 16px repeat(8, 1fr);
+    gap: 3px;
+}
+
+.heat--coarse .heat__cell { aspect-ratio: 2 / 1; }
+
+@media (max-width: 640px) {
+    .heat:not(.heat--coarse) { display: none; }
+    .heat--coarse { display: grid; }
+}
+
 .heat__day {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
 }
 
@@ -959,7 +1101,7 @@ body {
 .heat__cell {
     display: block;
     aspect-ratio: 1;
-    border-radius: 2px;
+    border-radius: 2px;          /* 그림 요소(아주 작은 칸)라 둥글기 단계에서 예외 */
     background: var(--surface-elevated);
     position: relative;
 }
@@ -980,7 +1122,7 @@ body {
 
 .heat__hour {
     padding-top: 4px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
 }
 
@@ -989,7 +1131,7 @@ body {
     display: flex;
     align-items: center;
     gap: 3px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
 }
 
@@ -1010,7 +1152,7 @@ body {
 .match {
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 .match[hidden] { display: none; }
@@ -1031,7 +1173,7 @@ body {
 .match__row:focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: -2px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 /* 펼침 표시: 꺾쇠 */
@@ -1073,7 +1215,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .match__facts strong {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
@@ -1152,13 +1294,13 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     gap: 2px;
     padding: 3px;
     border: 1px solid var(--hairline);
-    border-radius: 10px;
+    border-radius: var(--radius);
 }
 
 .tab {
     padding: 6px 12px;
     border: 0;
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--muted);
     font: inherit;
@@ -1181,7 +1323,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     font-size: 14px;
     color: var(--muted);
     background: var(--surface-card);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 .more {
@@ -1190,7 +1332,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     margin-top: 8px;
     height: 44px;
     border: 1px solid var(--hairline);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: transparent;
     color: var(--body);
     font: inherit;
@@ -1218,6 +1360,35 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     color: var(--muted);
 }
 
+/* 결과 띠: 줄 왼쪽 안쪽에 얇은 선. 치킨은 노랑, TOP 10 은 회색. 글자 배지도 같이 있어서 색만으로 구분하지 않음 */
+.match--win   { box-shadow: inset 3px 0 0 var(--primary); }
+.match--top10 { box-shadow: inset 3px 0 0 var(--hairline-strong); }
+
+.match__badge {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--body);
+    align-self: center;
+}
+
+.match__badge--win {
+    background: var(--primary);
+    box-shadow: none;
+    color: var(--on-primary);
+}
+
+.recent__summary {
+    margin: -6px 0 12px;
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.recent__summary:empty { display: none; }
+
 /* 1등 판: 등수만 노랑 */
 .match--win .match__rank strong { color: var(--primary-text); }
 
@@ -1232,7 +1403,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 .match__type {
     padding: 1px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-elevated);
     font-size: 12px;
     font-weight: 600;
@@ -1280,7 +1451,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     .team td { padding: 9px 4px; }
     .team th:nth-child(5),
     .team td:nth-child(5) { display: none; }
-    .match__rank strong { font-size: 26px; }
+    .match__rank strong { font-size: 24px; }
     .match__stats {
         grid-column: 1 / -1;
         grid-template-columns: repeat(4, 1fr);
@@ -1297,7 +1468,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     padding: 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
 }
 
 .notice__text {
@@ -1310,7 +1481,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .topbar__home:focus-visible {
     outline: 2px solid var(--primary-text);
     outline-offset: 4px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
 }
 
 /* ---------- 즐겨찾기 ☆ ---------- */
@@ -1322,7 +1493,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     border-radius: var(--radius);
     background: transparent;
     color: var(--muted);
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1;
     cursor: pointer;
 }
@@ -1350,7 +1521,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .plist__empty {
     margin: 0;
     font-size: 13px;
-    color: var(--muted-soft);
+    color: var(--muted);
 }
 
 .plist__items {
@@ -1367,7 +1538,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     align-items: center;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
 }
 
 .pchip__link {
@@ -1381,18 +1552,55 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     text-decoration: none;
 }
 
+/* 긴 닉네임은 한 줄 말줄임 (마우스를 올리면 전체 이름) */
+.pchip__name {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 즐겨찾기 칩: 이름 앞에 노란 ★ 로 최근 검색과 구분 */
+.pchip--fav .pchip__link::before {
+    content: "★";
+    color: var(--primary-text);
+    font-size: 12px;
+}
+
+.plist__undo {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--body);
+}
+
+.plist__undo button {
+    margin-left: 4px;
+    padding: 2px 6px;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.plist__undo button:focus-visible { outline: 2px solid var(--primary-text); }
+
 .pchip__platform {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--muted);
 }
 
 .pchip__remove {
-    width: 28px;
-    height: 28px;
+    width: 32px;                 /* 손가락으로 누르기 쉬운 크기 */
+    height: 32px;
     margin-right: 2px;
     border: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--muted);
     font-size: 16px;
@@ -1405,7 +1613,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .pchip__remove:focus-visible {
     outline: 2px solid var(--primary-text);
     outline-offset: 1px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
 }
 
 /* 첫 화면: 검색창 아래 */
@@ -1425,7 +1633,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     padding: 14px;
     background: var(--surface-card);
     border: 1px solid var(--hairline-strong);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
 }
 
@@ -1453,7 +1661,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     place-items: center;
     padding: 0;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--muted);
     cursor: pointer;
@@ -1492,7 +1700,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     place-items: center;
     padding: 0;
     border: 1px solid var(--hairline-strong);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-card);
     color: var(--ink);
     cursor: pointer;
@@ -1506,13 +1714,6 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 :root[data-theme="light"] .theme-toggle__sun { display: none; }
 :root[data-theme="light"] .theme-toggle__moon { display: block; }
 
-/* 첫 화면에는 상단 바가 없어서 오른쪽 위에 띄운다 */
-.theme-toggle--floating {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 30;
-}
 
 /* ---------- 강조 숫자 (KDA, 1등 등수) ----------
    라이트 모드에서는 노란 형광펜(검은 글자 + 노란 바탕)으로 칠한다.
@@ -1522,7 +1723,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .match__rank strong {
     display: inline-block;
     padding: 0 6px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: transparent;
 }
 

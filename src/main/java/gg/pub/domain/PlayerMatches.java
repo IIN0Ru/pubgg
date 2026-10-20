@@ -1,5 +1,6 @@
 package gg.pub.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,6 +45,34 @@ public record PlayerMatches(String nickname,
     /** 최근 경쟁전 vs 이번 시즌 (둘 다 있을 때만) */
     public List<SeasonRank.Comparison> seasonComparison() {
         return season == null ? List.of() : season.compareWith(card);
+    }
+
+    // ---------- 링크 미리보기 (디스코드·카톡·커뮤니티에 링크를 붙였을 때) ----------
+
+    /** "N0-RU · 플래티넘 3" (시즌 기록이 없으면 닉네임만) */
+    public String shareTitle() {
+        return season != null ? nickname + " · " + season.tierLabel() : nickname;
+    }
+
+    /**
+     * "KDA 3.42 · 평균 딜 412 · 해적 · 센터 운영 · 대도시파 · 주로 21~24시"
+     * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(칭호·스타일) + 언제 하는지
+     */
+    public String shareDescription() {
+        List<String> parts = new ArrayList<>();
+        if (card != null) {
+            parts.add("KDA " + card.kdaText());
+            parts.add("평균 딜 " + card.avgDamage());
+            card.titles().forEach(t -> parts.add(t.getLabel()));
+            parts.addAll(card.styleTags());
+        }
+        if (activity != null && activity.hasData()) {
+            parts.add("주로 " + activity.peakText());
+        }
+        if (parts.isEmpty()) {
+            return platform.getLabel() + " " + nickname + "의 배그 플레이 스타일";
+        }
+        return String.join(" · ", parts);
     }
 
     public boolean hasMatches() {
