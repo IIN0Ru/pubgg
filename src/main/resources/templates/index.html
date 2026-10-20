@@ -9,9 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <script th:replace="~{fragments/theme :: init}"></script>
     <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
 </head>
 <body>
+
+<button th:replace="~{fragments/theme :: toggle('theme-toggle--floating')}"></button>
 
 <main class="hero">
 
@@ -64,5 +67,6 @@
 </main>
 
 <script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 </body>
 </html>

@@ -4,14 +4,18 @@
    바꾼 점: 강조색을 형광 노랑(#FAFF69) → 노랑(#FFD02F)으로, 히어로를 가운데 정렬로
    색은 모두 아래 변수로 관리한다.
    ========================================================= */
+/* ---------- 다크 (기본) ---------- */
 :root {
-    --primary: #FFD02F;          /* 강조색: 버튼, 로고 점, 상단 띠 */
+    color-scheme: dark;
+
+    --primary: #FFD02F;          /* 강조색: 버튼, 로고 점, 상단 띠, 칭호 배지 (면) */
     --primary-active: #FCB900;   /* 버튼 눌림·hover */
+    --primary-text: #FFD02F;     /* 노랑을 글자·선으로 쓸 때 (KDA 숫자, 1등, 포커스 테두리) */
     --on-primary: #0A0A0A;
 
     --canvas: #0A0A0A;           /* 배경 */
     --surface-soft: #121212;     /* 아주 옅은 면 (자기장 지도 안쪽) */
-    --surface-card: #1A1A1A;     /* 입력창 */
+    --surface-card: #1A1A1A;     /* 카드·입력창 */
     --surface-elevated: #242424; /* 선택된 탭 */
     --hairline: #2A2A2A;         /* 테두리 */
     --hairline-strong: #3A3A3A;  /* 조금 더 진한 테두리 */
@@ -21,10 +25,60 @@
     --muted: #888888;
     --muted-soft: #5A5A5A;
 
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+
     --font-display: "Inter", "Pretendard", system-ui, sans-serif;
     --font-ui: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
     --radius: 8px;
+}
+
+/* ---------- 라이트 ----------
+   같은 변수 이름에 밝은 값만 넣는다. 화면 코드는 그대로.
+   1) 사용자가 직접 고른 경우: <html data-theme="light">
+   2) 아직 안 골랐으면 기기 설정(라이트)을 따라감 */
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
+    --primary-active: #F2BE00;
+
+    --canvas: #F5F5F2;
+    --surface-soft: #ECECE8;
+    --surface-card: #FFFFFF;
+    --surface-elevated: #EFEFEC;
+    --hairline: #E3E3DE;
+    --hairline-strong: #CFCFC9;
+
+    --ink: #0A0A0A;
+    --body: #33332F;
+    --muted: #6E6E68;
+    --muted-soft: #A3A39C;
+
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        color-scheme: light;
+
+        --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
+        --primary-active: #F2BE00;
+
+        --canvas: #F5F5F2;
+        --surface-soft: #ECECE8;
+        --surface-card: #FFFFFF;
+        --surface-elevated: #EFEFEC;
+        --hairline: #E3E3DE;
+        --hairline-strong: #CFCFC9;
+
+        --ink: #0A0A0A;
+        --body: #33332F;
+        --muted: #6E6E68;
+        --muted-soft: #A3A39C;
+
+        --shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
 }
 
 * { box-sizing: border-box; }
@@ -90,7 +144,7 @@ body {
     white-space: nowrap;
 }
 
-.logo__dot { color: var(--primary); }
+.logo__dot { color: var(--primary-text); }
 
 .logo-ko {
     margin: 18px 0 48px;
@@ -150,7 +204,7 @@ body {
 }
 
 .platform__option input:focus-visible + span {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 2px;
 }
 
@@ -177,7 +231,7 @@ body {
 
 .search__field input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--primary-text);
 }
 
 .search__field button {
@@ -207,7 +261,7 @@ body {
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: var(--primary);
+    color: var(--primary-text);
 }
 
 /* ---------- 검색 결과 화면 ---------- */
@@ -225,6 +279,12 @@ body {
     grid-template-columns: 1fr minmax(0, 560px) 1fr;
     align-items: center;
     gap: 24px;
+}
+
+.topbar__tools {
+    justify-self: end;
+    display: flex;
+    align-items: center;
 }
 
 .topbar__home {
@@ -272,7 +332,7 @@ body {
 }
 
 .topsearch__platform input:focus-visible + span {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 2px;
 }
 
@@ -299,7 +359,7 @@ body {
 
 .topsearch__input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--primary-text);
 }
 
 .topsearch__button {
@@ -326,11 +386,16 @@ body {
 
 /* 좁은 화면: 로고 한 줄, 검색 한 줄 */
 @media (max-width: 640px) {
+    /* 좁은 화면: 첫 줄에 로고 + 전환 버튼, 둘째 줄에 검색창 */
     .topbar__inner {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "home tools" "search search";
         gap: 12px;
         padding: 12px 16px;
     }
+    .topbar__home { grid-area: home; }
+    .topbar__tools { grid-area: tools; }
+    .topsearch { grid-area: search; }
 }
 
 .logo--small {
@@ -513,7 +578,7 @@ body {
     font-family: var(--font-display);
     font-size: 24px;
     letter-spacing: -0.02em;
-    color: var(--primary);
+    color: var(--primary-text);
 }
 
 .idcard__notice {
@@ -540,7 +605,7 @@ body {
 .idcard__share:hover { background: var(--hairline-strong); }
 
 .idcard__share:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 2px;
 }
 
@@ -620,7 +685,7 @@ body {
 .zone__safe   { fill: none; stroke: var(--ink); stroke-width: 4.5; }
 .zone__match  { fill: var(--ink); opacity: 0.5; }
 .zone__halo   { fill: var(--primary); opacity: 0.2; }
-.zone__me     { fill: var(--primary); stroke: var(--canvas); stroke-width: 3; stroke-linejoin: round; }
+.zone__me     { fill: var(--primary); stroke: var(--on-primary); stroke-width: 3; stroke-linejoin: round; }
 .zone__border { fill: none; stroke: var(--hairline); stroke-width: 2; }
 
 .zone__side {
@@ -1154,7 +1219,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 /* 1등 판: 등수만 노랑 */
-.match--win .match__rank strong { color: var(--primary); }
+.match--win .match__rank strong { color: var(--primary-text); }
 
 .match__mode {
     margin: 0;
@@ -1243,7 +1308,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .topbar__home:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 4px;
     border-radius: 4px;
 }
@@ -1263,12 +1328,12 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .fav[aria-pressed="true"] {
-    color: var(--primary);
-    border-color: var(--primary);
+    color: var(--primary-text);
+    border-color: var(--primary-text);
 }
 
 .fav:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 2px;
 }
 
@@ -1338,7 +1403,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 .pchip__link:focus-visible,
 .pchip__remove:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 1px;
     border-radius: 999px;
 }
@@ -1361,7 +1426,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     background: var(--surface-card);
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow);
 }
 
 .pdrop[hidden] { display: none; }
@@ -1395,7 +1460,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     font-variant-numeric: tabular-nums;
 }
 
-.refresh__button:hover { border-color: var(--primary); }
+.refresh__button:hover { border-color: var(--primary-text); }
 
 .refresh__button:disabled {
     border-color: var(--hairline);
@@ -1412,4 +1477,34 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     margin: 8px 0 0;
     font-size: 12px;
     color: var(--body);
+}
+
+/* ---------- 다크 / 라이트 전환 버튼 ---------- */
+.theme-toggle {
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 999px;
+    background: var(--surface-card);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+
+/* 지금 다크면 해(→라이트로), 라이트면 달(→다크로)을 보여준다 */
+.theme-toggle__moon { display: none; }
+:root[data-theme="light"] .theme-toggle__sun { display: none; }
+:root[data-theme="light"] .theme-toggle__moon { display: block; }
+
+/* 첫 화면에는 상단 바가 없어서 오른쪽 위에 띄운다 */
+.theme-toggle--floating {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 30;
 }
