@@ -46,9 +46,16 @@
             <input type="hidden" name="platform" th:value="${platform.shard}">
             <input type="hidden" name="nickname" th:value="${result.nickname()}">
             <span class="refresh__ago" th:text="'마지막 갱신 ' + ${updatedAgo}">마지막 갱신 3분 전</span>
-            <button class="refresh__button" type="submit"
+            <!-- 작은 새로고침 아이콘. 2분 대기 중이면 흐려지고, 마우스를 올리면 남은 시간 -->
+            <button class="refresh__button" type="submit" aria-label="전적 갱신" title="전적 갱신"
                     th:disabled="${refreshWait > 0}"
-                    th:text="${refreshWait > 0} ? '갱신 대기 ' + ${refreshWait / 60} + ':' + ${#numbers.formatInteger(refreshWait % 60, 2)} : '전적 갱신'">전적 갱신</button>
+                    th:title="${refreshWait > 0} ? ${refreshWait / 60} + ':' + ${#numbers.formatInteger(refreshWait % 60, 2)} + ' 뒤에 다시 갱신할 수 있어요' : '전적 갱신'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 11a8 8 0 1 0-2.3 5.7"/>
+                    <path d="M20 4v7h-7"/>
+                </svg>
+            </button>
         </form>
         <p class="refresh__message" role="status" th:if="${refreshMessage != null}" th:text="${refreshMessage}">방금 갱신했어요.</p>
 
@@ -60,7 +67,7 @@
         <ul class="tags" th:if="${c != null and (c.hasTitles() or !c.styleTags().isEmpty())}">
             <li class="tag tag--title" th:each="t : ${c.titles()}"
                 th:title="${t.getDescription()}" th:text="${t.getLabel()}">해적</li>
-            <li class="tag" th:each="s : ${c.styleTags()}" th:text="${s}">먼저 거는 편</li>
+            <li class="tag" th:each="s : ${c.styleTags()}" th:text="${s}">센터 운영</li>
         </ul>
 
         <dl class="idcard__lines" th:if="${c != null}">

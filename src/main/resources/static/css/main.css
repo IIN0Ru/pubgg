@@ -1433,11 +1433,10 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 /* ---------- 마지막 갱신 + 전적 갱신 ---------- */
 .refresh {
-    margin-top: 12px;
+    margin-top: 10px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 4px;
 }
 
 .refresh__ago {
@@ -1445,32 +1444,38 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     color: var(--muted);
 }
 
+/* 글자 옆 작은 아이콘 버튼 */
 .refresh__button {
     flex: none;
-    height: 32px;
-    padding: 0 14px;
-    border: 1px solid var(--hairline-strong);
+    width: 24px;
+    height: 24px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
     border-radius: 6px;
     background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
+    color: var(--muted);
     cursor: pointer;
-    font-variant-numeric: tabular-nums;
 }
 
-.refresh__button:hover { border-color: var(--primary-text); }
+.refresh__button svg { width: 14px; height: 14px; }
+
+.refresh__button:hover {
+    background: var(--surface-elevated);
+    color: var(--ink);
+}
 
 .refresh__button:disabled {
-    border-color: var(--hairline);
-    color: var(--muted);
+    background: transparent;
+    color: var(--muted-soft);
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .refresh__button:focus-visible {
     outline: 2px solid var(--ink);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 .refresh__message {
