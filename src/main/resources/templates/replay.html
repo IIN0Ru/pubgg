@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${nickname} + ' 리플레이 | 펍지지'">리플레이 | 펍지지</title>
+    <meta name="theme-color" content="#FFD02F">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <script th:replace="~{fragments/theme :: init}"></script>
+    <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
+
+<!--
+    2D 리플레이. 화면 틀만 서버가 그리고, 경기 데이터는 replay.js 가 /api/replay 로 받아와서 캔버스에 그린다.
+    data-src: 데이터 주소, data-me: 검색한 플레이어 계정 ID
+-->
+<main class="replay" data-replay
+      th:data-src="@{/api/replay(platform=${platform.shard},match=${matchId},player=${player})}"
+      th:data-me="${player}">
+
+    <div class="replay__head">
+        <a class="replay__back" th:if="${!nickname.isEmpty()}"
+           th:href="@{/search(platform=${platform.shard},nickname=${nickname})}">
+            ← <span th:text="${nickname}">N0-RU</span> 전적
+        </a>
+        <th:block th:if="${record != null}">
+            <h1 class="replay__title">
+                <span th:text="${record.map()}">에란겔</span>
+                <span class="replay__rank" th:classappend="${record.isWin()} ? 'replay__rank--win'"
+                      th:text="'#' + ${record.rank()}">#2</span>
+                <span class="replay__teams" th:text="'/ ' + ${record.teams()}">/ 16</span>
+            </h1>
+            <p class="replay__meta"
+               th:text="${record.matchTypeLabel()} + ' · ' + ${record.mode()} + ' · ' + ${record.playedAtText()} + ' · 킬 ' + ${record.kills()} + ' · 딜량 ' + ${record.damage()}">
+                경쟁 · 스쿼드 FPP · 10월 19일 23:12 · 킬 3 · 딜량 512</p>
+        </th:block>
+    </div>
+
+    <section class="notice" th:if="${errorMessage != null}">
+        <p class="notice__text" th:text="${errorMessage}">리플레이는 경쟁전 경기만 볼 수 있어요.</p>
+    </section>
+
+    <div class="replay__body" th:if="${record != null}">
+
+        <!-- 지도 + 조작 -->
+        <section class="replay__stage">
+            <div class="replay__bar">
+                <div class="tabs" role="group" aria-label="보기 방식" data-mode>
+                    <button type="button" class="tab is-active" data-value="play" aria-pressed="true">재생</button>
+                    <button type="button" class="tab" data-value="path" aria-pressed="false">동선 전체</button>
+                </div>
+                <div class="replay__view">
+                    <button type="button" class="replay__icon" data-follow aria-pressed="true" title="우리 팀 따라가기">따라가기</button>
+                    <button type="button" class="replay__icon" data-zoom="out" aria-label="축소">−</button>
+                    <button type="button" class="replay__icon" data-zoom="in" aria-label="확대">+</button>
+                    <button type="button" class="replay__icon" data-zoom="fit" title="지도 전체 보기">전체</button>
+                </div>
+            </div>
+
+            <div class="replay__canvas" data-canvas-wrap>
+                <canvas data-canvas role="img" aria-label="2D 리플레이 지도. 아래 경기 흐름 목록에서 같은 내용을 글로 볼 수 있어요."></canvas>
+                <p class="replay__status" data-status role="status">리플레이를 만드는 중이에요. 처음 여는 경기는 몇 초 걸려요.</p>
+            </div>
+
+            <!-- 재생 모드 -->
+            <div class="replay__controls" data-play-controls>
+                <button type="button" class="replay__play" data-play aria-label="재생">
+                    <svg class="replay__play-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5l9 5.5-9 5.5z"/></svg>
+                    <svg class="replay__pause-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5h3v11H3zM8 1.5h3v11H8z"/></svg>
+                </button>
+                <span class="replay__time" data-time>00:00 / 00:00</span>
+                <div class="replay__timeline" data-timeline role="slider" tabindex="0"
+                     aria-label="경기 시간" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0">
+                    <span class="replay__track"></span>
+                    <span class="replay__done" data-done></span>
+                    <span data-marks></span>
+                    <span class="replay__knob" data-knob></span>
+                </div>
+                <div class="tabs replay__speed" role="group" aria-label="재생 속도" data-speed>
+                    <button type="button" class="tab" data-value="1" aria-pressed="false">1x</button>
+                    <button type="button" class="tab is-active" data-value="4" aria-pressed="true">4x</button>
+                    <button type="button" class="tab" data-value="16" aria-pressed="false">16x</button>
+                </div>
+            </div>
+
+            <!-- 동선 전체 모드 -->
+            <div class="replay__controls" data-path-controls hidden>
+                <span class="replay__label">페이즈</span>
+                <div class="tabs" role="group" aria-label="페이즈" data-phase></div>
+                <span class="replay__grow"></span>
+                <span class="replay__label">동선</span>
+                <div class="tabs" role="group" aria-label="누구 동선" data-who>
+                    <button type="button" class="tab is-active" data-value="team" aria-pressed="true">우리 팀</button>
+                    <button type="button" class="tab" data-value="me" aria-pressed="false">나만</button>
+                </div>
+            </div>
+
+            <p class="replay__legend">
+                <span><i class="replay__dot replay__dot--me"></i>나</span>
+                <span><i class="replay__dot"></i>팀원</span>
+                <span><i class="replay__dot replay__dot--enemy"></i>근처 적 (300m 안)</span>
+                <span>✕ 킬</span>
+                <span>빗금 자기장 밖</span>
+                <span>흰 원 다음 안전구역</span>
+                <span>점선 비행기</span>
+            </p>
+        </section>
+
+        <!-- 오른쪽: 우리 팀 + 경기 흐름 / 교전 -->
+        <aside class="replay__side">
+            <section class="sidebox">
+                <h2 class="sidebox__title">우리 팀 <span data-alive></span></h2>
+                <ol class="replay__team" data-team></ol>
+            </section>
+
+            <section class="sidebox replay__flow">
+                <div class="replay__flow-head">
+                    <h2 class="sidebox__title" data-flow-title>경기 흐름</h2>
+                    <div class="tabs" role="group" aria-label="경기 흐름 거르기" data-feed-filter>
+                        <button type="button" class="tab is-active" data-value="all" aria-pressed="true">전체</button>
+                        <button type="button" class="tab" data-value="fight" aria-pressed="false">교전</button>
+                        <button type="button" class="tab" data-value="move" aria-pressed="false">이동</button>
+                    </div>
+                </div>
+                <p class="replay__hint" data-flow-hint>누르면 그 순간으로 넘어가요.</p>
+                <ol class="replay__feed" data-feed></ol>
+            </section>
+        </aside>
+    </div>
+</main>
+
+<script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
+<script src="/js/replay.js" th:src="@{/js/replay.js}"></script>
+<script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+[
+ {
+  "_T": "LogMatchDefinition",
+  "_D": "2026-10-19T14:09:00Z"
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:09:30Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 100,
+    "y": 100,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogMatchStart",
+  "_D": "2026-10-19T14:10:00Z"
+ },
+ {
+  "_T": "LogVehicleLeave",
+  "_D": "2026-10-19T14:11:00Z",
+  "character": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 100000,
+    "y": 100000,
+    "z": 0
+   }
+  },
+  "vehicle": {
+   "vehicleType": "TransportAircraft",
+   "vehicleId": "DummyTransportAircraft_C"
+  }
+ },
+ {
+  "_T": "LogVehicleLeave",
+  "_D": "2026-10-19T14:11:30Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 300000,
+    "y": 300000,
+    "z": 0
+   }
+  },
+  "vehicle": {
+   "vehicleType": "TransportAircraft",
+   "vehicleId": "DummyTransportAircraft_C"
+  }
+ },
+ {
+  "_T": "LogVehicleLeave",
+  "_D": "2026-10-19T14:12:00Z",
+  "character": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 600000,
+    "y": 600000,
+    "z": 0
+   }
+  },
+  "vehicle": {
+   "vehicleType": "TransportAircraft",
+   "vehicleId": "DummyTransportAircraft_C"
+  }
+ },
+ {
+  "_T": "LogParachuteLanding",
+  "_D": "2026-10-19T14:12:10Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 310000,
+    "y": 305000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogParachuteLanding",
+  "_D": "2026-10-19T14:12:11Z",
+  "character": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 500000,
+    "y": 500000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:20Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 310000,
+    "y": 305000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:20Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 312000,
+    "y": 305000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:20Z",
+  "character": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 500000,
+    "y": 500000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:30Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 315000,
+    "y": 310000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:30Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 317000,
+    "y": 310000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:30Z",
+  "character": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 480000,
+    "y": 480000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:40Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:40Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:40Z",
+  "character": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 320000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerPosition",
+  "_D": "2026-10-19T14:12:40Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 321000,
+    "y": 316000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:11:40Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 408000,
+    "y": 408000
+   },
+   "safetyZoneRadius": 580000,
+   "poisonGasWarningPosition": {
+    "x": 0,
+    "y": 0
+   },
+   "poisonGasWarningRadius": 0
+  }
+ },
+ {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:13:20Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 408000,
+    "y": 408000
+   },
+   "safetyZoneRadius": 580000,
+   "poisonGasWarningPosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "poisonGasWarningRadius": 200000
+  }
+ },
+ {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:13:30Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 400000,
+    "y": 400000
+   },
+   "safetyZoneRadius": 500000,
+   "poisonGasWarningPosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "poisonGasWarningRadius": 200000
+  }
+ },
+ {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:16:40Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "safetyZoneRadius": 200000,
+   "poisonGasWarningPosition": {
+    "x": 330000,
+    "y": 330000
+   },
+   "poisonGasWarningRadius": 110000
+  }
+ },
+ {
+  "_T": "LogPlayerMakeGroggy",
+  "_D": "2026-10-19T14:12:50Z",
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 320000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerKillV2",
+  "_D": "2026-10-19T14:12:55Z",
+  "victim": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 320000,
+    "z": 0
+   }
+  },
+  "killer": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "finisher": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "dBNOMaker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerMakeGroggy",
+  "_D": "2026-10-19T14:13:15Z",
+  "attacker": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 310000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerRevive",
+  "_D": "2026-10-19T14:13:35Z",
+  "reviver": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerMakeGroggy",
+  "_D": "2026-10-19T14:15:20Z",
+  "attacker": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 350000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 330000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerKillV2",
+  "_D": "2026-10-19T14:15:30Z",
+  "victim": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "killer": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 350000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "finisher": {},
+  "dBNOMaker": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 350000,
+    "y": 330000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogPlayerKillV2",
+  "_D": "2026-10-19T14:15:40Z",
+  "victim": {
+   "accountId": "account.x",
+   "name": "Other",
+   "teamId": 5,
+   "health": 100,
+   "location": {
+    "x": 10000,
+    "y": 10000,
+    "z": 0
+   }
+  },
+  "killer": {
+   "accountId": "account.y",
+   "name": "Other2",
+   "teamId": 6,
+   "health": 100,
+   "location": {
+    "x": 10000,
+    "y": 12000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogVehicleRide",
+  "_D": "2026-10-19T14:14:10Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "vehicle": {
+   "vehicleType": "WheeledVehicle",
+   "vehicleId": "BP_Mirado_A_03_C"
+  }
+ },
+ {
+  "_T": "LogCarePackageLand",
+  "_D": "2026-10-19T14:15:00Z",
+  "itemPackage": {
+   "itemPackageId": "Carapackage_RedBox_C",
+   "location": {
+    "x": 360000,
+    "y": 350000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogMatchEnd",
+  "_D": "2026-10-19T14:20:00Z"
+ }
+]

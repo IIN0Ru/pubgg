@@ -329,6 +329,13 @@
                         </tbody>
                     </table>
                     <p class="match__solo" th:unless="${m.hasTeammates()}">혼자 한 경기예요.</p>
+
+                    <!-- 2D 리플레이: 경쟁전만 -->
+                    <a class="match__replay" th:if="${m.isCompetitive()}"
+                       th:href="@{/replay(platform=${result.platform().getShard()},match=${m.matchId()},player=${m.me().accountId()},nickname=${result.nickname()})}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>
+                        2D 리플레이 보기
+                    </a>
                 </div>
               </details>
             </li>
