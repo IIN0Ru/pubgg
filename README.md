@@ -4,7 +4,7 @@
 게임회사 웹서비스 개발자 지원용 개인 포트폴리오 프로젝트이며 KRAFTON·PUBG와 관련이 없다.
 
 - 기술: Java 21, Spring Boot 3.5, Thymeleaf, Maven
-- 데이터: PUBG 공식 API (예정)
+- 데이터: PUBG 공식 API
 
 ## 현재 상태
 
@@ -24,10 +24,14 @@
 4. PUBG API 키를 환경 변수 `PUBG_API_KEY`로 등록 (developer.pubg.com에서 발급)
    - Windows: 시작 메뉴 → "환경 변수" 검색 → 시스템 환경 변수 편집 → 환경 변수 → 사용자 변수 새로 만들기
    - 등록 후 IntelliJ를 완전히 껐다 켜야 반영됨
+   - 그래도 "API 키가 설정되지 않았어요"가 뜨면: 실행 버튼 옆 **PubggApplication ▼ → 구성 편집 → 환경 변수**에 `PUBG_API_KEY=키` 입력
+     (JetBrains Toolbox로 켠 IntelliJ는 예전 환경 변수를 들고 있을 수 있음. 이 설정은 내 컴퓨터에만 저장되고 GitHub에 올라가지 않음)
 5. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
 6. 브라우저에서 http://localhost:8080 접속
 
-테스트는 `src/test/java/gg/pub/web/HomeControllerTest.java`에서 ▶ 버튼으로 실행한다.
+테스트는 `src/test/java` 폴더 오른쪽 클릭 → **모든 테스트 실행**.
+
+코드를 새로 받았을 때(Git → 풀)는 실행 중인 서버를 멈췄다가 다시 실행해야 반영된다.
 
 ## 폴더 구조
 
