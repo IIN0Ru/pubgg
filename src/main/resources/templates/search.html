@@ -20,6 +20,9 @@
 
 <main class="page">
 
+  <!-- 왼쪽: 누구인지 + 플레이 카드 -->
+  <aside class="side">
+
     <!-- 누구를 검색했는지 -->
     <section class="profile">
         <span class="profile__platform" th:text="${platform.label}">스팀</span>
@@ -79,6 +82,12 @@
         <p class="notice__text">최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.</p>
     </section>
 
+    <a class="page__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
+  </aside>
+
+  <!-- 가운데~오른쪽: 최근 경기 -->
+  <div class="feed">
+
     <!-- 2) 경기 없음 -->
     <section class="notice" th:if="${result != null and !result.hasMatches()}">
         <p class="notice__text">최근 14일 안에 한 경기가 없어요. PUBG API는 최근 14일 경기만 알려줘요.</p>
@@ -118,8 +127,8 @@
             </li>
         </ol>
     </section>
+  </div>
 
-    <a class="page__back" href="/" th:href="@{/}">다른 닉네임 검색하기</a>
 </main>
 
 </body>
