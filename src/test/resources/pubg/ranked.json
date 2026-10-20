@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "rankedplayerstats",
+    "attributes": {
+      "rankedGameModeStats": {
+        "squad-fpp": {
+          "currentTier": { "tier": "Platinum", "subTier": "3" },
+          "currentRankPoint": 2450,
+          "bestTier": { "tier": "Diamond", "subTier": "5" },
+          "bestRankPoint": 2610,
+          "roundsPlayed": 120,
+          "avgRank": 7.4,
+          "top10Ratio": 0.61,
+          "winRatio": 0.08,
+          "assists": 80,
+          "wins": 10,
+          "kda": 2.76,
+          "kills": 210,
+          "deaths": 105,
+          "damageDealt": 33600.4,
+          "dBNOs": 190
+        },
+        "squad": {
+          "currentTier": { "tier": "Gold", "subTier": "1" },
+          "currentRankPoint": 2100,
+          "roundsPlayed": 8,
+          "avgRank": 9.1,
+          "top10Ratio": 0.5,
+          "kda": 1.9,
+          "kills": 9,
+          "deaths": 7,
+          "assists": 4,
+          "damageDealt": 1700
+        }
+      }
+    },
+    "relationships": {}
+  },
+  "links": { "self": "https://api.pubg.com/shards/steam/players/account.test0001/seasons/division.bro.official.pc-2018-36/ranked" }
+}

@@ -34,6 +34,12 @@
                     data-favorite-toggle aria-pressed="false" aria-label="즐겨찾기에 추가"
                     th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}">☆</button>
         </div>
+        <!-- 이번 시즌 경쟁전 티어 -->
+        <p class="rank" th:if="${result != null and result.hasSeason()}" th:with="sr=${result.season()}">
+            <strong class="rank__tier" th:text="${sr.tierLabel()}">플래티넘 3</strong>
+            <span class="rank__rp" th:if="${sr.isPlaced()}" th:text="${sr.rankPointText()}">2,450 RP</span>
+            <span class="rank__scope" th:text="'이번 시즌 ' + ${sr.modeLabel()} + ' ' + ${sr.rounds()} + '판'">이번 시즌 스쿼드 FPP 120판</span>
+        </p>
         <!-- 마지막 갱신 + 전적 갱신 버튼 -->
         <form class="refresh" th:if="${result != null}" action="/refresh" th:action="@{/refresh}" method="post">
             <input type="hidden" name="platform" th:value="${platform.shard}">
@@ -82,6 +88,28 @@
         </p>
 
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">링크 복사</button>
+    </section>
+
+    <!-- 최근 경쟁전 10경기 vs 이번 시즌 -->
+    <section class="sidebox" th:if="${result != null and !result.seasonComparison().isEmpty()}">
+        <h2 class="sidebox__title">최근 vs 이번 시즌 <span th:text="'최근 경쟁전 ' + ${result.card().matches()} + '경기 기준'">최근 경쟁전 10경기 기준</span></h2>
+        <table class="compare">
+            <thead>
+                <tr><th scope="col"></th><th scope="col">최근</th><th scope="col">시즌</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="row : ${result.seasonComparison()}">
+                    <th scope="row" th:text="${row.label()}">KDA</th>
+                    <td>
+                        <span th:text="${row.recent()}">3.25</span>
+                        <span class="compare__arrow" th:classappend="${row.trend() > 0} ? 'compare__arrow--up'"
+                              th:if="${row.trend() != 0}" th:text="${row.arrow()}" aria-hidden="true">▲</span>
+                        <span class="sr-only" th:text="${row.trendText()}">시즌보다 높음</span>
+                    </td>
+                    <td th:text="${row.season()}">2.76</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <!-- 자주 같이 한 팀원 (14일 전체) -->

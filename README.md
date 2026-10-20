@@ -19,7 +19,7 @@
 - [x] 검색 결과 저장 + 전적 갱신 버튼 (2분 대기)
 - [x] 경기 필터(경쟁/일반, FPP/TPP)·더 보기·펼쳐보기(팀원 기록)
 - [x] 자주 같이 한 팀원, 활동 시간대(요일 × 시간)
-- [ ] 시즌 티어 + 최근 vs 시즌 비교
+- [x] 이번 시즌 경쟁전 티어·RP + 최근 10경기 vs 시즌 비교
 - [ ] 카드 이미지 공유(디스코드), 2D 리플레이
 
 ## 실행 방법 (IntelliJ)
@@ -51,6 +51,7 @@ src/main/java/gg/pub/
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
+│   ├── SeasonService.java     이번 시즌 티어·기록 (시즌 ID 6시간 저장, 실패하면 티어 없이)
 │   ├── MatchRecordService.java 경기 하나 → 작은 기록(MatchRecord)으로 줄이고 캐시
 │   ├── PlayCardService.java   플레이 카드 계산 (기본 정보 + 칭호·게이지)
 │   ├── TelemetryService.java  텔레메트리 받기 + 분석 결과 캐시
@@ -66,6 +67,7 @@ src/main/java/gg/pub/
 │   ├── MatchPlayer.java       경기 하나에서 한 사람 기록
 │   ├── Teammate.java          자주 같이 한 팀원 계산
 │   ├── ActivityMap.java       활동 시간대(요일 × 시간) 계산
+│   ├── SeasonRank.java        시즌 티어 + 최근 vs 시즌 비교
 │   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
 │   ├── PlayCard.java          플레이 카드
 │   ├── Title.java             칭호 (이름은 여기서 바꿈)

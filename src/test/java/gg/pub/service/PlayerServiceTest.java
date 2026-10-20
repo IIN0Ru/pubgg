@@ -6,6 +6,7 @@ import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayerMatches;
+import gg.pub.domain.SeasonRank;
 import gg.pub.pubgapi.PlayerNotFoundException;
 import gg.pub.pubgapi.PubgApiClient;
 import gg.pub.pubgapi.PubgApiException;
@@ -38,6 +39,7 @@ class PlayerServiceTest {
     private final ObjectMapper mapper = new ObjectMapper();
     private PubgApiClient client;
     private PlayCardService playCardService;
+    private SeasonService seasonService;
     private PlayerService service;
 
     @BeforeEach
@@ -45,7 +47,9 @@ class PlayerServiceTest {
         client = mock(PubgApiClient.class);
         playCardService = mock(PlayCardService.class);
         when(playCardService.build(any(), anyString())).thenReturn(Optional.empty());
-        service = new PlayerService(client, new MatchRecordService(client), playCardService,
+        seasonService = mock(SeasonService.class);
+        when(seasonService.currentRank(any(), anyString())).thenReturn(Optional.empty());
+        service = new PlayerService(client, new MatchRecordService(client), playCardService, seasonService,
                 new PubgApiProperties("test-key", "https://api.pubg.com", 10));
     }
 
@@ -127,6 +131,19 @@ class PlayerServiceTest {
         PlayerMatches result = service.getRecentMatches(Platform.STEAM, "N0-RU");
 
         assertThat(result.matches()).hasSize(1);
+    }
+
+    @Test
+    void 시즌_티어를_결과에_담는다() throws IOException {
+        PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
+        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.getMatch(any(), anyString())).thenReturn(read("/pubg/match.json", MatchResponse.class));
+        SeasonRank rank = new SeasonRank("squad-fpp", "Platinum", "3", 2450, 120, 2.5, 280, 7.4, 61);
+        when(seasonService.currentRank(Platform.STEAM, "account.test0001")).thenReturn(Optional.of(rank));
+
+        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "N0-RU");
+
+        assertThat(result.season().tierLabel()).isEqualTo("플래티넘 3");
     }
 
     @Test

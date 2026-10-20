@@ -423,6 +423,35 @@ body {
     word-break: break-all;
 }
 
+/* 이번 시즌 티어: 이름 바로 아래 */
+.rank {
+    margin: 10px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+}
+
+.rank__tier {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.rank__rp {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--body);
+    font-variant-numeric: tabular-nums;
+}
+
+.rank__scope {
+    flex-basis: 100%;
+    font-size: 12px;
+    color: var(--muted);
+}
+
 /* 칭호(노랑 칠) + 스타일 요약(테두리) */
 .tags {
     list-style: none;
@@ -816,6 +845,55 @@ body {
     color: var(--muted);
     font-variant-numeric: tabular-nums;
 }
+
+/* 최근 vs 시즌 */
+.compare {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+.compare th,
+.compare td {
+    padding: 8px 0;
+    text-align: right;
+    border-top: 1px solid var(--hairline);
+}
+
+.compare thead th {
+    padding-top: 0;
+    border-top: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.compare tbody th {
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--body);
+}
+
+.compare td {
+    width: 30%;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.compare td:last-child {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* 올랐으면 흰색, 내렸으면 회색 (새 색을 쓰지 않음) */
+.compare__arrow {
+    margin-left: 2px;
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.compare__arrow--up { color: var(--ink); }
 
 /* 활동 시간대: 요일 이름 칸 + 24칸 */
 .heat {

@@ -1,0 +1,9 @@
+{
+  "data": [
+    { "type": "season", "id": "division.bro.official.pc-2018-35",
+      "attributes": { "isCurrentSeason": false, "isOffseason": false } },
+    { "type": "season", "id": "division.bro.official.pc-2018-36",
+      "attributes": { "isCurrentSeason": true, "isOffseason": false } }
+  ],
+  "links": { "self": "https://api.pubg.com/shards/steam/seasons" }
+}

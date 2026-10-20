@@ -3,6 +3,8 @@ package gg.pub.pubgapi;
 import gg.pub.config.PubgApiProperties;
 import gg.pub.pubgapi.dto.MatchResponse;
 import gg.pub.pubgapi.dto.PlayerResponse;
+import gg.pub.pubgapi.dto.RankedStatsResponse;
+import gg.pub.pubgapi.dto.SeasonResponse;
 import gg.pub.domain.Platform;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,11 +27,13 @@ import java.util.zip.GZIPInputStream;
  *  1. 닉네임으로 플레이어 찾기  → findPlayer
  *  2. 경기 ID로 경기 기록 받기  → getMatch
  *  3. 텔레메트리(경기 상세 기록 파일) 읽기 → readTelemetry
+ *  4. 시즌 목록 받기 → getSeasons
+ *  5. 한 시즌 경쟁전 기록 받기 → getRankedStats
  *
  * 받은 데이터를 계산하거나 화면에 맞게 바꾸는 일은 여기서 하지 않고 Service 가 한다.
  *
- * 참고: 플레이어 조회는 1분에 10번까지만 가능하다 (PUBG API 제한).
- *       경기 조회는 횟수 제한이 없다.
+ * 참고: 플레이어·시즌·경쟁전 기록 조회는 합쳐서 1분에 10번까지만 가능하다 (PUBG API 제한).
+ *       경기 조회와 텔레메트리는 횟수 제한이 없다.
  */
 @Component
 public class PubgApiClient {
@@ -91,6 +95,54 @@ public class PubgApiClient {
                     })
                     .body(MatchResponse.class);
 
+        } catch (ResourceAccessException e) {
+            throw new PubgApiException("PUBG 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.", e);
+        }
+    }
+
+    /** 시즌 목록 (지금 시즌을 찾는 데 씀) */
+    public SeasonResponse getSeasons(Platform platform) {
+        return getJson("/shards/{shard}/seasons", SeasonResponse.class, platform.getShard());
+    }
+
+    /**
+     * 한 시즌 경쟁전 기록.
+     * 이번 시즌 경쟁전을 한 판도 안 했으면 PUBG 가 404 를 줄 수 있어서, 그때는 빈 기록을 돌려준다.
+     */
+    public RankedStatsResponse getRankedStats(Platform platform, String accountId, String seasonId) {
+        requireKey();
+        try {
+            return restClient.get()
+                    .uri("/shards/{shard}/players/{id}/seasons/{season}/ranked",
+                            platform.getShard(), accountId, seasonId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.key())
+                    .exchange((req, res) -> {
+                        if (res.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
+                            return new RankedStatsResponse(null);
+                        }
+                        if (res.getStatusCode().isError()) {
+                            throw errorFor(res.getStatusCode().value());
+                        }
+                        RankedStatsResponse body = res.bodyTo(RankedStatsResponse.class);
+                        return body != null ? body : new RankedStatsResponse(null);
+                    });
+        } catch (ResourceAccessException e) {
+            throw new PubgApiException("PUBG 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.", e);
+        }
+    }
+
+    /** 단순 GET (오류는 상태 코드별 문장으로) */
+    private <T> T getJson(String path, Class<T> type, Object... vars) {
+        requireKey();
+        try {
+            return restClient.get()
+                    .uri(path, vars)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.key())
+                    .retrieve()
+                    .onStatus(s -> s.isError(), (req, res) -> {
+                        throw errorFor(res.getStatusCode().value());
+                    })
+                    .body(type);
         } catch (ResourceAccessException e) {
             throw new PubgApiException("PUBG 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.", e);
         }
