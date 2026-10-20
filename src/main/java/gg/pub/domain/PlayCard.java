@@ -68,4 +68,18 @@ public record PlayCard(int matches,
     public int fightReceivePercent() {
         return fightStartPercent == null ? 0 : 100 - fightStartPercent;
     }
+
+    // ---------- 자기장 지도 그리기용 (120×120 그림, 안전구역 반지름 56) ----------
+
+    private static final double MAP_RADIUS = 56;
+
+    /** 내 평균 위치까지의 거리를 그림 크기로 바꾼 값 */
+    public double zoneRingRadius() {
+        return zoneEdgePercent == null ? 0 : MAP_RADIUS * zoneEdgePercent / 100.0;
+    }
+
+    /** 점을 오른쪽 위 45도 방향에 찍을 때 x·y 로 얼마나 움직일지 */
+    public double zoneMarkerOffset() {
+        return zoneRingRadius() / Math.sqrt(2);
+    }
 }

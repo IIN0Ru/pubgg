@@ -67,33 +67,44 @@
             </div>
         </dl>
 
-        <!-- 게이지 -->
-        <div class="gauges" th:if="${c.hasFightGauge() or c.hasZoneGauge()}">
-
-            <div class="gauge" th:if="${c.hasFightGauge()}">
-                <div class="gauge__ends">
-                    <span>싸움걸기 <b th:text="${c.fightStartPercent()} + '%'">65%</b></span>
-                    <span>싸움걸리기 <b th:text="${c.fightReceivePercent()} + '%'">35%</b></span>
+        <!-- 싸움: 양쪽 대결형 -->
+        <div class="tug" th:if="${c.hasFightGauge()}">
+            <div class="tug__sides">
+                <div class="tug__side">
+                    싸움걸기
+                    <b th:text="${c.fightStartPercent()} + '%'">65%</b>
                 </div>
-                <div class="gauge__track" role="img"
-                     th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트'">
-                    <span class="gauge__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'"
-                          style="width:65%"></span>
+                <div class="tug__side tug__side--right">
+                    싸움걸리기
+                    <b th:text="${c.fightReceivePercent()} + '%'">35%</b>
                 </div>
             </div>
+            <div class="tug__bar" role="img"
+                 th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트, 싸움걸리기 ' + ${c.fightReceivePercent()} + '퍼센트'">
+                <span class="tug__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'" style="width:65%"></span>
+            </div>
+        </div>
 
-            <div class="gauge" th:if="${c.hasZoneGauge()}">
-                <div class="gauge__ends">
-                    <span>센터운영</span>
-                    <span>외곽운영</span>
-                </div>
-                <div class="gauge__track" role="img"
-                     th:aria-label="'자기장 중심에서 ' + ${c.zoneEdgePercent()} + '퍼센트 지점'">
-                    <span class="gauge__marker" th:style="'left:' + ${c.zoneEdgePercent()} + '%'"
-                          style="left:38%"></span>
-                </div>
-                <p class="gauge__caption">
-                    3페이즈부터 평균 위치: 중심에서 <b th:text="${c.zoneEdgePercent()} + '%'">38%</b>
+        <!-- 자기장 운영: 지도형 -->
+        <div class="zone-map" th:if="${c.hasZoneGauge()}">
+            <h3 class="card__label">자기장 운영 (3페이즈부터)</h3>
+            <div class="zone-map__body">
+                <!-- 흰 원 = 안전구역, 노란 점 = 내 평균 위치 (방향은 의미 없고 중심에서의 거리만 의미 있음) -->
+                <svg class="zone-map__svg" viewBox="0 0 120 120" role="img"
+                     th:aria-label="'자기장 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리'">
+                    <circle class="zone-map__safe" cx="60" cy="60" r="56"/>
+                    <circle class="zone-map__half" cx="60" cy="60" r="28"/>
+                    <circle class="zone-map__center" cx="60" cy="60" r="2.5"/>
+                    <circle class="zone-map__ring" cx="60" cy="60"
+                            th:attr="r=${c.zoneRingRadius()}" r="21.3"/>
+                    <circle class="zone-map__me" r="7"
+                            th:attr="cx=${60 + c.zoneMarkerOffset()},cy=${60 - c.zoneMarkerOffset()}"
+                            cx="75" cy="45"/>
+                </svg>
+                <p class="zone-map__text">
+                    평균 위치<br>
+                    <b th:text="'중심에서 ' + ${c.zoneEdgePercent()} + '%'">중심에서 38%</b><br>
+                    흰 원 = 안전구역
                 </p>
             </div>
         </div>

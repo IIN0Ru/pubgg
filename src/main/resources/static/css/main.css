@@ -10,6 +10,7 @@
     --on-primary: #0A0A0A;
 
     --canvas: #0A0A0A;           /* 배경 */
+    --surface-soft: #121212;     /* 아주 옅은 면 (자기장 지도 안쪽) */
     --surface-card: #1A1A1A;     /* 입력창 */
     --surface-elevated: #242424; /* 선택된 탭 */
     --hairline: #2A2A2A;         /* 테두리 */
@@ -345,67 +346,103 @@ body {
     cursor: default;
 }
 
-/* 게이지 */
-.gauges {
+/* 싸움: 양쪽 대결형 */
+.tug {
     margin-top: 28px;
     padding-top: 24px;
     border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
 }
 
-.gauge__ends {
+.tug__sides {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}
+
+.tug__side {
     font-size: 13px;
     color: var(--muted);
 }
 
-.gauge__ends b {
-    margin-left: 4px;
-    color: var(--ink);
+.tug__side b {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-display);
+    font-size: 30px;
     font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--primary);
     font-variant-numeric: tabular-nums;
 }
 
-.gauge__track {
+.tug__side--right { text-align: right; }
+.tug__side--right b { color: var(--body); }
+
+.tug__bar {
     position: relative;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--surface-elevated);
+    height: 14px;
+    border-radius: 4px;
+    background: var(--hairline-strong);
+    overflow: hidden;
 }
 
-/* 싸움걸기: 왼쪽부터 노랑으로 채움 */
-.gauge__fill {
+.tug__fill {
     position: absolute;
     left: 0; top: 0; bottom: 0;
-    border-radius: 999px;
     background: var(--primary);
 }
 
-/* 센터/외곽: 평균 위치에 점 */
-.gauge__marker {
+/* 가운데(50%) 기준선 */
+.tug__bar::after {
+    content: "";
     position: absolute;
-    top: 50%;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--primary);
-    border: 3px solid var(--surface-card);
-    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--canvas);
 }
 
-.gauge__caption {
-    margin: 8px 0 0;
+/* 자기장 운영: 지도형 */
+.zone-map {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+}
+
+.zone-map__body {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.zone-map__svg {
+    flex: none;
+    width: 120px;
+    height: 120px;
+}
+
+.zone-map__safe   { fill: var(--surface-soft); stroke: var(--ink); stroke-width: 2; }
+.zone-map__half   { fill: none; stroke: var(--hairline-strong); stroke-dasharray: 3 4; }
+.zone-map__center { fill: var(--muted); }
+.zone-map__ring   { fill: none; stroke: var(--primary); stroke-opacity: 0.35; }
+.zone-map__me     { fill: var(--primary); stroke: var(--surface-card); stroke-width: 3; }
+
+.zone-map__text {
+    margin: 0;
     font-size: 13px;
+    line-height: 1.6;
     color: var(--muted);
 }
 
-.gauge__caption b {
-    color: var(--ink);
+.zone-map__text b {
+    font-family: var(--font-display);
+    font-size: 20px;
     font-weight: 700;
+    color: var(--ink);
 }
 
 .card__weapons {
