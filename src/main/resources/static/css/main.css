@@ -1508,3 +1508,24 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     right: 16px;
     z-index: 30;
 }
+
+/* ---------- 라이트 모드: 노란 형광펜 ----------
+   흰 배경에서는 노란 글자가 안 보여서, 강조 숫자는 "검은 글자 + 노란 바탕"으로 칠한다.
+   (작은 글자·아이콘·테두리는 --primary-text 진한 금색) */
+:root[data-theme="light"] .idcard__line--key dd,
+:root[data-theme="light"] .match--win .match__rank strong {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+:root[data-theme="light"] .logo__dot {
+    color: var(--primary);
+    -webkit-text-stroke: 1px var(--on-primary);
+}
+
+/* 형광펜 바탕 때문에 글자가 오른쪽으로 밀리지 않게 왼쪽으로 당기고, "/ 25" 는 원래처럼 아래 줄에 */
+:root[data-theme="light"] .match--win .match__rank strong { margin-left: -6px; }
+:root[data-theme="light"] .match--win .match__rank span { display: block; margin-top: 4px; }
