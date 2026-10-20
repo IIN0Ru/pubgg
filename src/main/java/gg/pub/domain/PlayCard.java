@@ -1,5 +1,6 @@
 package gg.pub.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -83,5 +84,39 @@ public record PlayCard(int matches,
     /** 점을 오른쪽 위 45도 방향에 찍을 때 x·y 로 얼마나 움직일지 */
     public double zoneMarkerOffset() {
         return zoneRingRadius() / Math.sqrt(2);
+    }
+
+    // ---------- 스타일 요약 (공유 카드의 한 단어 태그) ----------
+
+    /** 이 이상 / 이하일 때만 한쪽 성향으로 본다. 그 사이는 태그를 붙이지 않음 */
+    static final int LEAN_HIGH = 55;
+    static final int LEAN_LOW = 45;
+
+    /** 예: ["먼저 거는 편", "센터 운영", "대도시파"] — 성향이 반반이면 그 항목은 빠진다 */
+    public List<String> styleTags() {
+        List<String> tags = new ArrayList<>();
+        if (fightStartPercent != null) {
+            if (fightStartPercent >= LEAN_HIGH) {
+                tags.add("먼저 거는 편");
+            } else if (fightStartPercent <= LEAN_LOW) {
+                tags.add("받아치는 편");
+            }
+        }
+        if (zoneEdgePercent != null) {
+            if (zoneEdgePercent <= LEAN_LOW) {
+                tags.add("센터 운영");
+            } else if (zoneEdgePercent >= LEAN_HIGH) {
+                tags.add("외곽 운영");
+            }
+        }
+        if (farming != null && farming.hasDropStyle()) {
+            tags.add(farming.dropStyle());
+        }
+        return tags;
+    }
+
+    /** 주무기 이름만 이어 붙인 것: "Beryl M762 · Mini 14" */
+    public String weaponNames() {
+        return String.join(" · ", mainWeapons.stream().map(WeaponUsage::name).toList());
     }
 }

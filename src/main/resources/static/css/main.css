@@ -340,7 +340,7 @@ body {
     margin: 0 auto;
     padding: 32px 24px 96px;
     display: grid;
-    grid-template-columns: 380px minmax(0, 1fr);
+    grid-template-columns: 360px minmax(0, 1fr);
     gap: 32px;
     align-items: start;
 }
@@ -353,33 +353,6 @@ body {
     }
 }
 
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-}
-
-.profile__platform {
-    padding: 4px 12px;
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--body);
-}
-
-.profile__name {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(32px, 6vw, 48px);
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: -0.035em;
-    word-break: break-all;
-}
-
 .section-title {
     margin: 0 0 16px;
     font-size: 18px;
@@ -387,98 +360,224 @@ body {
     color: var(--body);
 }
 
-/* 플레이 카드 */
-.card {
-    margin-bottom: 24px;
-    padding: 24px;
+/* ---------- 공유용 요약 카드 (왼쪽) ---------- */
+.idcard {
+    position: relative;
+    overflow: hidden;
+    padding: 26px 24px 24px;
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
+    border-radius: 16px;
 }
 
-.card .section-title { margin-bottom: 24px; }
-
-.card__stats {
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px 16px;
+/* 카드 맨 위 노란 띠: 펍지지 카드라는 표시 */
+.idcard::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; right: 0;
+    height: 6px;
+    background: var(--primary);
 }
 
-.stat dt {
+.idcard__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.idcard__platform {
+    padding: 3px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--body);
+}
+
+.idcard__scope {
+    font-size: 12px;
     color: var(--muted);
 }
 
-.stat dd {
-    margin: 6px 0 0;
+.idcard__name {
+    margin: 14px 0 0;
     font-family: var(--font-display);
-    font-size: 36px;
+    font-size: clamp(32px, 6vw, 44px);
     font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: var(--primary);
-    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    word-break: break-all;
 }
 
-/* 칭호 */
-.titles {
+/* 칭호(노랑 칠) + 스타일 요약(테두리) */
+.tags {
     list-style: none;
-    margin: -8px 0 20px;
+    margin: 16px 0 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.title-badge {
+.tag {
     padding: 5px 12px;
     border-radius: 999px;
-    background: var(--primary);
-    color: var(--on-primary);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: 13px;
+    font-weight: 600;
+    color: var(--body);
+}
+
+.tag--title {
+    background: var(--primary);
+    box-shadow: none;
+    color: var(--on-primary);
     font-weight: 700;
     cursor: default;
 }
 
-/* 싸움: 양쪽 대결형 */
-.tug {
-    margin-top: 28px;
-    padding-top: 24px;
+.idcard__lines {
+    margin: 22px 0 0;
+    padding-top: 20px;
     border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
+.idcard__line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+
+.idcard__line dt {
+    flex: none;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.idcard__line dd {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: right;
+}
+
+/* KDA만 크게, 노랑으로 */
+.idcard__line--key dd {
+    font-family: var(--font-display);
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+}
+
+.idcard__notice {
+    margin: 20px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--body);
+}
+
+.idcard__share {
+    width: 100%;
+    height: 42px;
+    margin-top: 22px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--surface-elevated);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.idcard__share:hover { background: var(--hairline-strong); }
+
+.idcard__share:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ---------- 상세 분석 패널 (오른쪽 위, 2×2) ---------- */
+.details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.detail {
+    padding: 20px;
+    background: var(--surface-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+}
+
+.detail__title {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--body);
+}
+
+.detail__title span {
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.detail__sub {
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.detail__sub b {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.detail__empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.details__note {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* 교전: 양쪽 대결형 막대 */
 .tug__sides {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: baseline;
     margin-bottom: 10px;
-}
-
-.tug__side {
     font-size: 13px;
     color: var(--muted);
 }
 
 .tug__side b {
-    display: block;
-    margin-top: 6px;
+    margin-left: 4px;
     font-family: var(--font-display);
-    font-size: 30px;
+    font-size: 22px;
     font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: var(--primary);
+    letter-spacing: -0.02em;
+    color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 
-.tug__side--right { text-align: right; }
-.tug__side--right b { color: var(--body); }
-
 .tug__bar {
     position: relative;
-    height: 14px;
+    height: 12px;
     border-radius: 4px;
     background: var(--hairline-strong);
     overflow: hidden;
@@ -499,26 +598,20 @@ body {
     bottom: 0;
     width: 2px;
     margin-left: -1px;
-    background: var(--canvas);
+    background: var(--surface-card);
 }
 
 /* 자기장 운영: 지도형 */
-.zone-map {
-    margin-top: 28px;
-    padding-top: 24px;
-    border-top: 1px solid var(--hairline);
-}
-
 .zone-map__body {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 }
 
 .zone-map__svg {
     flex: none;
-    width: 120px;
-    height: 120px;
+    width: 104px;
+    height: 104px;
 }
 
 .zone-map__safe   { fill: var(--surface-soft); stroke: var(--ink); stroke-width: 2; }
@@ -529,58 +622,46 @@ body {
 
 .zone-map__text {
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.6;
     color: var(--muted);
 }
 
 .zone-map__text b {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--ink);
 }
 
-.card__weapons {
-    margin-top: 28px;
-    padding-top: 24px;
-    border-top: 1px solid var(--hairline);
-}
-
-.card__label {
-    margin: 0 0 12px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-}
-
+/* 주무기 */
 .weapons {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .weapon {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
+    gap: 8px;
+    padding: 11px 14px;
     background: var(--surface-elevated);
     border-radius: 8px;
 }
 
 .weapon__name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
 }
 
 .weapon__type {
-    padding: 2px 10px;
+    padding: 1px 9px;
     border-radius: 999px;
-    border: 1px solid var(--hairline-strong);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: 12px;
     font-weight: 600;
     color: var(--body);
@@ -588,20 +669,14 @@ body {
 
 .weapon__share {
     margin-left: auto;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
 }
 
 /* 파밍 */
-.farming {
-    margin-top: 28px;
-    padding-top: 24px;
-    border-top: 1px solid var(--hairline);
-}
-
 .farming__style {
-    margin: 0 0 16px;
+    margin: 0 0 12px;
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
@@ -609,61 +684,44 @@ body {
 }
 
 .farming__style b {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .farming__style span {
-    font-size: 14px;
-    color: var(--body);
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .farming__bag {
     margin: 0;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
 }
 
 .farming__bag div {
-    padding: 12px 14px;
+    padding: 10px 12px;
     background: var(--surface-elevated);
     border-radius: 8px;
 }
 
 .farming__bag dt {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
 }
 
 .farming__bag dd {
     margin: 4px 0 0;
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
 }
 
-.farming__caption {
-    margin: 10px 0 0;
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.card__empty,
-.card__note {
-    margin: 0;
-    font-size: 13px;
-    color: var(--muted);
-}
-
-.card__note { margin-top: 16px; }
-
 @media (max-width: 640px) {
-    .card { padding: 20px; }
-    .stat dd { font-size: 32px; }
+    .details { grid-template-columns: 1fr; }
 }
 
 /* 경기 목록 */

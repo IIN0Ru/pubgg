@@ -16,74 +16,81 @@
 
 <main class="page">
 
-  <!-- 왼쪽: 누구인지 + 플레이 카드 -->
+  <!-- 왼쪽: 공유용 요약 카드 -->
   <aside class="side">
 
-    <!-- 누구를 검색했는지 -->
-    <section class="profile">
-        <span class="profile__platform" th:text="${platform.label}">스팀</span>
-        <h1 class="profile__name"
+    <section class="idcard" th:with="c=${result != null ? result.card() : null}">
+        <div class="idcard__meta">
+            <span class="idcard__platform" th:text="${platform.label}">스팀</span>
+            <span class="idcard__scope" th:if="${c != null}"
+                  th:text="'경쟁전 ' + ${c.matches()} + '경기 · ' + ${c.perspective()}">경쟁전 10경기 · FPP</span>
+        </div>
+
+        <h1 class="idcard__name"
             th:text="${result != null} ? ${result.nickname()} : ${nickname}">N0-RU</h1>
-    </section>
 
-    <!-- 1) 오류: 플레이어 없음, 키 문제, 요청 초과 등 -->
-    <section class="notice" th:if="${errorMessage != null}">
-        <p class="notice__text" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
-    </section>
-
-    <!-- 플레이 카드: 경쟁전 최근 경기 기준 -->
-    <section class="card" th:if="${result != null and result.hasCard()}" th:with="c=${result.card()}">
-        <h2 class="section-title">
-            경쟁전 최근 <span th:text="${c.matches()}">10</span>경기
-        </h2>
-
-        <!-- 칭호 -->
-        <ul class="titles" th:if="${c.hasTitles()}">
-            <li class="title-badge" th:each="t : ${c.titles()}"
+        <!-- 칭호(노랑) + 스타일 요약(테두리) -->
+        <ul class="tags" th:if="${c != null and (c.hasTitles() or !c.styleTags().isEmpty())}">
+            <li class="tag tag--title" th:each="t : ${c.titles()}"
                 th:title="${t.getDescription()}" th:text="${t.getLabel()}">해적</li>
+            <li class="tag" th:each="s : ${c.styleTags()}" th:text="${s}">먼저 거는 편</li>
         </ul>
 
-        <dl class="card__stats">
-            <div class="stat">
+        <dl class="idcard__lines" th:if="${c != null}">
+            <div class="idcard__line idcard__line--key">
                 <dt>KDA</dt>
                 <dd th:text="${c.kdaText()}">3.42</dd>
             </div>
-            <div class="stat">
+            <div class="idcard__line">
                 <dt>평균 딜량</dt>
                 <dd th:text="${c.avgDamage()}">412</dd>
             </div>
-            <div class="stat">
-                <dt>평균 투척</dt>
-                <dd th:text="${c.avgThrowablesText()}">2.3</dd>
+            <div class="idcard__line" th:if="${c.hasWeapons()}">
+                <dt>주무기</dt>
+                <dd th:text="${c.weaponNames()}">Beryl M762 · Mini 14</dd>
             </div>
-            <div class="stat">
-                <dt>시점</dt>
-                <dd th:text="${c.perspective()}">FPP</dd>
+            <div class="idcard__line" th:if="${c.farming() != null and c.farming().hasMainCity()}">
+                <dt>주 착지</dt>
+                <dd th:text="${c.farming().mainCity()}">포친키</dd>
             </div>
         </dl>
 
-        <!-- 싸움: 양쪽 대결형 -->
-        <div class="tug" th:if="${c.hasFightGauge()}">
-            <div class="tug__sides">
-                <div class="tug__side">
-                    싸움걸기
-                    <b th:text="${c.fightStartPercent()} + '%'">65%</b>
-                </div>
-                <div class="tug__side tug__side--right">
-                    싸움걸리기
-                    <b th:text="${c.fightReceivePercent()} + '%'">35%</b>
-                </div>
-            </div>
-            <div class="tug__bar" role="img"
-                 th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트, 싸움걸리기 ' + ${c.fightReceivePercent()} + '퍼센트'">
-                <span class="tug__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'" style="width:65%"></span>
-            </div>
-        </div>
+        <!-- 오류: 플레이어 없음, 키 문제, 요청 초과 등 -->
+        <p class="idcard__notice" th:if="${errorMessage != null}" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
+        <p class="idcard__notice" th:if="${result != null and c == null}">
+            최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.
+        </p>
 
-        <!-- 자기장 운영: 지도형 -->
-        <div class="zone-map" th:if="${c.hasZoneGauge()}">
-            <h3 class="card__label">자기장 운영 (3페이즈부터)</h3>
-            <div class="zone-map__body">
+        <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">링크 복사</button>
+    </section>
+
+  </aside>
+
+  <!-- 가운데~오른쪽: 최근 경기 -->
+  <div class="feed">
+
+    <!-- 상세 분석 패널 (경쟁전 기준) -->
+    <section class="details" th:if="${result != null and result.hasCard()}" th:with="c=${result.card()}">
+
+        <article class="detail">
+            <h2 class="detail__title">교전</h2>
+            <div th:if="${c.hasFightGauge()}">
+                <div class="tug__sides">
+                    <div class="tug__side">싸움걸기 <b th:text="${c.fightStartPercent()} + '%'">65%</b></div>
+                    <div class="tug__side tug__side--right">싸움걸리기 <b th:text="${c.fightReceivePercent()} + '%'">35%</b></div>
+                </div>
+                <div class="tug__bar" role="img"
+                     th:aria-label="'싸움걸기 ' + ${c.fightStartPercent()} + '퍼센트, 싸움걸리기 ' + ${c.fightReceivePercent()} + '퍼센트'">
+                    <span class="tug__fill" th:style="'width:' + ${c.fightStartPercent()} + '%'" style="width:65%"></span>
+                </div>
+            </div>
+            <p class="detail__empty" th:unless="${c.hasFightGauge()}">교전 기록이 없어요.</p>
+            <p class="detail__sub">판당 투척 사용 <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
+        </article>
+
+        <article class="detail">
+            <h2 class="detail__title">자기장 운영 <span>3페이즈부터</span></h2>
+            <div class="zone-map__body" th:if="${c.hasZoneGauge()}">
                 <!-- 흰 원 = 안전구역, 노란 점 = 내 평균 위치 (방향은 의미 없고 중심에서의 거리만 의미 있음) -->
                 <svg class="zone-map__svg" viewBox="0 0 120 120" role="img"
                      th:aria-label="'자기장 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리'">
@@ -102,10 +109,11 @@
                     흰 원 = 안전구역
                 </p>
             </div>
-        </div>
+            <p class="detail__empty" th:unless="${c.hasZoneGauge()}">3페이즈까지 살아남은 기록이 없어요.</p>
+        </article>
 
-        <div class="card__weapons">
-            <h3 class="card__label">주무기</h3>
+        <article class="detail">
+            <h2 class="detail__title">주무기</h2>
             <ul class="weapons" th:if="${c.hasWeapons()}">
                 <li class="weapon" th:each="w : ${c.mainWeapons()}">
                     <span class="weapon__name" th:text="${w.name()}">Beryl M762</span>
@@ -113,51 +121,30 @@
                     <span class="weapon__share" th:text="${w.sharePercent()} + '%'">48%</span>
                 </li>
             </ul>
-            <p class="card__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
-        </div>
+            <p class="detail__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
+        </article>
 
-        <!-- 파밍 -->
-        <div class="farming" th:if="${c.farming() != null and (c.farming().hasDropStyle() or c.farming().hasBag())}"
-             th:with="f=${c.farming()}">
-            <h3 class="card__label">파밍</h3>
-
-            <p class="farming__style" th:if="${f.hasDropStyle()}">
+        <article class="detail" th:with="f=${c.farming()}">
+            <h2 class="detail__title">파밍 <span>3페이즈 시작 때 가방</span></h2>
+            <p class="farming__style" th:if="${f != null and f.hasDropStyle()}">
                 <b th:text="${f.dropStyle()}">대도시파</b>
-                <span th:if="${f.hasMainCity()}" th:text="'주 착지 ' + ${f.mainCity()}">주 착지 포친키</span>
+                <span th:text="${f.bigCityDrops()} + '/' + ${f.drops()} + '판 대도시 착지'">7/10판 대도시 착지</span>
             </p>
-
-            <dl class="farming__bag" th:if="${f.hasBag()}">
-                <div>
-                    <dt>힐템</dt>
-                    <dd th:text="${f.avgHealsText()}">7.5</dd>
-                </div>
-                <div>
-                    <dt>투척</dt>
-                    <dd th:text="${f.avgThrowablesText()}">3.2</dd>
-                </div>
-                <div>
-                    <dt>주운 총알</dt>
-                    <dd th:text="${f.avgAmmo()}">214</dd>
-                </div>
+            <dl class="farming__bag" th:if="${f != null and f.hasBag()}">
+                <div><dt>힐템</dt><dd th:text="${f.avgHealsText()}">7.5</dd></div>
+                <div><dt>투척 보유</dt><dd th:text="${f.avgThrowablesText()}">3.2</dd></div>
+                <div><dt>주운 총알</dt><dd th:text="${f.avgAmmo()}">214</dd></div>
             </dl>
-            <p class="farming__caption" th:if="${f.hasBag()}">
-                3페이즈 시작 때 평균 · 살아남은 <span th:text="${f.phase3Matches()}">8</span>경기 기준
+            <p class="detail__sub" th:if="${f != null and f.hasBag()}">
+                살아남은 <span th:text="${f.phase3Matches()}">8</span>경기 평균
             </p>
-        </div>
+            <p class="detail__empty" th:if="${f == null or (!f.hasDropStyle() and !f.hasBag())}">파밍 기록이 없어요.</p>
+        </article>
 
-        <p class="card__note" th:if="${c.analyzedMatches() lt c.matches()}">
-            주무기와 투척은 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
+        <p class="details__note" th:if="${c.analyzedMatches() lt c.matches()}">
+            교전·자기장·주무기·파밍은 상세 기록을 불러온 <span th:text="${c.analyzedMatches()}">8</span>경기 기준이에요.
         </p>
     </section>
-
-    <section class="notice" th:if="${result != null and !result.hasCard()}">
-        <p class="notice__text">최근 14일 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.</p>
-    </section>
-
-  </aside>
-
-  <!-- 가운데~오른쪽: 최근 경기 -->
-  <div class="feed">
 
     <!-- 2) 경기 없음 -->
     <section class="notice" th:if="${result != null and !result.hasMatches()}">
@@ -201,6 +188,20 @@
   </div>
 
 </main>
+
+<script>
+  // 링크 복사: 지금 보고 있는 주소(/search?platform=...&nickname=...)를 복사
+  document.querySelectorAll('[data-copy-link]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(location.href).then(function () {
+        btn.textContent = '링크 복사됨';
+        setTimeout(function () { btn.textContent = '링크 복사'; }, 1500);
+      }, function () {
+        btn.textContent = '복사하지 못했어요';
+      });
+    });
+  });
+</script>
 
 </body>
 </html>
