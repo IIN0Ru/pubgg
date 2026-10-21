@@ -80,9 +80,8 @@ public record Replay(String matchId,
      * @param target 당한 사람 닉네임. 없으면 null
      * @param ours   우리 팀이 관련된 사건인지 (경기 흐름 목록에는 이것만 나온다)
      * @param text   목록에 보여줄 한 줄
-     * @param cause  기절·킬을 무엇으로 했는지. 총이면 null.
-     *               grenade / molotov / c4 / sticky (투척), mortar (박격포), panzer (판처파우스트),
-     *               melee (근접 무기), meleeThrow (근접 무기 던짐), punch (주먹)
+     * @param cause  기절·킬을 무엇으로 했는지: grenade / molotov / c4 / sticky (투척), mortar (박격포),
+     *               panzer (판처파우스트). 총·근접 등은 null
      */
     public record Event(int t, String type, int x, int y, String actor, String target, boolean ours, String text,
                         String cause) {

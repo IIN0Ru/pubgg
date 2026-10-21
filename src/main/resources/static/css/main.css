@@ -2068,7 +2068,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 .replay__dot--me { background: var(--primary); }
 /* 범례: 적은 팀마다 색이라 여러 색 점 대신 반반 원으로 "색이 여러 개"라는 것만 보여준다 */
-.replay__dot--enemy { background: linear-gradient(90deg, #FF7A59 50%, #5BC0EB 50%); }
+.replay__dot--enemy { background: linear-gradient(90deg, #FF7A59 50%, #38BDF8 50%); }   /* TEAM_PALETTE 앞의 두 색 */
 
 /* 범례: 명중선 */
 .replay__line {
@@ -2104,13 +2104,13 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--primary);
 }
 
-/* 근접: 사선 세 줄 (가운데 노랑) */
-.replay__icon-slash {
+/* 회복: 초록 플러스 (지도 위 회복 이펙트와 같은 고정색, CLAUDE.md 예외) */
+.replay__icon-heal {
     width: 12px;
     height: 12px;
-    background: linear-gradient(135deg,
-        transparent 18%, var(--ink) 18% 28%, transparent 28% 45%,
-        var(--primary) 45% 55%, transparent 55% 72%, var(--ink) 72% 82%, transparent 82%);
+    background:
+        linear-gradient(#22C55E, #22C55E) center / 4px 100% no-repeat,
+        linear-gradient(#22C55E, #22C55E) center / 100% 4px no-repeat;
 }
 
 /* 오른쪽 패널 */

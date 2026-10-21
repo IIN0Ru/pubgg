@@ -69,7 +69,8 @@
 
   // ---------- 색 (main.css 변수) ----------
   // 지도 위 색: 어두운 지도 위에서 잘 보이게 고정 (다크 모드 값과 같음)
-  var MAP_COLORS = { ink: '#FFFFFF', muted: '#9A9A9A', card: '#1A1A1A', dark: '#0A0A0A' };
+  var MAP_COLORS = { ink: '#FFFFFF', muted: '#9A9A9A', card: '#1A1A1A', dark: '#0A0A0A',
+                     heal: '#22C55E' };   // 회복 이펙트 (DESIGN.md accent-emerald / success)
 
   // 적 팀 색: 근처에 여러 팀이 섞여 있을 때 구분하려고 지도 위에서만 쓰는 색 (디자인 규칙의 예외. NOTES 참고)
   // 노랑(나)·흰색(팀원)·회색과 헷갈리지 않는 색만. 처음 마주친 순서대로 돌려 쓴다
@@ -456,7 +457,7 @@
    *  - 폭발물(blasts): 던진 곳 → 터진 곳 궤적 뒤에 폭발. 터진 곳은 맞은 적들 위치로 추정한 값
    *      수류탄·C4·접착 폭탄·박격포·판처 = 섬광 + 노란 충격파 + 파편 / 화염병 = 불꽃
    *      박격포는 높게 휘는 궤적, 판처는 곧은 로켓 연기. 잡은 한 발은 크게, 맞히기만 한 건 작게
-   *  - 근접(events.cause = melee / meleeThrow / punch): 맞은 자리에 베는 자국. 던진 근접무기는 날아가는 것부터
+   *  - 회복(heals): 쓴 사람 점 위로 초록 플러스가 올라가며 사라짐
    */
   var FX_MS = 1500;          // 터진 뒤 이펙트 길이
   var FLIGHT_MS = 380;       // 궤적(날아가는 동안) 길이. 박격포는 더 길게
@@ -467,13 +468,6 @@
     fxSources = [];
     (R.blasts || []).forEach(function (b) {
       fxSources.push({ t: b.t, fx: 'blast', b: b });
-    });
-    R.events.forEach(function (e) {
-      if (!e.ours || (e.type !== 'knock' && e.type !== 'kill')) return;
-      if (e.cause !== 'melee' && e.cause !== 'meleeThrow' && e.cause !== 'punch') return;
-      var actor = byName[e.actor];
-      if (!actor || actor.team !== R.myTeam) return;   // 우리 팀이 한 것만
-      fxSources.push({ t: e.t, fx: 'melee', e: e });
     });
     (R.heals || []).forEach(function (h) {
       fxSources.push({ t: h.t, fx: 'heal', h: h });
@@ -494,7 +488,7 @@
 
   /**
    * layer 'under' = 폭발물 (점 아래에 깔아서 사람 위치를 가리지 않게)
-   * layer 'over'  = 근접·회복 (바로 옆에서 일어나서 우리 팀 점에 가려지므로 맨 위에)
+   * layer 'over'  = 회복 (쓴 사람 점에 가려지지 않게 맨 위에)
    */
   function drawEffects(now, layer) {
     if (layer === 'under') fx = fx.filter(function (f) { return now - f.at < fxLength(f.src); });
@@ -503,7 +497,6 @@
       var ms = now - f.at;
       ctx.save();
       if (f.src.fx === 'blast') drawBlast(f.src.b, ms);
-      else if (f.src.fx === 'melee') drawMelee(f.src.e, ms);
       else drawHeal(f.src.h, ms);
       ctx.restore();
     });
@@ -513,7 +506,6 @@
 
   function fxLength(src) {
     if (src.fx === 'blast') return flightMs(src.b.kind) + (src.b.kind === 'molotov' ? FX_MS * 1.4 : FX_MS);
-    if (src.fx === 'melee') return (src.e.cause === 'meleeThrow' ? FLIGHT_MS : 0) + FX_MS;
     return HEAL_MS;
   }
 
@@ -626,68 +618,38 @@
     }
   }
 
-  /** 근접: 맞은 자리에 베는 자국 세 줄 (주먹은 별 모양 충격). 던진 근접무기는 돌면서 날아가는 것부터 */
-  function drawMelee(e, ms) {
-    var x = sx(e.x), y = sy(e.y);
-    if (e.cause === 'meleeThrow') {
-      var from = posAt(byName[e.actor], e.t);
-      if (ms < FLIGHT_MS) {
-        if (!from) return;
-        var k = ms / FLIGHT_MS, x0 = sx(from.x), y0 = sy(from.y);
-        var px = x0 + (x - x0) * k, py = y0 + (y - y0) * k;
-        ctx.translate(px, py);
-        ctx.rotate(k * Math.PI * 6);
-        ctx.fillStyle = MAP_COLORS.ink;
-        ctx.strokeStyle = MAP_COLORS.dark;
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();   // 프라이팬 머리
-        ctx.fillRect(4, -1.5, 8, 3);                                                   // 손잡이
-        return;
-      }
-      ms -= FLIGHT_MS;
-    }
-    var k2 = ms / FX_MS;
-    var draw = Math.min(1, k2 * 5);           // 0.3초 동안 그어지고
-    var fade = Math.max(0, 1 - Math.max(0, k2 - 0.4) / 0.6);
-    ctx.globalAlpha = fade;
-    ctx.lineCap = 'round';
-    if (e.cause === 'punch') {
-      ctx.strokeStyle = colors.primary;
-      ctx.lineWidth = 3;
-      for (var j = 0; j < 8; j++) {
-        var a = j / 8 * Math.PI * 2;
-        var r1 = 8, r2 = 8 + 14 * draw * (j % 2 ? 0.6 : 1);
-        ctx.beginPath();
-        ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
-        ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
-        ctx.stroke();
-      }
-      return;
-    }
-    for (var i = -1; i <= 1; i++) {
-      var ox = i * 9, len = 40;
-      var x0s = x - len / 2 + ox - 4, y0s = y - len / 2 + ox * 0.2 - 4;
-      var x1s = x0s + len * draw, y1s = y0s + len * draw;
-      ctx.strokeStyle = MAP_COLORS.dark;
-      ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.moveTo(x0s, y0s); ctx.lineTo(x1s, y1s); ctx.stroke();
-      ctx.strokeStyle = i === 0 ? colors.primary : MAP_COLORS.ink;
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(x0s, y0s); ctx.lineTo(x1s, y1s); ctx.stroke();
-    }
-  }
-
-  /** 회복: 시안 선택 전 임시 (점 둘레 고리) */
-  var HEAL_MS = 1200;
+  /** 회복: 쓴 사람 둘레가 초록으로 잠깐 빛나고, 초록 플러스 세 개가 차례로 올라가며 사라진다 */
+  var HEAL_MS = 1300;
   function drawHeal(h, ms) {
     var m = byName[h.name];
     var p = m ? posAt(m, state.t) : null;   // 쓴 사람을 따라다님
+    if (p && p.dead) return;
     var x = sx(p ? p.x : h.x), y = sy(p ? p.y : h.y);
     var k = ms / HEAL_MS;
-    ctx.globalAlpha = 1 - k;
-    ctx.strokeStyle = MAP_COLORS.ink;
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(x, y, 14 + 10 * k, 0, Math.PI * 2); ctx.stroke();
+    var glow = k < 0.15 ? k / 0.15 : 1 - Math.max(0, (k - 0.55) / 0.45);
+    ctx.globalAlpha = 0.28 * glow;
+    ctx.fillStyle = MAP_COLORS.heal;
+    ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill();
+    [[-9, 0], [8, 0.14], [0, 0.28]].forEach(function (o) {
+      var kk = k - o[1];
+      if (kk <= 0) return;
+      var a = Math.max(0, 1 - kk / 0.75);
+      plusSign(x + o[0], y - 14 - kk * 34, 11, a);
+    });
+  }
+
+  /** 초록 플러스 (검은 테두리) */
+  function plusSign(x, y, s, alpha) {
+    var w = s / 3;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.rect(x - w / 2, y - s / 2, w, s);
+    ctx.rect(x - s / 2, y - w / 2, s, w);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = MAP_COLORS.dark;
+    ctx.stroke();
+    ctx.fillStyle = MAP_COLORS.heal;
+    ctx.fill();
   }
 
   function trail(p, from, to, color, width, alpha) {

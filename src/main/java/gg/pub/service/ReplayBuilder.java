@@ -20,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -32,7 +31,7 @@ import java.util.Set;
  *  - LogMatchStart              경기 시작 시각 (모든 시각을 여기서부터 초로 센다)
  *  - LogPlayerPosition          전원 위치 (약 10초마다) + 그때 탄 차량·보트
  *  - LogGameStatePeriodic       자기장: safetyZone(지금 경계, 파란 원) / poisonGasWarning(다음 안전구역, 흰 원)
- *  - LogPlayerMakeGroggy        기절 (무엇으로 했는지도: 투척·박격포·판처·근접. 총은 따로 안 적음)
+ *  - LogPlayerMakeGroggy        기절 (무엇으로 했는지도: 투척·박격포·판처. 총·근접은 따로 안 적음)
  *  - LogPlayerKillV2            킬 (죽은 시각도 여기서)
  *  - LogPlayerRevive            부활
  *  - LogParachuteLanding        착지 (우리 팀만)
@@ -64,13 +63,6 @@ public class ReplayBuilder {
             "Item_Boost_EnergyDrink_C", "에너지 드링크",
             "Item_Boost_PainKiller_C", "진통제",
             "Item_Boost_AdrenalineSyringe_C", "아드레날린");
-
-    /** 근접 무기 (damageCauserName 앞부분) → 이름 */
-    static final Map<String, String> MELEE_WEAPONS = Map.of(
-            "WeapPan", "프라이팬",
-            "WeapMachete", "마체테",
-            "WeapSickle", "낫",
-            "WeapCowbar", "쇠지렛대");
 
     private final ObjectMapper mapper;
 
@@ -145,7 +137,7 @@ public class ReplayBuilder {
                     String cause = weaponCause(e.path("damageTypeCategory").asText(""));
                     addCombat(t, "knock", attacker, victim,
                             (name(attacker) == null ? name(victim) + " 기절" : name(attacker) + " → " + name(victim) + " 기절")
-                                    + causeText(cause, e.path("damageCauserName").asText("")), cause);
+                                    + causeText(cause), cause);
                 }
                 case "LogPlayerKillV2" -> onKill(e, t);
                 case "LogPlayerRevive" -> {
@@ -252,7 +244,7 @@ public class ReplayBuilder {
                     ? e.path("killerDamageInfo") : e.path("finishDamageInfo");
             String cause = weaponCause(info.path("damageTypeCategory").asText(""));
             String text = (name(killer) == null ? name(victim) + " 사망" : name(killer) + " → " + name(victim) + " 킬")
-                    + causeText(cause, info.path("damageCauserName").asText(""));
+                    + causeText(cause);
             addCombat(t, "kill", killer, victim, text, cause);
         }
 
@@ -264,7 +256,7 @@ public class ReplayBuilder {
                     cause));
         }
 
-        /** 피해 종류 → 짧은 이름. 총이나 그 밖의 것(자기장, 차량 ...)은 null */
+        /** 피해 종류 → 짧은 이름. 총·근접이나 그 밖의 것(자기장, 차량 ...)은 null */
         static String weaponCause(String damageTypeCategory) {
             return switch (damageTypeCategory) {
                 case "Damage_Explosion_Grenade" -> "grenade";
@@ -274,9 +266,6 @@ public class ReplayBuilder {
                 case "Damage_Explosion_Mortar" -> "mortar";
                 case "Damage_Explosion_PanzerFaustWarhead", "Damage_Explosion_PanzerFaustWarheadVehicleArmorPenetration",
                      "Damage_Explosion_PanzerFaustBackBlast" -> "panzer";
-                case "Damage_Melee" -> "melee";
-                case "Damage_MeleeThrow" -> "meleeThrow";
-                case "Damage_Punch" -> "punch";
                 default -> null;
             };
         }
@@ -289,8 +278,8 @@ public class ReplayBuilder {
             };
         }
 
-        /** 경기 흐름 글 끝에 붙일 무기 이름. causer = damageCauserName (근접 무기 이름에 씀) */
-        static String causeText(String cause, String causer) {
+        /** 경기 흐름 글 끝에 붙일 무기 이름 */
+        static String causeText(String cause) {
             if (cause == null) {
                 return "";
             }
@@ -301,18 +290,8 @@ public class ReplayBuilder {
                 case "sticky" -> " (접착 폭탄)";
                 case "mortar" -> " (박격포)";
                 case "panzer" -> " (판처파우스트)";
-                case "melee" -> meleeName(causer).map(n -> " (근접: " + n + ")").orElse(" (근접)");
-                case "meleeThrow" -> meleeName(causer).map(n -> " (던진 " + n + ")").orElse(" (근접 무기 던짐)");
-                case "punch" -> " (주먹)";
                 default -> "";
             };
-        }
-
-        private static Optional<String> meleeName(String causer) {
-            return MELEE_WEAPONS.entrySet().stream()
-                    .filter(en -> causer.startsWith(en.getKey()))
-                    .map(Map.Entry::getValue)
-                    .findFirst();
         }
 
         // ---------- 폭발물: 던진 곳 → 터진 곳 ----------
