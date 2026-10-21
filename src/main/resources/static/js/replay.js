@@ -44,6 +44,12 @@
   var aliveEl = q('[data-alive]');
   var followBtn = q('[data-follow]');
   var shareBtn = q('[data-share]');
+  var sideEl = q('[data-side]');
+  var viewEl = q('.replay__view');
+  var legendEl = q('[data-legend]');
+  var hintEl = q('[data-touch-hint]');
+  // 폰·태블릿(위아래로 쌓이는 화면): 지도 버튼을 지도 안으로, 범례 접기, 아래 칸 탭
+  var narrow = window.matchMedia('(max-width: 960px)');
   var deathEl = q('[data-death]');
   var statsEl = q('[data-stats]');
   var playControls = q('[data-play-controls]');
@@ -256,7 +262,10 @@
   function resize() {
     var w = wrap.clientWidth;
     // 정사각형이 기본이지만, 화면보다 커지지 않게 창 높이의 70% 까지만 (최소 320px)
-    var h = Math.round(Math.max(320, Math.min(w, window.innerHeight * 0.7)));
+    // 폰은 지도를 위에 붙여 두므로 화면의 45% 까지만 (아래 칸이 보이게)
+    var h = narrow.matches
+        ? Math.round(Math.max(220, Math.min(w, window.innerHeight * 0.45)))
+        : Math.round(Math.max(320, Math.min(w, window.innerHeight * 0.7)));
     var dpr = window.devicePixelRatio || 1;
     var fitBefore = R && size.w && Math.abs(view.scale - Math.min(size.w, size.h) / R.map.size) < 1e-9;
     size = { w: w, h: h, dpr: dpr };
@@ -1461,14 +1470,15 @@
     draw();
   }, { passive: false });
 
+  // 마우스·펜: 끌어서 이동. 손가락은 아래 터치 처리에서 (한 손가락은 페이지 내리기로 남겨 둠)
   var drag = null;
   canvas.addEventListener('pointerdown', function (e) {
-    if (!R) return;
+    if (!R || e.pointerType === 'touch') return;
     drag = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', function (e) {
-    if (!drag) return;
+    if (!drag || e.pointerType === 'touch') return;
     var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (Math.abs(dx) + Math.abs(dy) > 3 && state.follow) { state.follow = false; paintFollow(); }
     view.cx = drag.cx - dx / view.scale;
@@ -1477,6 +1487,105 @@
   });
   canvas.addEventListener('pointerup', function () { drag = null; });
   canvas.addEventListener('pointercancel', function () { drag = null; });
+
+  // 손가락: 두 손가락이면 지도 이동 + 벌리고 오므려서 확대·축소. 한 손가락이면 페이지가 내려가고 안내만 잠깐
+  var pinch = null;
+  function touchMid(t) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: (t[0].clientX + t[1].clientX) / 2 - rect.left,
+      y: (t[0].clientY + t[1].clientY) / 2 - rect.top,
+      d: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
+    };
+  }
+  canvas.addEventListener('touchstart', function (e) {
+    if (!R || e.touches.length < 2) return;
+    e.preventDefault();
+    var m = touchMid(e.touches);
+    pinch = { m: m, scale: view.scale,
+      wx: (m.x - size.w / 2) / view.scale + view.cx, wy: (m.y - size.h / 2) / view.scale + view.cy };
+    state.follow = false; paintFollow();
+    hideHint();
+  }, { passive: false });
+  canvas.addEventListener('touchmove', function (e) {
+    if (e.touches.length < 2) {
+      if (!pinch) showHint();
+      return;
+    }
+    if (!pinch) return;
+    e.preventDefault();
+    var m = touchMid(e.touches);
+    view.scale = pinch.scale * (pinch.m.d ? m.d / pinch.m.d : 1);
+    clampView();
+    // 처음 잡은 지도 지점이 지금 두 손가락 가운데에 오게
+    view.cx = pinch.wx - (m.x - size.w / 2) / view.scale;
+    view.cy = pinch.wy - (m.y - size.h / 2) / view.scale;
+    draw();
+  }, { passive: false });
+  canvas.addEventListener('touchend', function (e) { if (e.touches.length < 2) pinch = null; });
+  canvas.addEventListener('touchcancel', function () { pinch = null; });
+
+  var hintTimer = null, hintShown = 0;
+  function showHint() {
+    if (!hintEl || hintShown >= 3 || hintTimer) return;   // 한 번 볼 때 세 번까지만
+    hintShown++;
+    hintEl.classList.add('is-on');
+    hintTimer = setTimeout(hideHint, 1400);
+  }
+  function hideHint() {
+    if (!hintEl) return;
+    hintEl.classList.remove('is-on');
+    clearTimeout(hintTimer);
+    hintTimer = null;
+  }
+
+  // ---------- 폰 배치 ----------
+  var barEl = q('.replay__bar');
+  function applyLayout() {
+    if (!viewEl) return;
+    // 지도 안 작은 버튼에는 짧은 기호 (data-short), 넓은 화면에서는 원래 글자
+    viewEl.querySelectorAll('[data-short]').forEach(function (b) {
+      if (!b.dataset.long) b.dataset.long = b.textContent;
+      b.textContent = narrow.matches ? b.dataset.short : b.dataset.long;
+    });
+    if (narrow.matches) {
+      if (viewEl.parentNode !== wrap) wrap.appendChild(viewEl);
+    } else if (viewEl.parentNode !== barEl) {
+      barEl.insertBefore(viewEl, shareBtn);
+    }
+  }
+  if (legendEl && narrow.matches) legendEl.open = false;   // 폰은 범례를 접어서 시작
+  applyLayout();
+  narrow.addEventListener('change', function () {
+    applyLayout();
+    if (legendEl && !narrow.matches) legendEl.open = true;
+  });
+
+  // 지도 칸 높이를 CSS 에 알려줌 (탭을 그 바로 아래에 붙이려고)
+  var stageEl = q('.replay__stage');
+  function measureStage() {
+    if (stageEl) root.style.setProperty('--stage-h', stageEl.offsetHeight + 'px');
+  }
+  if (window.ResizeObserver && stageEl) new ResizeObserver(measureStage).observe(stageEl);
+  measureStage();
+
+  // 아래 칸 탭 (폰)
+  var panelsEl = q('[data-panels]');
+  if (panelsEl && sideEl) {
+    panelsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-value]');
+      if (!btn) return;
+      sideEl.setAttribute('data-panel', btn.getAttribute('data-value'));
+      // 내려가 있었으면 바꾼 칸의 맨 위가 보이게
+      var top = sideEl.getBoundingClientRect().top;
+      var stageH = stageEl && getComputedStyle(stageEl).position === 'sticky' ? stageEl.offsetHeight : 0;
+      if (top < stageH) window.scrollBy(0, top - stageH);
+      panelsEl.querySelectorAll('[data-value]').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+    });
+  }
 
   // 지도 영역 크기가 바뀌면 (창 크기, 폰 회전) 다시 맞춘다
   if (window.ResizeObserver) new ResizeObserver(function () { if (R) resize(); }).observe(wrap);

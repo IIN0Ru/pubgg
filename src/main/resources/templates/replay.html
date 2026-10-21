@@ -12,7 +12,7 @@
     <script th:replace="~{fragments/theme :: init}"></script>
     <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
 </head>
-<body>
+<body class="page-replay">
 
 <header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
 
@@ -63,16 +63,18 @@
                     <button type="button" class="tab" data-value="all" aria-pressed="false">전체</button>
                 </div>
                 <div class="replay__view">
-                    <button type="button" class="replay__icon" data-follow aria-pressed="true" title="우리 팀 따라가기">따라가기</button>
+                    <button type="button" class="replay__icon" data-follow aria-pressed="true" title="우리 팀 따라가기" aria-label="우리 팀 따라가기" data-short="◎">따라가기</button>
                     <button type="button" class="replay__icon" data-zoom="out" aria-label="축소">−</button>
                     <button type="button" class="replay__icon" data-zoom="in" aria-label="확대">+</button>
-                    <button type="button" class="replay__icon" data-zoom="fit" title="지도 전체 보기">전체</button>
-                    <button type="button" class="replay__icon" data-share title="지금 장면으로 바로 열리는 주소를 복사해요">장면 링크</button>
+                    <button type="button" class="replay__icon" data-zoom="fit" title="지도 전체 보기" aria-label="지도 전체 보기" data-short="⤢">전체</button>
                 </div>
+                <button type="button" class="replay__icon replay__share" data-share title="지금 장면으로 바로 열리는 주소를 복사해요">장면 링크</button>
             </div>
 
             <div class="replay__canvas" data-canvas-wrap>
                 <canvas data-canvas role="img" aria-label="2D 리플레이 지도. 아래 경기 흐름 목록에서 같은 내용을 글로 볼 수 있어요."></canvas>
+                <!-- 폰: 한 손가락으로 지도를 끌면 페이지가 내려가고, 지도는 두 손가락으로 움직인다는 안내 -->
+                <p class="replay__touch-hint" data-touch-hint aria-hidden="true">두 손가락으로 지도를 움직여요</p>
                 <p class="replay__status" data-status role="status">리플레이를 만드는 중이에요. 처음 여는 경기는 몇 초 걸려요.</p>
             </div>
 
@@ -109,6 +111,9 @@
                 </div>
             </div>
 
+            <!-- 범례: PC 는 늘 펼침, 폰은 접어 둠 (replay.js) -->
+            <details class="replay__legend-box" data-legend open>
+                <summary>범례</summary>
             <p class="replay__legend">
                 <span><i class="replay__dot replay__dot--me"></i>나</span>
                 <span><i class="replay__dot"></i>팀원</span>
@@ -124,12 +129,21 @@
                 <span>흰 원 다음 안전구역</span>
                 <span>점선 비행기</span>
             </p>
+            </details>
         </section>
 
         <!-- 오른쪽: 우리 팀 + 경기 흐름 / 교전 -->
-        <aside class="replay__side">
+        <aside class="replay__side" data-side data-panel="flow">
+            <!-- 폰: 아래 칸들을 탭으로 하나씩 (PC 에서는 숨김, 전부 보임) -->
+            <div class="tabs replay__panels" role="group" aria-label="보여줄 칸" data-panels>
+                <button type="button" class="tab is-active" data-value="flow" aria-pressed="true">경기 흐름</button>
+                <button type="button" class="tab" data-value="team" aria-pressed="false">우리 팀</button>
+                <button type="button" class="tab" data-value="stats" aria-pressed="false">교전</button>
+                <button type="button" class="tab" data-value="death" aria-pressed="false">죽기 전 30초</button>
+            </div>
+
             <!-- 죽기 전 30초: 지금 시각까지 우리 팀이 마지막으로 기절·사망한 순간, 그 전에 받은 피해 -->
-            <section class="sidebox replay__death" data-death hidden>
+            <section class="sidebox replay__death" data-death data-panel-id="death" hidden>
                 <h2 class="sidebox__title">죽기 전 30초</h2>
                 <div class="replay__death-head">
                     <b data-death-title>N0-RU 기절 <span>21:05</span></b>
@@ -138,20 +152,22 @@
                 <p class="replay__death-sum" data-death-sum></p>
                 <ol class="replay__hurts" data-hurts></ol>
             </section>
+            <p class="sidebox replay__death-none" data-panel-id="death">아직 우리 팀이 당한 순간이 없어요. 재생하다 팀원이 기절하거나 죽으면 여기에 나와요.</p>
 
-            <section class="sidebox">
+            <section class="sidebox" data-panel-id="team">
                 <h2 class="sidebox__title">우리 팀 <span data-alive></span></h2>
                 <ol class="replay__team" data-team></ol>
             </section>
 
             <!-- 교전 지표: 이 판 합계 + 교전마다 한 줄 -->
-            <section class="sidebox" data-stats hidden>
+            <section class="sidebox" data-stats data-panel-id="stats" hidden>
                 <h2 class="sidebox__title">교전 <span>이 판 우리 팀</span></h2>
                 <dl class="replay__stats" data-stats-total></dl>
                 <ol class="replay__fightstats" data-stats-rows></ol>
             </section>
+            <p class="sidebox replay__death-none" data-panel-id="stats">우리 팀이 싸운 기록이 없어요.</p>
 
-            <section class="sidebox replay__flow">
+            <section class="sidebox replay__flow" data-panel-id="flow">
                 <div class="replay__flow-head">
                     <h2 class="sidebox__title" data-flow-title>경기 흐름</h2>
                     <div class="tabs" role="group" aria-label="경기 흐름 거르기" data-feed-filter>

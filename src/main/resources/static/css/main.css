@@ -870,10 +870,12 @@ body {
     margin-left: auto;
 }
 
+/* 막대마다 옅은 바탕(100%)을 깔고 그 판의 값만큼 진하게. 낮은 값이 끊긴 점선처럼 보이지 않게 */
 .luck__bars span {
     width: 6px;
+    height: 100%;
     border-radius: 2px;
-    background: var(--hairline-strong);
+    background: linear-gradient(to top, var(--muted) var(--h, 0%), var(--surface-elevated) var(--h, 0%));
 }
 
 .zone__caption + .zone__legend { margin-top: 6px; }
@@ -1916,7 +1918,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .replay__canvas canvas {
     display: block;
     width: 100%;
-    touch-action: none;   /* 손가락으로 끌어서 이동 */
+    touch-action: pan-x pan-y;   /* 한 손가락은 페이지 내리기, 두 손가락(확대·이동)은 replay.js 가 받음 */
     cursor: grab;
 }
 
@@ -2376,15 +2378,113 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     color: var(--muted);
 }
 
+/* 범례 접기 (PC 에서는 제목 없이 늘 펼침) */
+.replay__legend-box > summary { display: none; }
+
+/* 폰 탭·안내: PC 에서는 안 보임 */
+.replay__panels,
+.replay__death-none,
+.replay__touch-hint { display: none; }
+
 @media (max-width: 960px) {
     .replay { padding: 16px 16px 96px; }
-    .replay__body { grid-template-columns: 1fr; }
+    .replay__body { grid-template-columns: minmax(0, 1fr); }
     .replay__title { font-size: 24px; }
     .replay__feed { max-height: 360px; }
+
+    /* 조작줄: 한 줄로, 넘치면 옆으로 밀어서 */
+    .replay__bar {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        gap: 6px;
+        margin-bottom: 10px;
+        scrollbar-width: none;
+    }
+    .replay__bar::-webkit-scrollbar { display: none; }
+    .replay__bar .tab { white-space: nowrap; }
+    .replay__share { flex: none; white-space: nowrap; }
+
+    /* 따라가기·확대·축소·전체는 지도 오른쪽 위에 (replay.js 가 지도 안으로 옮김) */
+    .replay__canvas .replay__view {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        flex-direction: column;
+    }
+    .replay__canvas .replay__icon {
+        width: 36px;
+        padding: 0;
+        background: var(--surface-card);
+        font-size: 12px;
+    }
+
+    /* 범례는 접어 둠 */
+    .replay__legend-box > summary {
+        display: list-item;
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+    }
+    .replay__legend-box .replay__legend { margin-top: 8px; }
+
+    /* 아래 칸들은 탭으로 하나씩 */
+    .replay__panels {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .replay__panels .tab { flex: none; white-space: nowrap; }
+    .replay__side > [data-panel-id] { display: none; }
+    .replay__side[data-panel="flow"] > [data-panel-id="flow"],
+    .replay__side[data-panel="team"] > [data-panel-id="team"],
+    .replay__side[data-panel="stats"] > [data-panel-id="stats"]:not([hidden]):not(.replay__death-none),
+    .replay__side[data-panel="death"] > [data-panel-id="death"]:not([hidden]):not(.replay__death-none),
+    .replay__side[data-panel="death"] > [data-death][hidden] + .replay__death-none,
+    .replay__side[data-panel="stats"] > [data-stats][hidden] + .replay__death-none { display: block; }
+    .replay__death-none { margin: 0; font-size: 13px; color: var(--muted); }
+
+    /* 한 손가락 = 페이지, 두 손가락 = 지도 안내 */
+    .replay__touch-hint {
+        display: grid;
+        place-items: center;
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        background: rgba(10, 10, 10, 0.55);   /* 지도 위라 고정 (MAP_COLORS.dark) */
+        color: #FFFFFF;
+        font-size: 14px;
+        font-weight: 600;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .replay__touch-hint.is-on { opacity: 1; }
+}
+
+/* 지도·재생줄은 위에 붙여 두고 아래 칸만 내려간다. 화면이 낮으면(가로로 돌린 폰) 붙이지 않음 */
+@media (max-width: 960px) and (min-height: 560px) {
+    .replay__stage {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+    /* 탭도 지도 바로 아래에 붙여서, 내려간 채로 칸을 바꿀 수 있게 (--stage-h 는 replay.js 가 잰 지도 칸 높이) */
+    .replay__panels {
+        position: sticky;
+        top: var(--stage-h, 0px);
+        z-index: 19;
+        padding: 8px 0;
+        margin: -8px 0 0;
+        background: var(--canvas);
+    }
 }
 
 @media (max-width: 640px) {
     .replay__stage { padding: 10px; }
     .replay__timeline { flex-basis: 100%; order: 3; }
     .replay__speed { margin-left: auto; }
+    .page-replay .topsearch { display: none; }   /* 리플레이는 위 검색창 대신 지도부터 (← 전적 링크로 돌아감) */
 }

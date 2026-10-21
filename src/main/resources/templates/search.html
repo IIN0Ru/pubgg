@@ -199,7 +199,7 @@
                 </div>
                 <div class="luck__bars" role="img"
                      th:aria-label="'판별 자기장 운: ' + ${#strings.listJoin(c.zoneLuckMatchPercents(), '%, ')} + '%'">
-                    <span th:each="h : ${c.zoneLuckBars()}" th:style="'height:' + ${h} + '%'" style="height:60%"></span>
+                    <span th:each="h : ${c.zoneLuckBars()}" th:style="'--h:' + ${h} + '%'" style="--h:60%"></span>
                 </div>
             </div>
         </article>

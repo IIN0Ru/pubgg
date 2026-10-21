@@ -76,7 +76,7 @@ class SeasonServiceTest {
         assertThat(rank.tierLabel()).isEqualTo("플래티넘 3");
         assertThat(rank.rankPointText()).isEqualTo("2,450 RP");
         assertThat(rank.rounds()).isEqualTo(120);
-        assertThat(rank.kdaText()).isEqualTo("2.76");
+        assertThat(rank.kdaText()).isEqualTo("2.64");   // (210 + 80) ÷ (120 - 10). 응답의 kda 2.76 은 안 씀
         assertThat(rank.avgDamage()).isEqualTo(280);
         assertThat(rank.top10Percent()).isEqualTo(61);
     }

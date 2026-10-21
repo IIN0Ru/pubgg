@@ -79,6 +79,17 @@ public class SeasonService {
                 .max(Comparator.comparingInt(SeasonRank::rounds));
     }
 
+    /**
+     * 시즌 KDA = (킬 + 어시스트) ÷ 1등 못 한 판 수. 플레이 카드 KDA 와 같은 기준이라 둘을 비교할 수 있다.
+     * API 의 kda 값은 실제 응답에서 0 으로 오는 경우가 있어서 쓰지 않는다 (2026-10 실제 경기로 확인).
+     * 한 번도 안 진 시즌이면 (킬 + 어시스트) 그대로.
+     */
+    static double kda(RankedStatsResponse.ModeStats s) {
+        int ka = s.kills() + s.assists();
+        int lost = s.roundsPlayed() - s.wins();
+        return lost <= 0 ? ka : (double) ka / lost;
+    }
+
     private static SeasonRank toRank(String mode, RankedStatsResponse.ModeStats s) {
         RankedStatsResponse.Tier tier = s.currentTier();
         return new SeasonRank(
@@ -87,7 +98,7 @@ public class SeasonService {
                 tier != null ? tier.subTier() : null,
                 s.currentRankPoint(),
                 s.roundsPlayed(),
-                s.kda(),
+                kda(s),
                 s.roundsPlayed() == 0 ? 0 : (int) Math.round(s.damageDealt() / s.roundsPlayed()),
                 s.avgRank(),
                 (int) Math.round(s.top10Ratio() * 100));
