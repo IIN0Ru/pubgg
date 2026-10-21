@@ -18,8 +18,10 @@
   if (!root || !root.querySelector('[data-canvas]')) return;
 
   // ---------- 설정 ----------
-  var NEAR_METERS = 300;     // 우리 팀 누구와든 이 거리 안에 있는 적만 보여준다
-  var EVENT_NEAR_SECONDS = 8; // 우리 팀 사건에 얽힌 적은 거리와 상관없이 이 시간 동안 보여준다
+  var nearMeters = 500;      // 우리 팀 누구와든 이 거리 안의 적을 보여준다 (화면에서 300m/500m/1km/전체 고름)
+  var FAR_FADE = 1.3;        // 범위의 1.3배 안은 흐리게 먼저 보여준다 (갑자기 튀어나오지 않게)
+  var FIGHT_LEAD_SECONDS = 30;  // 우리와 싸울 적은 첫 기절·명중 30초 전부터 거리와 상관없이 보여준다
+  var FIGHT_TAIL_SECONDS = 10;  // 마지막으로 주고받은 뒤 10초까지
   var TRAIL_SECONDS = 90;    // 재생 중 보여주는 지나온 길 길이
   var KILL_MARK_SECONDS = 12; // ✕ 표시가 남아 있는 시간
   var HIT_SECONDS = 1.5;     // 명중선이 남아 있는 시간
@@ -409,7 +411,7 @@
     var teamPos = team.map(function (m) { return posAt(m.track, t); }).filter(function (p) { return p && !p.dead; });
     R.events.forEach(function (e) {
       if (e.type !== 'kill' || e.t > t || e.t < t - KILL_MARK_SECONDS) return;
-      if (!e.ours && !isNear(e.x, e.y, teamPos)) return;
+      if (!e.ours && nearness(e.x, e.y, teamPos) === 0) return;
       var a = 1 - (t - e.t) / KILL_MARK_SECONDS;
       cross(sx(e.x), sy(e.y), e.ours ? colors.ink : colors.muted, a, 7);
     });
@@ -420,10 +422,13 @@
     enemies.forEach(function (p) {
       var pos = posAt(p, t);
       if (!pos || pos.dead) return;
-      if (!involved[p.name] && !isNear(pos.x, pos.y, teamPos)) return;
+      // 1 = 범위 안 또는 우리와 싸우는 중, 0.35 = 범위를 조금 넘음(흐리게), 0 = 안 보여줌
+      var alpha = involved[p.name] ? 1 : nearness(pos.x, pos.y, teamPos);
+      if (alpha === 0) return;
       var color = teamColor(p.team);
       var x = sx(pos.x), y = sy(pos.y);
       ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.beginPath();
       ctx.arc(x, y, 7, 0, Math.PI * 2);
       if (pos.knocked) {
@@ -465,26 +470,47 @@
     updatePanels(t);
   }
 
-  function isNear(x, y, teamPos) {
+  /** 우리 팀과 얼마나 가까운지: 1 = 범위 안, 0.35 = 범위의 1.3배 안, 0 = 멀다. 전체 보기면 늘 1 */
+  function nearness(x, y, teamPos) {
+    if (nearMeters === Infinity) return 1;
+    var best = Infinity;
     for (var i = 0; i < teamPos.length; i++) {
-      if (Math.hypot(teamPos[i].x - x, teamPos[i].y - y) <= NEAR_METERS) return true;
+      best = Math.min(best, Math.hypot(teamPos[i].x - x, teamPos[i].y - y));
     }
-    return false;
+    if (best <= nearMeters) return 1;
+    if (best <= nearMeters * FAR_FADE) return 0.35;
+    return 0;
   }
 
-  /** 지금 우리 팀과 싸우는 중인 적 (최근·곧 있을 우리 팀 사건에 이름이 나온 적) */
+  /**
+   * 지금 우리 팀과 싸우는 중이거나 곧 싸울 적.
+   * 우리 팀 기절·킬·명중에 이름이 나온 적을, 그 적과 처음 주고받기 30초 전부터 마지막 10초 뒤까지 보여준다.
+   * (위치 기록이 10초 간격이라 300m 기준만 쓰면 이미 쏘고 있을 때 나타나서)
+   */
+  var enemyWindows = null;   // 닉네임 → [처음 주고받은 시각, 마지막 시각]
   function involvedEnemies(t) {
+    if (!enemyWindows) {
+      enemyWindows = {};
+      var add = function (name, when) {
+        if (!name || !byName[name] || byName[name].team === R.myTeam) return;
+        var w = enemyWindows[name] || (enemyWindows[name] = [when, when]);
+        w[0] = Math.min(w[0], when);
+        w[1] = Math.max(w[1], when);
+      };
+      R.events.forEach(function (e) {
+        if (!e.ours) return;
+        add(e.actor, e.t);
+        add(e.target, e.t);
+      });
+      (R.hits || []).forEach(function (h) {
+        add(h.attacker, h.t);
+        add(h.victim, h.t);
+      });
+    }
     var names = {};
-    R.events.forEach(function (e) {
-      if (!e.ours || Math.abs(e.t - t) > EVENT_NEAR_SECONDS) return;
-      if (e.actor) names[e.actor] = true;
-      if (e.target) names[e.target] = true;
-    });
-    // 우리 팀과 총을 주고받은 적도 (멀리서 쏜 저격수 포함)
-    (R.hits || []).forEach(function (h) {
-      if (Math.abs(h.t - t) > EVENT_NEAR_SECONDS) return;
-      names[h.attacker] = true;
-      names[h.victim] = true;
+    Object.keys(enemyWindows).forEach(function (name) {
+      var w = enemyWindows[name];
+      if (t >= w[0] - FIGHT_LEAD_SECONDS && t <= w[1] + FIGHT_TAIL_SECONDS) names[name] = true;
     });
     return names;
   }
@@ -840,6 +866,16 @@
   tabs(feedFilterEl, function (v) { state.feedFilter = v; applyFeedFilter(); });
   tabs(q('[data-phase]'), function (v) { state.phase = Number(v); draw(); });
   tabs(q('[data-who]'), function (v) { state.who = v; draw(); });
+
+  // 적 표시 범위
+  var rangeLabel = q('[data-range-label]');
+  tabs(q('[data-range]'), function (v) {
+    nearMeters = v === 'all' ? Infinity : Number(v);
+    if (rangeLabel) {
+      rangeLabel.textContent = v === 'all' ? '모든 적' : (nearMeters >= 1000 ? nearMeters / 1000 + 'km' : nearMeters + 'm') + ' 안';
+    }
+    draw();
+  });
   tabs(q('[data-mode]'), function (v) { setMode(v); });
 
   function setMode(mode) {

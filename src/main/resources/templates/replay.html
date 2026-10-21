@@ -55,6 +55,13 @@
                     <button type="button" class="tab is-active" data-value="play" aria-pressed="true">재생</button>
                     <button type="button" class="tab" data-value="path" aria-pressed="false">동선 전체</button>
                 </div>
+                <div class="tabs" role="group" aria-label="적 표시 범위" data-range
+                     title="우리 팀 누구와든 이 거리 안의 적을 보여줘요. 우리와 싸울 적은 30초 전부터 거리와 상관없이 보여요">
+                    <button type="button" class="tab" data-value="300" aria-pressed="false">300m</button>
+                    <button type="button" class="tab is-active" data-value="500" aria-pressed="true">500m</button>
+                    <button type="button" class="tab" data-value="1000" aria-pressed="false">1km</button>
+                    <button type="button" class="tab" data-value="all" aria-pressed="false">전체</button>
+                </div>
                 <div class="replay__view">
                     <button type="button" class="replay__icon" data-follow aria-pressed="true" title="우리 팀 따라가기">따라가기</button>
                     <button type="button" class="replay__icon" data-zoom="out" aria-label="축소">−</button>
@@ -104,7 +111,7 @@
             <p class="replay__legend">
                 <span><i class="replay__dot replay__dot--me"></i>나</span>
                 <span><i class="replay__dot"></i>팀원</span>
-                <span><i class="replay__dot replay__dot--enemy"></i>근처 적 (300m 안, 팀마다 색)</span>
+                <span><i class="replay__dot replay__dot--enemy"></i>적 (<span data-range-label>500m 안</span>, 팀마다 색 · 범위 근처는 흐리게)</span>
                 <span><i class="replay__line"></i>우리가 맞힘</span>
                 <span><i class="replay__line replay__line--taken"></i>우리가 맞음</span>
                 <span>✕ 킬</span>
