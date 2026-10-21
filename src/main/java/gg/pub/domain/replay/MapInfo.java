@@ -20,7 +20,7 @@ import java.util.Optional;
  */
 public record MapInfo(String name, String label, String tiles, int levels, int size) {
 
-    /** 경쟁전 맵은 모두 8km × 8km. (론도 8km 는 아직 실제 데이터로 확인 전) */
+    /** 경쟁전 맵은 모두 8km × 8km (론도 포함, 실제 경기로 확인) */
     private static final int EIGHT_KM = 8_160;
 
     /** 512 → 1024 → 2048 → 4096 → 8192 */
