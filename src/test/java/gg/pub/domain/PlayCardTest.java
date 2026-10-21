@@ -17,7 +17,7 @@ class PlayCardTest {
         return new PlayCard(10, 30, 10, 8, 400, "FPP",
                 List.of(new WeaponUsage("Beryl M762", WeaponClass.AR_762, 48),
                         new WeaponUsage("Mini 14", WeaponClass.DMR, 31)),
-                2.0, 10, List.of(), zone, List.of(20, 50, 130), farming);
+                2.0, 10, List.of(), zone, List.of(20, 50, 130), null, List.of(), farming);
     }
 
     @Test
@@ -60,6 +60,23 @@ class PlayCardTest {
         assertThat(card(50).zoneVerdict()).isEqualTo("중간");
         assertThat(card(70).zoneVerdict()).isEqualTo("외곽 운영");
         assertThat(card(null).zoneVerdict()).isEmpty();
+    }
+
+    private static PlayCard luck(Integer percent, List<Integer> matches) {
+        return new PlayCard(10, 30, 10, 8, 400, "FPP", List.of(), 2.0, 10, List.of(),
+                50, List.of(50), percent, matches, null);
+    }
+
+    @Test
+    void 자기장_운_판정과_판별_막대() {
+        assertThat(luck(72, List.of()).zoneLuckVerdict()).isEqualTo("운 좋음");
+        assertThat(luck(60, List.of()).zoneLuckVerdict()).isEqualTo("운 좋음");
+        assertThat(luck(55, List.of()).zoneLuckVerdict()).isEqualTo("보통");
+        assertThat(luck(40, List.of()).zoneLuckVerdict()).isEqualTo("운 나쁨");
+        assertThat(luck(null, List.of()).zoneLuckVerdict()).isEmpty();
+        assertThat(luck(null, List.of()).hasZoneLuck()).isFalse();
+        // 0%여도 막대가 보이게 4
+        assertThat(luck(50, List.of(0, 35, 100)).zoneLuckBars()).containsExactly(4, 35, 100);
     }
 
     @Test

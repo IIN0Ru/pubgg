@@ -119,7 +119,7 @@ class SeasonServiceTest {
     @Test
     void 최근_10경기와_시즌을_비교한다() {
         // 최근: 킬 20 + 어시 6 ÷ 죽은 판 8 = 3.25, 평균 딜 310
-        PlayCard card = new PlayCard(10, 20, 6, 8, 310, "FPP", List.of(), 0, 0, List.of(), null, List.of(), null);
+        PlayCard card = new PlayCard(10, 20, 6, 8, 310, "FPP", List.of(), 0, 0, List.of(), null, List.of(), null, List.of(), null);
         SeasonRank season = new SeasonRank("squad-fpp", "Platinum", "3", 2450, 120, 2.76, 330, 7.4, 61);
 
         List<SeasonRank.Comparison> rows = season.compareWith(card);

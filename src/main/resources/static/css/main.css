@@ -822,6 +822,60 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* 자기장 운: 운영 미니맵 아래 한 줄. 큰 노란 숫자 + 판별 작은 막대 */
+.luck {
+    display: flex;
+    flex-wrap: wrap;   /* 좁은 화면에서는 판별 막대가 다음 줄로 */
+    align-items: center;
+    gap: 12px 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hairline);
+}
+
+.luck__value {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--primary-text);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.luck__text { flex: 1 1 180px; min-width: 0; }
+
+.luck__title {
+    margin: 0 0 2px;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.luck__caption {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.luck__bars {
+    flex: none;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 32px;
+    margin-left: auto;
+}
+
+.luck__bars span {
+    width: 6px;
+    border-radius: 2px;
+    background: var(--hairline-strong);
+}
+
 .zone__caption + .zone__legend { margin-top: 6px; }
 
 .zone__legend {

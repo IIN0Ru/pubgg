@@ -13,8 +13,10 @@ import java.util.Map;
  * @param hyenaEngagements    우리가 시작한 교전 중, 상대가 직전 10초 안에 다른 팀에게 맞고 있던 경우
  * @param pirateKnocks        차에 타 있거나 내린 직후 움직이는 적을 맞히고, 그 적을 내가 기절·킬시킨 횟수
  * @param carePackages        보급상자를 연 횟수 (같은 상자는 1번)
- * @param zoneRatioSum        3페이즈부터 (자기장 중심까지 거리 ÷ 반지름) 값들의 합
- * @param zoneSamples         위 값을 잰 횟수
+ * @param zoneRatioSum        운영: 3페이즈부터 자기장이 줄어들기 시작할 때 (흰 원 중심까지 거리 ÷ 반지름) 값들의 합
+ * @param zoneSamples         위 값을 잰 횟수 (페이즈 수)
+ * @param zoneLuckSum         자기장 운: 3페이즈부터 새 흰 원이 뜬 직후 (1 − 중심까지 거리 ÷ 반지름, 0 아래는 0) 값들의 합
+ * @param zoneLuckSamples     위 값을 잰 횟수 (페이즈 수)
  * @param landing             낙하산 착지 기록 (없으면 null)
  * @param phase3              3페이즈 시작 순간의 가방 상태 (그 전에 죽었으면 null)
  */
@@ -27,6 +29,8 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
                              int carePackages,
                              double zoneRatioSum,
                              int zoneSamples,
+                             double zoneLuckSum,
+                             int zoneLuckSamples,
                              Landing landing,
                              Bag phase3) {
 
@@ -46,7 +50,7 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
 
     /** 주무기·투척만 있는 기록 (테스트에서 간단히 만들 때) */
     public TelemetryStats(Map<String, Long> weaponSeconds, int throwables) {
-        this(weaponSeconds, throwables, 0, 0, 0, 0, 0, 0, 0, null, null);
+        this(weaponSeconds, throwables, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, null);
     }
 
     /** 착지·가방 정보 없이 만들 때 (테스트용) */
@@ -54,6 +58,6 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
                           int engagementsStarted, int engagementsReceived, int hyenaEngagements,
                           int pirateKnocks, int carePackages, double zoneRatioSum, int zoneSamples) {
         this(weaponSeconds, throwables, engagementsStarted, engagementsReceived, hyenaEngagements,
-                pirateKnocks, carePackages, zoneRatioSum, zoneSamples, null, null);
+                pirateKnocks, carePackages, zoneRatioSum, zoneSamples, 0, 0, null, null);
     }
 }

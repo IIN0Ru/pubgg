@@ -60,6 +60,8 @@ public class TelemetryAnalyzer {
     static final double MOVING_DISTANCE_CM = 1_000;
     /** 이 단계(isGame)부터 자기장 위치를 잰다. 3.0 = 3페이즈 */
     static final double ZONE_FROM_PHASE = 3.0;
+    /** 자기장 순간(새 원·줄어들기 시작) 뒤 이 시간 안에 온 내 위치로 잰다. 위치 기록이 10초쯤 간격이라 넉넉히 */
+    static final Duration ZONE_SAMPLE_WINDOW = Duration.ofSeconds(20);
 
     /** 회복·부스트템 */
     static final Set<String> HEAL_ITEMS = Set.of(
@@ -132,10 +134,16 @@ public class TelemetryAnalyzer {
         // 보급
         private final Set<String> carePackageIds = new HashSet<>();
 
-        // 자기장
+        // 자기장 (흰 원 = 다음 안전구역, 파란 원 = 지금 줄어드는 경계)
         private double zoneX, zoneY, zoneRadius;
+        private double safeRadius;
+        private boolean shrinking;
+        /** 흰 원이 새로 떴을 때 / 파란 원이 줄기 시작할 때, 다음 내 위치로 잴 원 */
+        private Zone pendingLuck, pendingEdge;
         private double zoneRatioSum;
         private int zoneSamples;
+        private double zoneLuckSum;
+        private int zoneLuckSamples;
 
         // 착지
         private Landing landing;
@@ -150,6 +158,9 @@ public class TelemetryAnalyzer {
         }
 
         record Position(double x, double y, Instant time) {
+        }
+
+        record Zone(double x, double y, double radius, Instant time) {
         }
 
         Tracker(String accountId) {
@@ -189,7 +200,7 @@ public class TelemetryAnalyzer {
                     }
                 }
                 case "LogPlayerPosition" -> onPosition(e, time);
-                case "LogGameStatePeriodic" -> onGameState(e);
+                case "LogGameStatePeriodic" -> onGameState(e, time);
                 case "LogPlayerMakeGroggy" -> onKnockOrKill(e.path("attacker"), e.path("victim"), time);
                 case "LogPlayerKillV2" -> {
                     JsonNode victim = e.path("victim");
@@ -373,21 +384,64 @@ public class TelemetryAnalyzer {
                 movingOnFoot.remove(playerId);
             }
 
-            // 자기장 대비 내 위치 (3페이즈부터)
-            double phase = e.path("common").path("isGame").asDouble(0);
-            if (playerId.equals(me) && phase >= ZONE_FROM_PHASE && zoneRadius > 0) {
-                zoneRatioSum += Math.min(1.5, distance(x, y, zoneX, zoneY) / zoneRadius);
-                zoneSamples++;
+            if (!playerId.equals(me)) {
+                return;
+            }
+            // 자기장 운: 흰 원이 새로 뜬 직후 내 위치. 중심 1, 경계·밖 0
+            if (pendingLuck != null) {
+                if (fresh(pendingLuck, time)) {
+                    zoneLuckSum += Math.max(0, 1 - distance(x, y, pendingLuck.x(), pendingLuck.y()) / pendingLuck.radius());
+                    zoneLuckSamples++;
+                }
+                pendingLuck = null;
+            }
+            // 운영: 파란 원이 줄어들기 시작한 직후 내 위치. 중심 0, 경계 1 (밖은 1.5까지)
+            if (pendingEdge != null) {
+                if (fresh(pendingEdge, time)) {
+                    zoneRatioSum += Math.min(1.5, distance(x, y, pendingEdge.x(), pendingEdge.y()) / pendingEdge.radius());
+                    zoneSamples++;
+                }
+                pendingEdge = null;
             }
         }
 
-        private void onGameState(JsonNode e) {
+        /** 자기장 순간 뒤 이 시간 안에 온 내 위치만 쓴다 (그 사이 기록이 없으면 그 페이즈는 건너뜀) */
+        private static boolean fresh(Zone zone, Instant time) {
+            return Duration.between(zone.time(), time).compareTo(ZONE_SAMPLE_WINDOW) <= 0;
+        }
+
+        private void onGameState(JsonNode e, Instant time) {
             JsonNode state = e.path("gameState");
+            boolean counted = e.path("common").path("isGame").asDouble(0) >= ZONE_FROM_PHASE;
+
             double radius = state.path("poisonGasWarningRadius").asDouble(0);
             if (radius > 0) {
-                zoneX = state.path("poisonGasWarningPosition").path("x").asDouble();
-                zoneY = state.path("poisonGasWarningPosition").path("y").asDouble();
+                double x = state.path("poisonGasWarningPosition").path("x").asDouble();
+                double y = state.path("poisonGasWarningPosition").path("y").asDouble();
+                boolean newCircle = Math.abs(radius - zoneRadius) > 1
+                        || distance(x, y, zoneX, zoneY) > 1;
+                zoneX = x;
+                zoneY = y;
                 zoneRadius = radius;
+                if (newCircle) {
+                    // 새 원이 뜬 순간: 파란 원은 방금 다 줄어든 상태라 여기서 기준만 새로 잡는다
+                    shrinking = false;
+                    safeRadius = state.path("safetyZoneRadius").asDouble(safeRadius);
+                    if (counted) {
+                        pendingLuck = new Zone(x, y, radius, time);
+                    }
+                    return;
+                }
+            }
+
+            double safe = state.path("safetyZoneRadius").asDouble(0);
+            if (safe > 0) {
+                boolean smaller = safeRadius > 0 && safe < safeRadius - 1;
+                if (smaller && !shrinking && zoneRadius > 0 && counted) {
+                    pendingEdge = new Zone(zoneX, zoneY, zoneRadius, time);
+                }
+                shrinking = smaller;
+                safeRadius = safe;
             }
         }
 
@@ -411,6 +465,8 @@ public class TelemetryAnalyzer {
                     carePackageIds.size(),
                     zoneRatioSum,
                     zoneSamples,
+                    zoneLuckSum,
+                    zoneLuckSamples,
                     landing,
                     phase3);
         }

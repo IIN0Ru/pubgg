@@ -17,8 +17,10 @@ import java.util.Locale;
  * @param avgThrowables     한 판 평균 투척 개수
  * @param analyzedMatches   텔레메트리 분석에 성공한 경기 수 (아래 항목들은 이 경기들 기준)
  * @param titles            받은 칭호 (해적, 하이에나, 보급러)
- * @param zoneEdgePercent   3페이즈부터 자기장 안 평균 위치 (0 = 중심, 100 = 경계). 기록이 없으면 null
- * @param zoneMatchPercents 위 값을 경기마다 (3페이즈까지 간 경기만)
+ * @param zoneEdgePercent   운영: 3페이즈부터 자기장이 줄어들기 시작할 때 흰 원 안 평균 위치 (0 = 중심, 100 = 경계). 기록이 없으면 null
+ * @param zoneMatchPercents 위 값을 경기마다
+ * @param zoneLuckPercent   자기장 운: 3페이즈부터 새 흰 원이 뜬 직후 내가 중심에 얼마나 가까웠는지 (100 = 중심, 0 = 경계·밖). 없으면 null
+ * @param zoneLuckMatchPercents 위 값을 경기마다
  * @param farming           착지 성향, 3페이즈 시작 가방 상태
  */
 public record PlayCard(int matches,
@@ -33,6 +35,8 @@ public record PlayCard(int matches,
                        List<Title> titles,
                        Integer zoneEdgePercent,
                        List<Integer> zoneMatchPercents,
+                       Integer zoneLuckPercent,
+                       List<Integer> zoneLuckMatchPercents,
                        Farming farming) {
 
     /** KDA = (킬 + 어시스트) ÷ 죽은 판 수. 한 번도 안 죽었으면 (킬 + 어시스트) 그대로 */
@@ -61,6 +65,10 @@ public record PlayCard(int matches,
 
     public boolean hasZoneGauge() {
         return zoneEdgePercent != null;
+    }
+
+    public boolean hasZoneLuck() {
+        return zoneLuckPercent != null;
     }
 
     // ---------- 자기장 미니맵 그리기용 (220×220 그림, 안전구역 중심 110,110 · 반지름 92) ----------
@@ -126,6 +134,26 @@ public record PlayCard(int matches,
             return "센터 운영";
         }
         return zoneEdgePercent >= LEAN_HIGH ? "외곽 운영" : "중간";
+    }
+
+    /** 자기장 운 판정: 이 이상이면 운 좋음, 이 이하면 운 나쁨 */
+    static final int LUCK_GOOD = 60;
+    static final int LUCK_BAD = 40;
+
+    /** 자기장 운 한 단어: 운 좋음 / 운 나쁨 / 보통 */
+    public String zoneLuckVerdict() {
+        if (zoneLuckPercent == null) {
+            return "";
+        }
+        if (zoneLuckPercent >= LUCK_GOOD) {
+            return "운 좋음";
+        }
+        return zoneLuckPercent <= LUCK_BAD ? "운 나쁨" : "보통";
+    }
+
+    /** 판별 운 막대 높이 (%). 0%여도 막대가 보이게 최소 4 */
+    public List<Integer> zoneLuckBars() {
+        return zoneLuckMatchPercents.stream().map(p -> Math.max(4, Math.min(100, p))).toList();
     }
 
     /** 주무기 이름만 이어 붙인 것: "Beryl M762 · Mini 14" */

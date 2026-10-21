@@ -67,7 +67,10 @@ class TelemetryAnalyzerTest {
      *  14:13:30  내가 A1 기절 → 해적(1)
      *  14:13:40  걸어서 B1을 때림 → 해적 아님. 3팀과 새 교전, 걸기(4)
      *  보급상자: 77번(두 번 주움), 88번 → 2개. 팀원 99번은 제외
-     *  자기장: 2.5페이즈 위치는 제외. 3페이즈에서 중심(0), 반지름 40000 중 30000 떨어짐(0.75) → 합 0.75, 2번
+     *  자기장: 2페이즈에 줄어들기 시작한 건 제외.
+     *    14:16:00 3페이즈 새 원(중심 200000, 반지름 40000) → 14:16:10 내 위치가 딱 중심 → 운 1.0
+     *    14:16:15 파란 원이 줄기 시작 → 14:16:20 내 위치가 중심에서 30000 → 운영 0.75
+     *    14:16:25 계속 줄어드는 중 → 새로 재지 않음
      *  14:17:00  내가 죽음 → 이후 팀원 교전, 보급 55번은 제외
      */
     @Test
@@ -82,8 +85,10 @@ class TelemetryAnalyzerTest {
         assertThat(stats.hyenaEngagements()).isEqualTo(1);
         assertThat(stats.pirateKnocks()).isEqualTo(1);
         assertThat(stats.carePackages()).isEqualTo(2);
-        assertThat(stats.zoneSamples()).isEqualTo(2);
+        assertThat(stats.zoneSamples()).isEqualTo(1);
         assertThat(stats.zoneRatioSum()).isEqualTo(0.75);
+        assertThat(stats.zoneLuckSamples()).isEqualTo(1);
+        assertThat(stats.zoneLuckSum()).isEqualTo(1.0);
     }
 
     /**

@@ -100,6 +100,8 @@ public class PlayCardService {
                 titles(telemetry),
                 zoneEdgePercent(telemetry),
                 zoneMatchPercents(telemetry),
+                zoneLuckPercent(telemetry),
+                zoneLuckMatchPercents(telemetry),
                 farming(analyzed)
         ));
     }
@@ -188,7 +190,7 @@ public class PlayCardService {
         return List.copyOf(titles);
     }
 
-    /** 3페이즈부터 자기장 안 평균 위치. 0 = 중심, 100 = 경계 (경계 밖은 100으로) */
+    /** 운영: 3페이즈부터 자기장이 줄어들기 시작할 때 평균 위치. 0 = 중심, 100 = 경계 (경계 밖은 100으로) */
     static Integer zoneEdgePercent(List<TelemetryStats> telemetry) {
         double sum = telemetry.stream().mapToDouble(TelemetryStats::zoneRatioSum).sum();
         int samples = telemetry.stream().mapToInt(TelemetryStats::zoneSamples).sum();
@@ -198,11 +200,29 @@ public class PlayCardService {
         return (int) Math.round(Math.min(1.0, sum / samples) * 100);
     }
 
-    /** 경기마다 3페이즈부터 자기장 안 평균 위치 (%). 3페이즈까지 못 간 경기는 빠진다 */
+    /** 운영을 경기마다 (%). 3페이즈가 줄어들기 시작할 때까지 못 간 경기는 빠진다 */
     static List<Integer> zoneMatchPercents(List<TelemetryStats> telemetry) {
         return telemetry.stream()
                 .filter(t -> t.zoneSamples() > 0)
                 .map(t -> (int) Math.round(Math.min(1.0, t.zoneRatioSum() / t.zoneSamples()) * 100))
+                .toList();
+    }
+
+    /** 자기장 운: 3페이즈부터 새 원이 뜬 직후 평균. 100 = 늘 중심, 0 = 늘 경계나 밖 */
+    static Integer zoneLuckPercent(List<TelemetryStats> telemetry) {
+        double sum = telemetry.stream().mapToDouble(TelemetryStats::zoneLuckSum).sum();
+        int samples = telemetry.stream().mapToInt(TelemetryStats::zoneLuckSamples).sum();
+        if (samples == 0) {
+            return null;
+        }
+        return (int) Math.round(sum / samples * 100);
+    }
+
+    /** 자기장 운을 경기마다 (%) */
+    static List<Integer> zoneLuckMatchPercents(List<TelemetryStats> telemetry) {
+        return telemetry.stream()
+                .filter(t -> t.zoneLuckSamples() > 0)
+                .map(t -> (int) Math.round(t.zoneLuckSum() / t.zoneLuckSamples() * 100))
                 .toList();
     }
 

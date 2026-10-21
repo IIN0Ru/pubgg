@@ -145,12 +145,12 @@
     <section class="details" th:if="${result != null and result.hasCard()}" th:with="c=${result.card()}">
 
         <article class="detail">
-            <h2 class="detail__title">자기장 운영 <span>3페이즈부터</span></h2>
+            <h2 class="detail__title">자기장 <span>3페이즈부터</span></h2>
             <div class="zone" th:if="${c.hasZoneGauge()}">
                 <!-- 인게임 미니맵 느낌: 격자, 자기장 밖 빗금, 흰 원 = 안전구역.
                      흰 점 = 한 판, 노란 화살표 = 평균. 중심에서의 거리만 의미 있고 방향은 의미 없음 -->
                 <svg class="zone__map" viewBox="0 0 220 220" role="img"
-                     th:attr="aria-label='3페이즈부터 자기장 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리, ' + ${c.zoneMatchPercents().size()} + '판 기준'">
+                     th:aria-label="'자기장이 줄어들기 시작할 때 흰 원 중심에서 평균 ' + ${c.zoneEdgePercent()} + '퍼센트 거리, ' + ${c.zoneMatchPercents().size()} + '판 기준'">
                     <defs>
                         <pattern id="zone-hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
                             <line class="zone__hatch" x1="0" y1="0" x2="0" y2="12"/>
@@ -182,13 +182,26 @@
                         <b th:text="${c.zoneEdgePercent()} + '%'">38%</b>
                         <span class="zone__verdict" th:text="${c.zoneVerdict()}">센터 운영</span>
                     </p>
-                    <p class="zone__caption">안전구역 중심에서 떨어진 평균 거리<br>0% 중심 · 100% 경계</p>
+                    <p class="zone__caption">줄어들기 시작할 때 흰 원 중심에서 거리<br>0% 중심 · 100% 경계</p>
                     <p class="zone__legend">
                         흰 점 한 판 (<span th:text="${c.zoneMatchPercents().size()}">9</span>판) · 노란 화살표 평균 · 빗금 자기장 밖
                     </p>
                 </div>
             </div>
-            <p class="detail__empty" th:unless="${c.hasZoneGauge()}">3페이즈까지 살아남은 기록이 없어요.</p>
+            <p class="detail__empty" th:unless="${c.hasZoneGauge()}">3페이즈 자기장이 줄어들 때까지 살아남은 기록이 없어요.</p>
+
+            <!-- 자기장 운: 새 흰 원이 뜬 직후 내 위치. 100 = 중심, 0 = 경계·밖. 막대 하나가 한 판 -->
+            <div class="luck" th:if="${c.hasZoneLuck()}">
+                <b class="luck__value" th:text="${c.zoneLuckPercent()} + '%'">55%</b>
+                <div class="luck__text">
+                    <p class="luck__title">자기장 운 · <span th:text="${c.zoneLuckVerdict()}">보통</span></p>
+                    <p class="luck__caption">새 원이 떴을 때 중심에 얼마나 가까웠나</p>
+                </div>
+                <div class="luck__bars" role="img"
+                     th:aria-label="'판별 자기장 운: ' + ${#strings.listJoin(c.zoneLuckMatchPercents(), '%, ')} + '%'">
+                    <span th:each="h : ${c.zoneLuckBars()}" th:style="'height:' + ${h} + '%'" style="height:60%"></span>
+                </div>
+            </div>
         </article>
 
         <article class="detail">

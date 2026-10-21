@@ -117,6 +117,23 @@ class PlayCardServiceTest {
     }
 
     @Test
+    void 자기장_운은_새_원이_뜬_직후_위치로() {
+        // 경기 1: 2페이즈 동안 1.0 + 0.6 → 80%, 경기 2: 1페이즈 0.2 → 20%, 경기 3: 기록 없음
+        // 전체: (1.0 + 0.6 + 0.2) ÷ 3 = 0.6 → 60%
+        TelemetryStats a = luck(1.6, 2);
+        TelemetryStats b = luck(0.2, 1);
+        TelemetryStats none = luck(0, 0);
+
+        assertThat(PlayCardService.zoneLuckPercent(List.of(a, b, none))).isEqualTo(60);
+        assertThat(PlayCardService.zoneLuckMatchPercents(List.of(a, b, none))).containsExactly(80, 20);
+        assertThat(PlayCardService.zoneLuckPercent(List.of(none))).isNull();
+    }
+
+    private static TelemetryStats luck(double sum, int samples) {
+        return new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0, sum, samples, null, null);
+    }
+
+    @Test
     void 기준에_못_미치면_칭호가_없다() {
         // 해적 2번(3번 미만), 하이에나 1/2(교전 3번 미만이라 판단 안 함), 보급 0
         TelemetryStats t = new TelemetryStats(Map.of(), 0, 2, 0, 1, 2, 0, 0, 0);
@@ -161,7 +178,7 @@ class PlayCardServiceTest {
     }
 
     private static PlayCardService.Analyzed analyzed(String zone, TelemetryStats.Bag bag) {
-        TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0,
+        TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 new TelemetryStats.Landing(List.of(zone), 0, 0), bag);
         return new PlayCardService.Analyzed(match("m", "squad-fpp", 0, 0, 0, 5), stats);
     }
