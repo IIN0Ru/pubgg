@@ -10,7 +10,7 @@ import java.util.Optional;
  * 1) 에란겔·미라마·태이고: 텔레메트리 Character 의 zone(지역 ID)으로 판단한다.
  *    지역 ID 출처: github.com/pubg/api-assets (enums/telemetry/regionId.json)
  * 2) 론도(와 태이고 병원): 지역 ID 가 없어서, 공식 맵 이미지(지명 포함)에서 도시 위치를 읽어 좌표 원으로 판단한다.
- *    이미지 819px = 맵 816,000cm → 1px ≈ 996cm(약 10m). 맵 크기 8km는 확인 필요.
+ *    이미지 819px = 맵 816,000cm → 1px ≈ 996cm(약 10m). 맵 크기 8km (실제 경기로 확인).
  *
  * 어디를 대도시로 볼지는 직접 정했다. 바꾸려면 여기 목록만 고치면 된다.
  */
