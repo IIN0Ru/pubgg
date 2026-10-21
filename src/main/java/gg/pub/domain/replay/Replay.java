@@ -23,6 +23,7 @@ import java.util.List;
  * @param fights      우리 팀 교전 묶음 (동선 전체 보기에서 번호로 표시)
  * @param blasts      우리 팀이 피해를 준 투척·박격포·판처 한 발씩 (터진 곳은 맞은 사람 위치로 추정)
  * @param heals       우리 팀 회복·부스트템 사용
+ * @param hurts       우리 팀이 받은 피해 (죽기 전 30초 요약용). 같은 사람에게 같은 무기로 2초 안에 이어 맞으면 한 줄
  */
 public record Replay(String matchId,
                      MapInfo map,
@@ -37,7 +38,8 @@ public record Replay(String matchId,
                      Plane plane,
                      List<Fight> fights,
                      List<Blast> blasts,
-                     List<Heal> heals) {
+                     List<Heal> heals,
+                     List<Hurt> hurts) {
 
     /**
      * 한 사람의 이동 기록. 같은 순서의 t[i], x[i], y[i] 가 한 점이다 (배열로 보내야 JSON 이 작다).
@@ -49,9 +51,10 @@ public record Replay(String matchId,
      * @param x      x (m)
      * @param y      y (m)
      * @param v      그 순간 탄 것: 0 = 걸어서, 1 = 차량(바이크 포함), 2 = 보트
+     * @param hp     그 순간 체력 (0~100). 위치 기록의 체력에서 그 뒤 받은 피해·회복을 더하고 뺀 값
      * @param diedAt 죽은 시각 (초). 끝까지 살았으면 null
      */
-    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, int[] v, Integer diedAt) {
+    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, int[] v, int[] hp, Integer diedAt) {
 
         public static final int ON_FOOT = 0;
         public static final int CAR = 1;
@@ -148,7 +151,31 @@ public record Replay(String matchId,
      * @param knocks  우리 팀이 기절시킨 수
      * @param knocked 우리 팀이 기절당한 수
      * @param deaths  우리 팀이 죽은 수
+     * @param enemyTeam 가장 많이 주고받은 상대 팀 번호 (없으면 -1)
+     * @param converted 우리가 기절시킨 적 중 우리 팀이 끝내 죽인 수 (knocks 중)
+     * @param losses    우리 팀이 적에게 당한 횟수 (기절, 또는 기절 없이 바로 사망)
+     * @param traded    그중 10초 안에 우리 팀이 그 적을 기절·킬해서 복수한 수
+     * @param revived   우리 팀 기절 중 살려낸 수 (knocked 중)
      */
-    public record Fight(int n, int start, int end, int x, int y, int kills, int knocks, int knocked, int deaths) {
+    public record Fight(int n, int start, int end, int x, int y, int kills, int knocks, int knocked, int deaths,
+                        int enemyTeam, int converted, int losses, int traded, int revived) {
+    }
+
+    /**
+     * 우리 팀이 받은 피해 한 줄 (같은 사람에게 같은 무기로 2초 안에 이어 맞은 건 합침).
+     *
+     * @param t        처음 맞은 시각 (초)
+     * @param victim   맞은 우리 팀원 닉네임
+     * @param attacker 때린 사람 닉네임 (자기장·낙하 등은 null)
+     * @param weapon   무엇으로: 총 이름 (M416 ...), 수류탄, 자기장, 낙하, 차량 ...
+     * @param damage   합친 피해량 (반올림)
+     * @param hits     합친 횟수
+     * @param hp       마지막으로 맞은 뒤 남은 체력 (기절 중이면 기절 체력이 아니라 0)
+     * @param distance 때린 사람과의 거리 (m, 때린 사람이 없으면 -1)
+     * @param height   때린 사람이 몇 m 위에 있었는지 (아래면 음수, 없으면 0)
+     * @param headshot 한 번이라도 머리에 맞았는지
+     */
+    public record Hurt(int t, String victim, String attacker, String weapon, int damage, int hits, int hp,
+                       int distance, int height, boolean headshot) {
     }
 }

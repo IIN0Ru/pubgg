@@ -451,7 +451,8 @@
    }
   },
   "damageTypeCategory": "Damage_Explosion_Grenade",
-  "damageCauserName": "ProjGrenade_C"
+  "damageCauserName": "ProjGrenade_C",
+  "distance": 1180
  },
  {
   "_T": "LogPlayerKillV2",
@@ -499,6 +500,12 @@
     "y": 315000,
     "z": 0
    }
+  },
+  "finishDamageInfo": {
+   "damageTypeCategory": "Damage_Gun",
+   "damageCauserName": "WeapHK416_C",
+   "damageReason": "HeadShot",
+   "distance": 1520
   }
  },
  {
@@ -548,7 +555,7 @@
    "location": {
     "x": 340000,
     "y": 310000,
-    "z": 0
+    "z": 1500
    }
   },
   "victim": {
@@ -563,7 +570,9 @@
    }
   },
   "damageTypeCategory": "Damage_Gun",
-  "damage": 25
+  "damage": 25,
+  "damageCauserName": "WeapBerylM762_C",
+  "damageReason": "HeadShot"
  },
  {
   "_T": "LogPlayerTakeDamage",

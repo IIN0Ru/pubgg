@@ -52,8 +52,8 @@ class ReplayBuilderTest {
         assertThat(replay.duration()).isEqualTo(600);
 
         Replay.Track me = track("N0-RU");
-        assertThat(me.t()).containsExactly(140, 150, 160);   // 시작 전 위치는 빠짐
-        assertThat(me.x()).containsExactly(3100, 3150, 3210); // 160초는 두 번 와서 마지막 값
+        assertThat(me.t()).startsWith(140, 150, 160);   // 시작 전 위치는 빠짐 (그 뒤는 피해·기절 순간 위치)
+        assertThat(me.x()).startsWith(3100, 3150, 3210); // 160초는 두 번 와서 마지막 값
         assertThat(me.diedAt()).isEqualTo(330);
         assertThat(track("DuoFriend").diedAt()).isNull();
         assertThat(track("Enemy_07").diedAt()).isEqualTo(175);
@@ -61,9 +61,9 @@ class ReplayBuilderTest {
 
     @Test
     void 차량_보트를_탄_순간을_기록한다() {
-        assertThat(track("DuoFriend").v()).containsExactly(0, 1, 0);
-        assertThat(track("Enemy_07").v()).containsExactly(0, 2, 0);
-        assertThat(track("N0-RU").v()).containsExactly(0, 0, 0);   // 비행기는 차량 아이콘으로 그리지 않음
+        assertThat(track("DuoFriend").v()).startsWith(0, 1, 0);
+        assertThat(track("Enemy_07").v()).startsWith(0, 2, 0);
+        assertThat(track("N0-RU").v()).containsOnly(0);   // 비행기는 차량 아이콘으로 그리지 않음
     }
 
     @Test
@@ -113,6 +113,63 @@ class ReplayBuilderTest {
     }
 
     @Test
+    void 킬_글에_총_이름_거리_헤드샷() {
+        assertThat(replay.events().get(2).text()).isEqualTo("N0-RU → Enemy_07 킬 (M416 · 15m · 헤드샷)");
+    }
+
+    @Test
+    void 체력은_위치_기록에서_피해를_뺀다() {
+        Replay.Track me = track("N0-RU");
+        int at169 = indexOf(me.t(), 169);   // 내 수류탄에 5 맞음
+        assertThat(me.hp()[at169]).isEqualTo(95);
+        int at192 = indexOf(me.t(), 192);   // 자기장 2 + 적 수류탄 40
+        assertThat(me.hp()[at192]).isEqualTo(53);
+        int at320 = indexOf(me.t(), 320);   // 기절 중은 0
+        assertThat(me.hp()[at320]).isZero();
+    }
+
+    private static int indexOf(int[] arr, int value) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == value) {
+                return i;
+            }
+        }
+        throw new AssertionError(value + " 없음");
+    }
+
+    @Test
+    void 우리_팀이_받은_피해_한_줄씩() {
+        // 190초 Enemy_12 가 DuoFriend 를 Beryl 로 머리에 맞힘. 15m 위, 187m 거리
+        Replay.Hurt h = replay.hurts().stream().filter(x -> x.t() == 190).findFirst().orElseThrow();
+        assertThat(h.victim()).isEqualTo("DuoFriend");
+        assertThat(h.attacker()).isEqualTo("Enemy_12");
+        assertThat(h.weapon()).isEqualTo("Beryl");
+        assertThat(h.damage()).isEqualTo(25);
+        assertThat(h.hp()).isEqualTo(75);
+        assertThat(h.distance()).isEqualTo(187);
+        assertThat(h.height()).isEqualTo(15);
+        assertThat(h.headshot()).isTrue();
+        // 자기장 피해는 때린 사람 없이
+        assertThat(replay.hurts()).anyMatch(x -> x.weapon().equals("자기장") && x.attacker() == null);
+        // 적끼리 피해는 안 들어감
+        assertThat(replay.hurts()).noneMatch(x -> x.victim().equals("Other2"));
+    }
+
+    @Test
+    void 교전_지표() {
+        Replay.Fight first = replay.fights().get(0);
+        assertThat(first.enemyTeam()).isEqualTo(2);
+        assertThat(first.converted()).isEqualTo(1);   // Enemy_07 기절 → 내가 킬
+        assertThat(first.losses()).isEqualTo(1);      // DuoFriend 기절
+        assertThat(first.traded()).isZero();          // Enemy_12 를 10초 안에 못 잡음
+        assertThat(first.revived()).isEqualTo(1);     // 215초에 살림
+
+        Replay.Fight third = replay.fights().get(2);  // 나 기절 → 사망: 당한 건 기절 한 번으로 셈
+        assertThat(third.losses()).isEqualTo(1);
+        assertThat(third.revived()).isZero();
+    }
+
+    @Test
     void 비행기_경로와_페이즈() {
         assertThat(replay.plane()).isEqualTo(new Replay.Plane(1000, 1000, 6000, 6000));
         assertThat(replay.phases()).containsExactly(new Replay.Phase(1, 200), new Replay.Phase(2, 400));
@@ -125,7 +182,7 @@ class ReplayBuilderTest {
         assertThat(replay.events()).extracting(Replay.Event::type)
                 .containsExactly("landing", "knock", "kill", "knock", "revive", "ride", "knock", "package", "knock", "kill",
                         "kill", "knock");
-        assertThat(replay.events().get(1).text()).isEqualTo("N0-RU → Enemy_07 기절 (수류탄)");
+        assertThat(replay.events().get(1).text()).isEqualTo("N0-RU → Enemy_07 기절 (수류탄 · 12m)");
         assertThat(replay.events().get(5).text()).isEqualTo("DuoFriend 차량 탑승 (Mirado)");
         // 남의 팀끼리 킬, 보급상자는 우리 팀 사건이 아님
         assertThat(replay.events().get(10).ours()).isFalse();

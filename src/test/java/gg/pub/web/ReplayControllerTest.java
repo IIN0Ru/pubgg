@@ -71,8 +71,8 @@ class ReplayControllerTest {
     @Test
     void 데이터는_JSON_으로() throws Exception {
         Replay replay = new Replay(MATCH, MapInfo.of("Baltic_Main").orElseThrow(), 600, PLAYER, 1,
-                List.of(new Replay.Track(PLAYER, "N0-RU", 1, new int[]{10, 20}, new int[]{100, 110}, new int[]{200, 210}, new int[]{0, 1}, null)),
-                List.of(), List.of(), List.of(), List.of(), null, List.of(), List.of(), List.of());
+                List.of(new Replay.Track(PLAYER, "N0-RU", 1, new int[]{10, 20}, new int[]{100, 110}, new int[]{200, 210}, new int[]{0, 1}, new int[]{100, 80}, null)),
+                List.of(), List.of(), List.of(), List.of(), null, List.of(), List.of(), List.of(), List.of());
         when(replayService.replay(Platform.STEAM, MATCH, PLAYER)).thenReturn(replay);
 
         mvc.perform(get("/api/replay").param("platform", "steam").param("match", MATCH).param("player", PLAYER))

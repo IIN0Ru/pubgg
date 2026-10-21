@@ -67,6 +67,7 @@
                     <button type="button" class="replay__icon" data-zoom="out" aria-label="축소">−</button>
                     <button type="button" class="replay__icon" data-zoom="in" aria-label="확대">+</button>
                     <button type="button" class="replay__icon" data-zoom="fit" title="지도 전체 보기">전체</button>
+                    <button type="button" class="replay__icon" data-share title="지금 장면으로 바로 열리는 주소를 복사해요">장면 링크</button>
                 </div>
             </div>
 
@@ -127,9 +128,27 @@
 
         <!-- 오른쪽: 우리 팀 + 경기 흐름 / 교전 -->
         <aside class="replay__side">
+            <!-- 죽기 전 30초: 지금 시각까지 우리 팀이 마지막으로 기절·사망한 순간, 그 전에 받은 피해 -->
+            <section class="sidebox replay__death" data-death hidden>
+                <h2 class="sidebox__title">죽기 전 30초</h2>
+                <div class="replay__death-head">
+                    <b data-death-title>N0-RU 기절 <span>21:05</span></b>
+                    <button type="button" class="tab" data-death-go>그 장면 보기</button>
+                </div>
+                <p class="replay__death-sum" data-death-sum></p>
+                <ol class="replay__hurts" data-hurts></ol>
+            </section>
+
             <section class="sidebox">
                 <h2 class="sidebox__title">우리 팀 <span data-alive></span></h2>
                 <ol class="replay__team" data-team></ol>
+            </section>
+
+            <!-- 교전 지표: 이 판 합계 + 교전마다 한 줄 -->
+            <section class="sidebox" data-stats hidden>
+                <h2 class="sidebox__title">교전 <span>이 판 우리 팀</span></h2>
+                <dl class="replay__stats" data-stats-total></dl>
+                <ol class="replay__fightstats" data-stats-rows></ol>
             </section>
 
             <section class="sidebox replay__flow">

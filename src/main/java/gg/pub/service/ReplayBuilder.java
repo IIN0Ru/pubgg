@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -41,6 +43,10 @@ import java.util.Set;
  *                               + 우리 팀 폭발물(투척·박격포·판처)이 적을 맞힌 것 → 터진 곳 추정
  *  - LogPlayerUseThrowable      우리 팀이 던진 곳 (attackId 로 위 피해와 이음)
  *  - LogItemUse                 우리 팀 회복·부스트템 사용
+ *  - LogHeal                    회복량 (체력 계산용)
+ *
+ * 체력: 위치 기록(약 10초마다)에 들어 있는 체력을 기준으로, 그 사이 받은 피해(LogPlayerTakeDamage.damage)는 빼고
+ * 회복(LogHeal.healamount)은 더한다. 피해·회복 순간의 위치도 이동 기록에 넣어서 교전 중 위치가 더 촘촘해진다.
  *
  * 좌표는 cm → m, 시각은 초 단위 정수로 줄인다.
  */
@@ -54,6 +60,28 @@ public class ReplayBuilder {
     static final int FIRE_GAP_SECONDS = 15;
     /** 던진 기록과 attackId 가 안 맞을 때, 피해 전 이 시간 안에 같은 사람이 던진 것을 대신 쓴다 */
     static final int THROW_LOOKBACK_SECONDS = 10;
+    /** 같은 사람에게 같은 무기로 이 시간 안에 이어 맞으면 피해 한 줄로 합친다 */
+    static final int HURT_MERGE_SECONDS = 2;
+    /** 부활 직후 체력 (가정. 다음 위치 기록의 실제 체력으로 곧 바뀐다) */
+    static final double REVIVE_HP = 10;
+    /** 복수(트레이드): 우리 팀원이 당하고 이 시간 안에 그 적을 기절·킬 */
+    static final int TRADE_SECONDS = 10;
+
+    /** 총 이름: damageCauserName → 이름 (pubg/api-assets dictionaries/telemetry/damageCauserName.json 에서 총만) */
+    private static final Map<String, String> GUN_NAMES = loadGunNames();
+
+    private static Map<String, String> loadGunNames() {
+        try (InputStream in = ReplayBuilder.class.getResourceAsStream("/pubg/gun-names.json")) {
+            if (in == null) {
+                return Map.of();
+            }
+            Map<String, String> names = new HashMap<>();
+            new ObjectMapper().readTree(in).fields().forEachRemaining(en -> names.put(en.getKey(), en.getValue().asText()));
+            return Map.copyOf(names);
+        } catch (IOException e) {
+            return Map.of();
+        }
+    }
 
     /** 회복·부스트템 → 이름 */
     static final Map<String, String> HEAL_ITEMS = Map.of(
@@ -102,6 +130,10 @@ public class ReplayBuilder {
         private final List<Replay.Hit> hits = new ArrayList<>();
         private final List<BlastBuilder> blasts = new ArrayList<>();
         private final List<Replay.Heal> heals = new ArrayList<>();
+        private final List<HurtBuilder> hurts = new ArrayList<>();
+        // 체력 계산: 계정 ID → 지금 체력, 기절 중인 사람
+        private final Map<String, Double> hp = new HashMap<>();
+        private final Set<String> knockedNow = new HashSet<>();
         // 우리 팀이 던진 것: 던진 시각·위치 (attackId 로 찾기 + 사람별 최근 순)
         private final Map<Integer, Throw> throwsById = new HashMap<>();
         private final List<Throw> throwList = new ArrayList<>();
@@ -134,16 +166,21 @@ public class ReplayBuilder {
                 case "LogPlayerMakeGroggy" -> {
                     JsonNode attacker = e.path("attacker");
                     JsonNode victim = e.path("victim");
-                    String cause = weaponCause(e.path("damageTypeCategory").asText(""));
+                    String category = e.path("damageTypeCategory").asText("");
+                    String cause = weaponCause(category);
+                    knockedNow.add(id(victim));
                     addCombat(t, "knock", attacker, victim,
                             (name(attacker) == null ? name(victim) + " 기절" : name(attacker) + " → " + name(victim) + " 기절")
-                                    + causeText(cause), cause);
+                                    + detail(category, e.path("damageCauserName").asText(""),
+                                    e.path("damageReason").asText(""), e.path("distance").asDouble(0)), cause);
                 }
                 case "LogPlayerKillV2" -> onKill(e, t);
                 case "LogPlayerRevive" -> {
                     JsonNode reviver = e.path("reviver");
                     JsonNode victim = e.path("victim");
                     boolean ours = isMyTeam(reviver) || isMyTeam(victim);
+                    knockedNow.remove(id(victim));
+                    hp.put(id(victim), REVIVE_HP);   // 다음 위치 기록(10초 안)이 오면 실제 값으로 바뀜
                     if (ours) {
                         events.add(new Replay.Event(t, "revive", m(x(victim)), m(y(victim)), name(reviver), name(victim),
                                 true, name(reviver) + "가 " + name(victim) + " 살림", null));
@@ -158,8 +195,17 @@ public class ReplayBuilder {
                 }
                 case "LogVehicleRide", "LogVehicleLeave" -> onVehicle(e, t, type.equals("LogVehicleRide"));
                 case "LogPlayerTakeDamage" -> {
+                    onHealth(e, t);
                     onDamage(e, t);
                     onBlastDamage(e, t);
+                }
+                case "LogHeal" -> {
+                    JsonNode c = e.path("character");
+                    String id = id(c);
+                    if (!id.isEmpty() && !knockedNow.contains(id)) {
+                        hp.merge(id, e.path("healamount").asDouble(0), (a, b) -> Math.min(100, a + b));
+                    }
+                    sample(c, t);
                 }
                 case "LogPlayerUseThrowable" -> onThrow(e, t);
                 case "LogItemUse" -> {
@@ -189,8 +235,136 @@ public class ReplayBuilder {
                 return;
             }
             learnTeam(c);
-            tracks.computeIfAbsent(id, k -> new TrackBuilder(id, name(c), c.path("teamId").asInt(-1)))
-                    .add(t, m(x(c)), m(y(c)), vehicleKind(vehicle));
+            double health = c.path("health").asDouble(-1);
+            if (health >= 0 && !knockedNow.contains(id)) {
+                hp.put(id, health);
+            }
+            track(c).add(t, m(x(c)), m(y(c)), vehicleKind(vehicle), hpOf(id));
+        }
+
+        private TrackBuilder track(JsonNode c) {
+            String id = id(c);
+            return tracks.computeIfAbsent(id, k -> new TrackBuilder(id, name(c), c.path("teamId").asInt(-1)));
+        }
+
+        /** 지금 체력 (모르면 100, 기절 중이면 0) */
+        private int hpOf(String id) {
+            if (knockedNow.contains(id)) {
+                return 0;
+            }
+            return (int) Math.round(Math.max(0, Math.min(100, hp.getOrDefault(id, 100.0))));
+        }
+
+        /** 피해·회복 순간의 위치와 체력도 이동 기록에 넣는다 (탄 것은 직전 기록 그대로) */
+        private void sample(JsonNode c, int t) {
+            String id = id(c);
+            if (id.isEmpty() || !c.path("location").isObject()) {
+                return;
+            }
+            learnTeam(c);
+            TrackBuilder tb = track(c);
+            if (tb.diedAt != null) {
+                return;
+            }
+            tb.add(t, m(x(c)), m(y(c)), tb.lastVehicle(), hpOf(id));
+        }
+
+        // ---------- 체력 · 받은 피해 ----------
+
+        private void onHealth(JsonNode e, int t) {
+            JsonNode attacker = e.path("attacker");
+            JsonNode victim = e.path("victim");
+            String vid = id(victim);
+            double damage = e.path("damage").asDouble(0);
+            if (vid.isEmpty()) {
+                return;
+            }
+            if (damage > 0 && !knockedNow.contains(vid)) {
+                hp.putIfAbsent(vid, 100.0);
+                hp.merge(vid, -damage, (a, b) -> Math.max(0, a + b));
+            }
+            sample(victim, t);
+            if (!id(attacker).isEmpty() && !id(attacker).equals(vid)) {
+                sample(attacker, t);
+            }
+            learnTeam(victim);
+            if (damage <= 0 || !isMyTeam(victim)) {
+                return;
+            }
+            // 우리 팀이 받은 피해 (죽기 전 30초 요약)
+            String category = e.path("damageTypeCategory").asText("");
+            String weapon = weaponLabel(category, e.path("damageCauserName").asText(""));
+            String who = id(attacker).isEmpty() ? null : name(attacker);
+            boolean head = "HeadShot".equals(e.path("damageReason").asText(""));
+            HurtBuilder last = null;
+            for (int i = hurts.size() - 1; i >= 0 && t - hurts.get(i).last <= HURT_MERGE_SECONDS; i--) {
+                HurtBuilder h = hurts.get(i);
+                if (h.victim.equals(name(victim)) && Objects.equals(h.attacker, who) && h.weapon.equals(weapon)) {
+                    last = h;
+                    break;
+                }
+            }
+            if (last == null) {
+                int distance = who == null ? -1
+                        : (int) Math.round(Math.hypot(x(attacker) - x(victim), y(attacker) - y(victim)) / 100.0);
+                int height = who == null ? 0 : m(z(attacker) - z(victim));
+                last = new HurtBuilder(t, name(victim), who, weapon, distance, height);
+                hurts.add(last);
+            }
+            last.last = t;
+            last.damage += damage;
+            last.hits++;
+            last.headshot |= head;
+            last.hp = hpOf(vid);
+        }
+
+        /** 피해 종류 → 사람이 읽는 이름. 받은 피해 목록에 씀 */
+        static String weaponLabel(String category, String causer) {
+            String blast = causeText(weaponCause(category));
+            if (!blast.isEmpty()) {
+                return blast.substring(2, blast.length() - 1);   // " (수류탄)" → "수류탄"
+            }
+            return switch (category) {
+                case "Damage_Gun", "Damage_Gun_Penetrate_BRDM" -> GUN_NAMES.getOrDefault(causer, "총");
+                case "Damage_BlueZone" -> "자기장";
+                case "Damage_Instant_Fall" -> "낙하";
+                case "Damage_VehicleHit", "Damage_VehicleCrashHit" -> "차량";
+                case "Damage_Explosion_Vehicle" -> "차량 폭발";
+                case "Damage_Drown" -> "익사";
+                case "Damage_Groggy" -> "출혈";
+                case "Damage_Explosion_RedZone" -> "레드존";
+                case "Damage_BlueZoneGrenade" -> "블루존 수류탄";
+                case "Damage_Melee", "Damage_MeleeThrow", "Damage_Punch" -> "근접";
+                default -> "기타";
+            };
+        }
+
+        /**
+         * 경기 흐름 기절·킬 글 끝에 붙일 것: (무기 · 거리 · 헤드샷).
+         * 무기는 총 이름이나 폭발물 이름만 (자기장·차량 같은 것도 이름). 근접은 이름 없이 거리만도 안 붙인다
+         */
+        static String detail(String category, String causer, String reason, double distanceCm) {
+            String cause = weaponCause(category);
+            String name;
+            if (cause != null) {
+                name = causeText(cause);
+                name = name.substring(2, name.length() - 1);
+            } else if (category.startsWith("Damage_Gun")) {
+                name = GUN_NAMES.get(causer);
+            } else {
+                return "";
+            }
+            List<String> parts = new ArrayList<>();
+            if (name != null) {
+                parts.add(name);
+            }
+            if (distanceCm >= 100) {
+                parts.add(Math.round(distanceCm / 100) + "m");
+            }
+            if ("HeadShot".equals(reason)) {
+                parts.add("헤드샷");
+            }
+            return parts.isEmpty() ? "" : " (" + String.join(" · ", parts) + ")";
         }
 
         /** 위치 기록의 vehicle → 걸어서 / 차량 / 보트. 비행기·낙하산은 걸어서로 본다 (차량 아이콘을 그리지 않게) */
@@ -239,18 +413,26 @@ public class ReplayBuilder {
             if (tb != null) {
                 tb.diedAt = t;
             }
+            knockedNow.remove(victimId);
+            hp.put(victimId, 0.0);
             // 마무리한 피해(없으면 킬 피해)가 무엇이었는지
             JsonNode info = e.path("finishDamageInfo").path("damageTypeCategory").asText("").isEmpty()
                     ? e.path("killerDamageInfo") : e.path("finishDamageInfo");
-            String cause = weaponCause(info.path("damageTypeCategory").asText(""));
+            String category = info.path("damageTypeCategory").asText("");
+            String cause = weaponCause(category);
             String text = (name(killer) == null ? name(victim) + " 사망" : name(killer) + " → " + name(victim) + " 킬")
-                    + causeText(cause);
+                    + detail(category, info.path("damageCauserName").asText(""), info.path("damageReason").asText(""),
+                    info.path("distance").asDouble(0));
             addCombat(t, "kill", killer, victim, text, cause);
         }
 
         private void addCombat(int t, String type, JsonNode attacker, JsonNode victim, String text, String cause) {
             learnTeam(attacker);
             learnTeam(victim);
+            sample(attacker, t);
+            if (type.equals("knock")) {
+                sample(victim, t);   // 킬은 죽은 뒤라 위치를 넣지 않음 (diedAt 은 onKill 이 먼저 정함)
+            }
             boolean ours = isMyTeam(attacker) || isMyTeam(victim);
             events.add(new Replay.Event(t, type, m(x(victim)), m(y(victim)), name(attacker), name(victim), ours, text,
                     cause));
@@ -436,7 +618,8 @@ public class ReplayBuilder {
             events.sort(Comparator.comparingInt(Replay.Event::t));
             return new Replay(matchId, map, lastT, me, myTeam == null ? -1 : myTeam,
                     players, List.copyOf(zones), List.copyOf(phases), List.copyOf(events), List.copyOf(hits), plane(), fights(),
-                    blasts.stream().map(this::toBlast).toList(), List.copyOf(heals));
+                    blasts.stream().map(this::toBlast).toList(), List.copyOf(heals),
+                    hurts.stream().map(HurtBuilder::build).toList());
         }
 
         /** 첫 낙하 지점과 마지막 낙하 지점을 이은 선. 낙하 기록이 2개 미만이면 모름 */
@@ -483,8 +666,87 @@ public class ReplayBuilder {
                 sx += ev.x();
                 sy += ev.y();
             }
+            // 교전 지표
+            int converted = 0, losses = 0, traded = 0, revived = 0;
+            Map<Integer, Integer> enemyCount = new HashMap<>();
+            for (Replay.Event ev : group) {
+                boolean weDidIt = isMyTeamName(ev.actor());
+                boolean weGotIt = isMyTeamName(ev.target());
+                String enemy = weDidIt && !weGotIt ? ev.target() : weGotIt && !weDidIt ? ev.actor() : null;
+                if (enemy != null && teamOf(enemy) >= 0) {
+                    enemyCount.merge(teamOf(enemy), 1, Integer::sum);
+                }
+                if (ev.type().equals("knock") && weDidIt && !weGotIt && laterKilledByUs(ev)) {
+                    converted++;
+                }
+                if (ev.type().equals("knock") && weGotIt && wasRevived(ev)) {
+                    revived++;
+                }
+                boolean loss = weGotIt && ev.actor() != null && !weDidIt
+                        && (ev.type().equals("knock") || !knockedBefore(ev));
+                if (loss) {
+                    losses++;
+                    if (tradedBack(ev)) {
+                        traded++;
+                    }
+                }
+            }
+            int enemyTeam = enemyCount.entrySet().stream().max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey).orElse(-1);
             return new Replay.Fight(n, group.get(0).t(), group.get(group.size() - 1).t(),
-                    (int) (sx / group.size()), (int) (sy / group.size()), kills, knocks, knocked, deaths);
+                    (int) (sx / group.size()), (int) (sy / group.size()), kills, knocks, knocked, deaths,
+                    enemyTeam, converted, losses, traded, revived);
+        }
+
+        /** 우리가 기절시킨 적을 그 뒤 우리 팀이 죽였는지 */
+        private boolean laterKilledByUs(Replay.Event knock) {
+            return events.stream().anyMatch(e -> e.type().equals("kill") && e.t() >= knock.t()
+                    && knock.target().equals(e.target()) && isMyTeamName(e.actor()));
+        }
+
+        /** 기절당한 우리 팀원이 (죽기 전에) 살아났는지 */
+        private boolean wasRevived(Replay.Event knock) {
+            for (Replay.Event e : events) {
+                if (e.t() < knock.t() || e == knock || !knock.target().equals(e.target())) {
+                    continue;
+                }
+                if (e.type().equals("revive")) {
+                    return true;
+                }
+                if (e.type().equals("kill") || e.type().equals("knock")) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        /** 이 사망 전에 같은 사람이 기절한 기록이 있는지 (있으면 그 기절을 이미 당한 것으로 셈) */
+        private boolean knockedBefore(Replay.Event kill) {
+            Replay.Event lastKnock = null;
+            for (Replay.Event e : events) {
+                if (e.t() > kill.t()) {
+                    break;
+                }
+                if (kill.target().equals(e.target())) {
+                    if (e.type().equals("knock")) {
+                        lastKnock = e;
+                    } else if (e.type().equals("revive")) {
+                        lastKnock = null;
+                    }
+                }
+            }
+            return lastKnock != null;
+        }
+
+        /** 우리 팀원을 당하게 한 적을 10초 안에 우리 팀이 기절·킬했는지 */
+        private boolean tradedBack(Replay.Event loss) {
+            return events.stream().anyMatch(e -> (e.type().equals("knock") || e.type().equals("kill"))
+                    && e.t() > loss.t() && e.t() <= loss.t() + TRADE_SECONDS
+                    && loss.actor().equals(e.target()) && isMyTeamName(e.actor()));
+        }
+
+        private int teamOf(String name) {
+            return tracks.values().stream().filter(tb -> name.equals(tb.name)).mapToInt(tb -> tb.team).findFirst().orElse(-1);
         }
 
         // ---------- 작은 도우미 ----------
@@ -511,6 +773,14 @@ public class ReplayBuilder {
 
         private static double y(JsonNode c) {
             return c.path("location").path("y").asDouble();
+        }
+
+        private static double z(JsonNode c) {
+            return c.path("location").path("z").asDouble();
+        }
+
+        private static String id(JsonNode c) {
+            return c.path("accountId").asText("");
         }
 
         /** cm → m */
@@ -572,6 +842,34 @@ public class ReplayBuilder {
         }
     }
 
+    /** 받은 피해 한 줄을 쌓는 중 */
+    private static final class HurtBuilder {
+        final int t;
+        final String victim;
+        final String attacker;
+        final String weapon;
+        final int distance, height;
+        int last;
+        double damage;
+        int hits, hp;
+        boolean headshot;
+
+        HurtBuilder(int t, String victim, String attacker, String weapon, int distance, int height) {
+            this.t = t;
+            this.victim = victim;
+            this.attacker = attacker;
+            this.weapon = weapon;
+            this.distance = distance;
+            this.height = height;
+            this.last = t;
+        }
+
+        Replay.Hurt build() {
+            return new Replay.Hurt(t, victim, attacker, weapon, (int) Math.round(damage), hits, hp, distance, height,
+                    headshot);
+        }
+    }
+
     /** 한 사람의 이동 기록을 쌓는 중 */
     private static final class TrackBuilder {
         final String id;
@@ -586,25 +884,30 @@ public class ReplayBuilder {
             this.team = team;
         }
 
-        void add(int t, int x, int y, int vehicle) {
+        void add(int t, int x, int y, int vehicle, int hp) {
             // 같은 초에 두 번 오면 마지막 값만
             if (!points.isEmpty() && points.get(points.size() - 1)[0] == t) {
-                points.set(points.size() - 1, new int[]{t, x, y, vehicle});
+                points.set(points.size() - 1, new int[]{t, x, y, vehicle, hp});
             } else {
-                points.add(new int[]{t, x, y, vehicle});
+                points.add(new int[]{t, x, y, vehicle, hp});
             }
+        }
+
+        int lastVehicle() {
+            return points.isEmpty() ? Replay.Track.ON_FOOT : points.get(points.size() - 1)[3];
         }
 
         Replay.Track build() {
             int n = points.size();
-            int[] t = new int[n], x = new int[n], y = new int[n], v = new int[n];
+            int[] t = new int[n], x = new int[n], y = new int[n], v = new int[n], hp = new int[n];
             for (int i = 0; i < n; i++) {
                 t[i] = points.get(i)[0];
                 x[i] = points.get(i)[1];
                 y[i] = points.get(i)[2];
                 v[i] = points.get(i)[3];
+                hp[i] = points.get(i)[4];
             }
-            return new Replay.Track(id, name, team, t, x, y, v, diedAt);
+            return new Replay.Track(id, name, team, t, x, y, v, hp, diedAt);
         }
     }
 }

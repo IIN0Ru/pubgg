@@ -43,6 +43,9 @@
   var teamEl = q('[data-team]');
   var aliveEl = q('[data-alive]');
   var followBtn = q('[data-follow]');
+  var shareBtn = q('[data-share]');
+  var deathEl = q('[data-death]');
+  var statsEl = q('[data-stats]');
   var playControls = q('[data-play-controls]');
   var pathControls = q('[data-path-controls]');
   var flowTitle = q('[data-flow-title]');
@@ -152,7 +155,19 @@
     buildTimeline();
     buildPhaseTabs();
     buildFeed();
-    state.t = firstMoment();
+    buildDeaths();
+    buildStats();
+    state.t = timeFromUrl();
+    if (state.t === null) state.t = firstMoment();
+  }
+
+  /** 주소의 ?t=07:02 (또는 초) → 그 장면부터. 없거나 이상하면 null */
+  function timeFromUrl() {
+    var v = new URLSearchParams(location.search).get('t');
+    if (!v) return null;
+    var m = /^(\d{1,3}):(\d{2})$/.exec(v);
+    var t = m ? Number(m[1]) * 60 + Number(m[2]) : /^\d+$/.test(v) ? Number(v) : NaN;
+    return isFinite(t) ? Math.max(0, Math.min(R.duration, t)) : null;
   }
 
   /** 처음 보여줄 시각: 우리 팀 착지 직전. 단, 우리 팀 위치 기록이 처음 생기는 때보다 앞서지 않게 (빈 지도 방지) */
@@ -195,7 +210,9 @@
     // 탄 것: 지금 기록 기준. 다음 기록에서 차에 타면 그 사이의 절반이 지난 뒤부터 차량으로 (10초 간격이라 대략)
     var v = p.v ? p.v[i] : 0;
     if (!v && p.v && i < p.v.length - 1 && !dead) v = p.v[i + 1] && (tt - p.t[i]) > (p.t[i + 1] - p.t[i]) / 2 ? p.v[i + 1] : 0;
-    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t), vehicle: dead ? 0 : v, heading: heading };
+    // 체력: 맞거나 회복한 순간 바로 바뀌므로 사이를 잇지 않고 마지막 기록 값
+    var hp = p.hp ? p.hp[i] : null;
+    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t), vehicle: dead ? 0 : v, heading: heading, hp: hp };
   }
 
   function isKnocked(p, t) {
@@ -688,6 +705,19 @@
     ctx.restore();
   }
 
+  /** 체력 막대: 점 아래 가운데. 바탕은 어둡게, 남은 만큼 색으로 */
+  function hpBar(x, y, hp, w, color) {
+    var h = w > 18 ? 4 : 3;
+    ctx.save();
+    ctx.fillStyle = MAP_COLORS.dark;
+    ctx.globalAlpha *= 0.85;
+    ctx.fillRect(x - w / 2 - 1, y - 1, w + 2, h + 2);
+    ctx.globalAlpha /= 0.85;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - w / 2, y, w * Math.max(0, Math.min(100, hp)) / 100, h);
+    ctx.restore();
+  }
+
   /** 번호가 적힌 동그라미 (팀원, 교전) */
   function badge(x, y, r, fill, text, hollow) {
     ctx.save();
@@ -762,6 +792,8 @@
           ctx.lineWidth = 2; ctx.strokeStyle = colors.dark; ctx.stroke();
         }
       }
+      // 적 체력: 깎였을 때만 (다 찬 막대까지 그리면 지도가 복잡해서)
+      if (!pos.knocked && pos.hp !== null && pos.hp < 100) hpBar(x, y + 12, pos.hp, 16, color);
       if (!labeled[p.team]) {
         labeled[p.team] = true;
         ctx.font = '700 12px Pretendard, Inter, sans-serif';
@@ -795,6 +827,7 @@
       } else {
         badge(x, y, 9.5, color, String(m.n), pos.knocked);
       }
+      if (!pos.knocked && pos.hp !== null) hpBar(x, y + 15, pos.hp, 22, color);
     });
     drawEffects(performance.now(), 'over');
 
@@ -946,6 +979,7 @@
     }).join('');
     if (teamEl.innerHTML !== html) teamEl.innerHTML = html;
     aliveEl.textContent = alive + '명 생존';
+    paintDeath(t);
 
     // 경기 흐름: 지금 시각까지 마지막 사건에 표시
     if (state.mode === 'play') {
@@ -985,6 +1019,138 @@
     });
     items.sort(function (a, b) { return a.t - b.t; });
     renderFeed(items);
+  }
+
+  // ---------- 죽기 전 30초 ----------
+  /*
+   * 우리 팀이 당한 순간(기절, 또는 기절 없이 바로 사망)마다, 그 전 30초 동안 받은 피해(R.hurts)를 모아 둔다.
+   * 재생 중에는 지금 시각까지 마지막으로 당한 순간의 카드를 보여준다.
+   */
+  var DEATH_WINDOW = 30;
+  var deaths = [];
+  var shownDeath = null;
+
+  function buildDeaths() {
+    var knockedAt = {};
+    deaths = [];
+    R.events.forEach(function (e) {
+      var target = e.target && byName[e.target];
+      if (!target || target.team !== R.myTeam) return;
+      if (e.type === 'revive') { knockedAt[e.target] = null; return; }
+      if (e.type === 'knock' || (e.type === 'kill' && knockedAt[e.target] == null)) {
+        deaths.push(e);
+      }
+      if (e.type === 'knock') knockedAt[e.target] = e.t;
+    });
+  }
+
+  function paintDeath(t) {
+    if (!deathEl) return;
+    var d = null;
+    for (var i = 0; i < deaths.length && deaths[i].t <= t; i++) d = deaths[i];
+    if (d === shownDeath) return;
+    shownDeath = d;
+    deathEl.hidden = !d;
+    if (!d) return;
+    var hurts = (R.hurts || []).filter(function (h) {
+      return h.victim === d.target && h.t >= d.t - DEATH_WINDOW && h.t <= d.t;
+    });
+    q('[data-death-title]').innerHTML = escapeHtml(d.target) + ' ' + (d.type === 'knock' ? '기절' : '사망') +
+        ' <span>' + clock(d.t) + '</span>';
+    var total = 0, who = {};
+    hurts.forEach(function (h) { total += h.damage; if (h.attacker && byName[h.attacker] && byName[h.attacker].team !== R.myTeam) who[h.attacker] = 1; });
+    var enemies = Object.keys(who).length;
+    q('[data-death-sum]').textContent = hurts.length
+        ? (d.type === 'knock' ? '기절' : '사망') + ' 전 30초 · 받은 피해 ' + total +
+          (enemies ? ' · 적 ' + enemies + '명' : '') + ' · ' + Math.max(1, d.t - hurts[0].t) + '초 동안'
+        : '기록된 피해가 없어요.';
+    var list = q('[data-hurts]');
+    list.innerHTML = '';
+    hurts.forEach(function (h) {
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'replay__hurt';
+      var line = h.attacker ? '<b>' + escapeHtml(h.attacker) + '</b> · ' + escapeHtml(h.weapon) +
+          (h.distance >= 0 ? ' · ' + h.distance + 'm' : '') : '<b>' + escapeHtml(h.weapon) + '</b>';
+      var notes = [];
+      if (h.attacker && Math.abs(h.height) >= 3) notes.push(Math.abs(h.height) + 'm ' + (h.height > 0 ? '높은' : '낮은') + ' 곳에서');
+      if (h.headshot) notes.push('헤드샷');
+      if (h.hits > 1) notes.push(h.hits + '번');
+      btn.innerHTML = '<time>' + clock(h.t) + '</time>' +
+          '<span>' + line + (notes.length ? '<small>' + notes.join(' · ') + '</small>' : '') + '</span>' +
+          '<span class="replay__hurt-dmg"><b>−' + h.damage + '</b><small>남은 ' + h.hp + '</small></span>';
+      btn.addEventListener('click', function () { seek(Math.max(0, h.t - 2)); state.follow = true; paintFollow(); });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    q('[data-death-go]').onclick = function () {
+      seek(Math.max(0, (hurts.length ? hurts[0].t : d.t) - 3));
+      state.follow = true;
+      paintFollow();
+    };
+  }
+
+  // ---------- 교전 지표 ----------
+  function buildStats() {
+    if (!statsEl) return;
+    var f = R.fights || [];
+    statsEl.hidden = !f.length;
+    if (!f.length) return;
+    var sum = function (key) { return f.reduce(function (a, x) { return a + (x[key] || 0); }, 0); };
+    var knocks = sum('knocks'), conv = sum('converted');
+    var losses = sum('losses'), traded = sum('traded');
+    var knocked = sum('knocked'), revived = sum('revived');
+    q('[data-stats-total]').innerHTML =
+        '<div><dt>기절→킬<br>' + conv + '/' + knocks + '</dt><dd>' + (knocks ? Math.round(conv / knocks * 100) + '%' : '−') + '</dd></div>' +
+        '<div><dt>복수<br>당하고 10초 안</dt><dd>' + traded + '/' + losses + '</dd></div>' +
+        '<div><dt>살림<br>기절당한 팀원</dt><dd>' + revived + '/' + knocked + '</dd></div>';
+    var rows = q('[data-stats-rows]');
+    rows.innerHTML = '';
+    f.forEach(function (x) {
+      var parts = [];
+      if (x.knocks) parts.push('기절→킬 ' + x.converted + '/' + x.knocks);
+      if (x.losses) parts.push('복수 ' + x.traded + '/' + x.losses);
+      if (x.knocked) parts.push('살림 ' + x.revived + '/' + x.knocked);
+      var result = x.kills > x.deaths ? '승' : x.deaths > x.kills ? '패' : '';
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'replay__fightstat';
+      btn.innerHTML = '<span class="replay__fight-n">' + x.n + '</span>' +
+          '<span>' + clock(x.start) + (x.enemyTeam >= 0 ? ' · ' + x.enemyTeam + '팀' : '') +
+          (parts.length ? '<small>' + parts.join(' · ') + '</small>' : '') + '</span>' +
+          '<b' + (result === '패' ? ' class="is-lose"' : '') + '>' + result + '</b>';
+      btn.addEventListener('click', function () {
+        if (state.mode !== 'play') setMode('play');
+        seek(Math.max(0, x.start - 5));
+        state.follow = true;
+        paintFollow();
+      });
+      li.appendChild(btn);
+      rows.appendChild(li);
+    });
+  }
+
+  // ---------- 장면 링크 ----------
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function () {
+      if (!R) return;
+      var url = new URL(location.href);
+      url.searchParams.set('t', clock(state.t));
+      url = url.toString().replace(/([?&]t=\d+)%3A(\d{2})/, '$1:$2');   // ?t=07%3A02 → ?t=07:02 (읽기 쉽게)
+      var say = function (text) {
+        shareBtn.textContent = text;
+        setTimeout(function () { shareBtn.textContent = '장면 링크'; }, 1800);
+      };
+      // 복사가 안 되는 환경(권한 거부 등)이면 주소창에 넣어 두고 그렇게 알려준다
+      var fallback = function () { history.replaceState(null, '', url); say('주소창에 넣었어요'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { say('복사됨'); }, fallback);
+      } else {
+        fallback();
+      }
+    });
   }
 
   function renderFeed(items) {
