@@ -1,5 +1,7 @@
 # 펍지지 (PUB.GG)
 
+[![test](https://github.com/IIN0Ru/pubgg/actions/workflows/test.yml/badge.svg)](https://github.com/IIN0Ru/pubgg/actions/workflows/test.yml)
+
 배그 닉네임으로 전적과 플레이 스타일을 분석하고, 디스코드·커뮤니티에 공유할 수 있는 카드를 만들어 주는 사이트.
 
 - 지금: 친구들과 서로의 전적을 검색하고, 플레이 스타일 카드로 "이 사람이랑 듀오할까"를 판단. 우리 판(경쟁전)을 2D 리플레이로 다시 보기
