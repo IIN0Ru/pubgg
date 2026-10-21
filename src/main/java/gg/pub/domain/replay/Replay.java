@@ -44,9 +44,14 @@ public record Replay(String matchId,
      * @param t      시각 (초)
      * @param x      x (m)
      * @param y      y (m)
+     * @param v      그 순간 탄 것: 0 = 걸어서, 1 = 차량(바이크 포함), 2 = 보트
      * @param diedAt 죽은 시각 (초). 끝까지 살았으면 null
      */
-    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, Integer diedAt) {
+    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, int[] v, Integer diedAt) {
+
+        public static final int ON_FOOT = 0;
+        public static final int CAR = 1;
+        public static final int BOAT = 2;
     }
 
     /**
@@ -71,8 +76,10 @@ public record Replay(String matchId,
      * @param target 당한 사람 닉네임. 없으면 null
      * @param ours   우리 팀이 관련된 사건인지 (경기 흐름 목록에는 이것만 나온다)
      * @param text   목록에 보여줄 한 줄
+     * @param cause  기절·킬을 공격 투척으로 했으면 grenade / molotov / c4 / sticky, 아니면 null
      */
-    public record Event(int t, String type, int x, int y, String actor, String target, boolean ours, String text) {
+    public record Event(int t, String type, int x, int y, String actor, String target, boolean ours, String text,
+                        String cause) {
     }
 
     /**

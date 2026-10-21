@@ -16,8 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * 예시 경기: 14:10:00 시작. 나(N0-RU)와 DuoFriend 가 1팀.
  *  - 130초 착지, 140~160초 이동 (160초에는 위치가 두 번 와서 마지막 값)
- *  - 교전 1 (170~195초): 내가 Enemy_07 기절 → 킬, Enemy_12 가 DuoFriend 기절, 215초에 내가 살림
- *  - 교전 2 (320~330초): 내가 Enemy_12 에게 기절 → 사망
+ *  - 교전 1 (170~195초): 내가 Enemy_07 수류탄으로 기절 → 킬, Enemy_12 가 DuoFriend 기절, 215초에 내가 살림
+ *  - 교전 2 (320~330초): 내가 Enemy_12 에게 기절 → 화염병으로 사망
+ *  - 150초 위치: DuoFriend 는 차량, Enemy_07 은 보트. 140초 내 위치는 비행기(→ 걸어서로 봄)
  *  - 340초: 남의 팀끼리 킬 (우리 팀 아님)
  *  - 비행기 낙하 60·90·120초 → 경로 (1000,1000) → (6000,6000)
  *  - 다음 안전구역이 200초, 400초에 작아짐 → 페이즈 1, 2
@@ -54,6 +55,24 @@ class ReplayBuilderTest {
     }
 
     @Test
+    void 차량_보트를_탄_순간을_기록한다() {
+        assertThat(track("DuoFriend").v()).containsExactly(0, 1, 0);
+        assertThat(track("Enemy_07").v()).containsExactly(0, 2, 0);
+        assertThat(track("N0-RU").v()).containsExactly(0, 0, 0);   // 비행기는 차량 아이콘으로 그리지 않음
+    }
+
+    @Test
+    void 공격_투척으로_기절_킬하면_무엇으로_했는지() {
+        Replay.Event grenadeKnock = replay.events().get(1);
+        assertThat(grenadeKnock.cause()).isEqualTo("grenade");
+        assertThat(replay.events().get(2).cause()).isNull();          // 175초 킬은 총
+        Replay.Event molotovKill = replay.events().get(8);
+        assertThat(molotovKill.type()).isEqualTo("kill");
+        assertThat(molotovKill.cause()).isEqualTo("molotov");
+        assertThat(molotovKill.text()).isEqualTo("Enemy_12 → N0-RU 킬 (화염병)");
+    }
+
+    @Test
     void 비행기_경로와_페이즈() {
         assertThat(replay.plane()).isEqualTo(new Replay.Plane(1000, 1000, 6000, 6000));
         assertThat(replay.phases()).containsExactly(new Replay.Phase(1, 200), new Replay.Phase(2, 400));
@@ -65,7 +84,7 @@ class ReplayBuilderTest {
     void 우리_팀_사건만_ours_로_표시한다() {
         assertThat(replay.events()).extracting(Replay.Event::type)
                 .containsExactly("landing", "knock", "kill", "knock", "revive", "ride", "package", "knock", "kill", "kill");
-        assertThat(replay.events().get(1).text()).isEqualTo("N0-RU → Enemy_07 기절");
+        assertThat(replay.events().get(1).text()).isEqualTo("N0-RU → Enemy_07 기절 (수류탄)");
         assertThat(replay.events().get(5).text()).isEqualTo("DuoFriend 차량 탑승 (Mirado)");
         // 남의 팀끼리 킬, 보급상자는 우리 팀 사건이 아님
         assertThat(replay.events().get(9).ours()).isFalse();

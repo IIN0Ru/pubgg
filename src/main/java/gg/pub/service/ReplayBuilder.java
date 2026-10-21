@@ -26,9 +26,9 @@ import java.util.Map;
  *
  * 쓰는 이벤트:
  *  - LogMatchStart              경기 시작 시각 (모든 시각을 여기서부터 초로 센다)
- *  - LogPlayerPosition          전원 위치 (약 10초마다)
+ *  - LogPlayerPosition          전원 위치 (약 10초마다) + 그때 탄 차량·보트
  *  - LogGameStatePeriodic       자기장: safetyZone(지금 경계, 파란 원) / poisonGasWarning(다음 안전구역, 흰 원)
- *  - LogPlayerMakeGroggy        기절
+ *  - LogPlayerMakeGroggy        기절 (공격 투척으로 했는지도: 수류탄·화염병·C4·접착 폭탄)
  *  - LogPlayerKillV2            킬 (죽은 시각도 여기서)
  *  - LogPlayerRevive            부활
  *  - LogParachuteLanding        착지 (우리 팀만)
@@ -104,13 +104,15 @@ public class ReplayBuilder {
             lastT = Math.max(lastT, t);
 
             switch (type) {
-                case "LogPlayerPosition" -> onPosition(e.path("character"), t);
+                case "LogPlayerPosition" -> onPosition(e.path("character"), e.path("vehicle"), t);
                 case "LogGameStatePeriodic" -> onGameState(e.path("gameState"), t);
                 case "LogPlayerMakeGroggy" -> {
                     JsonNode attacker = e.path("attacker");
                     JsonNode victim = e.path("victim");
+                    String cause = throwableCause(e.path("damageTypeCategory").asText(""));
                     addCombat(t, "knock", attacker, victim,
-                            name(attacker) == null ? name(victim) + " 기절" : name(attacker) + " → " + name(victim) + " 기절");
+                            (name(attacker) == null ? name(victim) + " 기절" : name(attacker) + " → " + name(victim) + " 기절")
+                                    + causeText(cause), cause);
                 }
                 case "LogPlayerKillV2" -> onKill(e, t);
                 case "LogPlayerRevive" -> {
@@ -119,14 +121,14 @@ public class ReplayBuilder {
                     boolean ours = isMyTeam(reviver) || isMyTeam(victim);
                     if (ours) {
                         events.add(new Replay.Event(t, "revive", m(x(victim)), m(y(victim)), name(reviver), name(victim),
-                                true, name(reviver) + "가 " + name(victim) + " 살림"));
+                                true, name(reviver) + "가 " + name(victim) + " 살림", null));
                     }
                 }
                 case "LogParachuteLanding" -> {
                     JsonNode c = e.path("character");
                     learnTeam(c);
                     if (isMyTeam(c)) {
-                        events.add(new Replay.Event(t, "landing", m(x(c)), m(y(c)), name(c), null, true, name(c) + " 착지"));
+                        events.add(new Replay.Event(t, "landing", m(x(c)), m(y(c)), name(c), null, true, name(c) + " 착지", null));
                     }
                 }
                 case "LogVehicleRide", "LogVehicleLeave" -> onVehicle(e, t, type.equals("LogVehicleRide"));
@@ -134,7 +136,7 @@ public class ReplayBuilder {
                 case "LogCarePackageLand" -> {
                     JsonNode loc = e.path("itemPackage").path("location");
                     events.add(new Replay.Event(t, "package", m(loc.path("x").asDouble()), m(loc.path("y").asDouble()),
-                            null, null, false, "보급상자 떨어짐"));
+                            null, null, false, "보급상자 떨어짐", null));
                 }
                 default -> {
                     // 나머지는 리플레이에 쓰지 않는다
@@ -144,14 +146,24 @@ public class ReplayBuilder {
 
         // ---------- 위치 ----------
 
-        private void onPosition(JsonNode c, int t) {
+        private void onPosition(JsonNode c, JsonNode vehicle, int t) {
             String id = c.path("accountId").asText("");
             if (id.isEmpty()) {
                 return;
             }
             learnTeam(c);
             tracks.computeIfAbsent(id, k -> new TrackBuilder(id, name(c), c.path("teamId").asInt(-1)))
-                    .add(t, m(x(c)), m(y(c)));
+                    .add(t, m(x(c)), m(y(c)), vehicleKind(vehicle));
+        }
+
+        /** 위치 기록의 vehicle → 걸어서 / 차량 / 보트. 비행기·낙하산은 걸어서로 본다 (차량 아이콘을 그리지 않게) */
+        static int vehicleKind(JsonNode vehicle) {
+            String type = vehicle == null ? "" : vehicle.path("vehicleType").asText("");
+            return switch (type) {
+                case "", "TransportAircraft", "Parachute" -> Replay.Track.ON_FOOT;
+                case "FloatingVehicle" -> Replay.Track.BOAT;
+                default -> Replay.Track.CAR;   // WheeledVehicle, Motorbike 등
+            };
         }
 
         private void learnTeam(JsonNode c) {
@@ -190,15 +202,45 @@ public class ReplayBuilder {
             if (tb != null) {
                 tb.diedAt = t;
             }
-            String text = name(killer) == null ? name(victim) + " 사망" : name(killer) + " → " + name(victim) + " 킬";
-            addCombat(t, "kill", killer, victim, text);
+            // 마무리한 피해(없으면 킬 피해)가 무엇이었는지
+            JsonNode info = e.path("finishDamageInfo").path("damageTypeCategory").asText("").isEmpty()
+                    ? e.path("killerDamageInfo") : e.path("finishDamageInfo");
+            String cause = throwableCause(info.path("damageTypeCategory").asText(""));
+            String text = (name(killer) == null ? name(victim) + " 사망" : name(killer) + " → " + name(victim) + " 킬")
+                    + causeText(cause);
+            addCombat(t, "kill", killer, victim, text, cause);
         }
 
-        private void addCombat(int t, String type, JsonNode attacker, JsonNode victim, String text) {
+        private void addCombat(int t, String type, JsonNode attacker, JsonNode victim, String text, String cause) {
             learnTeam(attacker);
             learnTeam(victim);
             boolean ours = isMyTeam(attacker) || isMyTeam(victim);
-            events.add(new Replay.Event(t, type, m(x(victim)), m(y(victim)), name(attacker), name(victim), ours, text));
+            events.add(new Replay.Event(t, type, m(x(victim)), m(y(victim)), name(attacker), name(victim), ours, text,
+                    cause));
+        }
+
+        /** 공격 투척 피해 종류 → 짧은 이름. 투척이 아니면 null */
+        static String throwableCause(String damageTypeCategory) {
+            return switch (damageTypeCategory) {
+                case "Damage_Explosion_Grenade" -> "grenade";
+                case "Damage_Molotov" -> "molotov";
+                case "Damage_Explosion_C4" -> "c4";
+                case "Damage_Explosion_StickyBomb" -> "sticky";
+                default -> null;
+            };
+        }
+
+        private static String causeText(String cause) {
+            if (cause == null) {
+                return "";
+            }
+            return switch (cause) {
+                case "grenade" -> " (수류탄)";
+                case "molotov" -> " (화염병)";
+                case "c4" -> " (C4)";
+                case "sticky" -> " (접착 폭탄)";
+                default -> "";
+            };
         }
 
         // ---------- 총 명중 ----------
@@ -240,7 +282,7 @@ public class ReplayBuilder {
             if (isMyTeam(c)) {
                 String vehicle = e.path("vehicle").path("vehicleId").asText("차량");
                 events.add(new Replay.Event(t, ride ? "ride" : "leave", m(x(c)), m(y(c)), name(c), null, true,
-                        name(c) + (ride ? " 차량 탑승" : " 차량에서 내림") + " (" + vehicleLabel(vehicle) + ")"));
+                        name(c) + (ride ? " 차량 탑승" : " 차량에서 내림") + " (" + vehicleLabel(vehicle) + ")", null));
             }
         }
 
@@ -362,24 +404,25 @@ public class ReplayBuilder {
             this.team = team;
         }
 
-        void add(int t, int x, int y) {
+        void add(int t, int x, int y, int vehicle) {
             // 같은 초에 두 번 오면 마지막 값만
             if (!points.isEmpty() && points.get(points.size() - 1)[0] == t) {
-                points.set(points.size() - 1, new int[]{t, x, y});
+                points.set(points.size() - 1, new int[]{t, x, y, vehicle});
             } else {
-                points.add(new int[]{t, x, y});
+                points.add(new int[]{t, x, y, vehicle});
             }
         }
 
         Replay.Track build() {
             int n = points.size();
-            int[] t = new int[n], x = new int[n], y = new int[n];
+            int[] t = new int[n], x = new int[n], y = new int[n], v = new int[n];
             for (int i = 0; i < n; i++) {
                 t[i] = points.get(i)[0];
                 x[i] = points.get(i)[1];
                 y[i] = points.get(i)[2];
+                v[i] = points.get(i)[3];
             }
-            return new Replay.Track(id, name, team, t, x, y, diedAt);
+            return new Replay.Track(id, name, team, t, x, y, v, diedAt);
         }
     }
 }

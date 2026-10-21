@@ -138,6 +138,10 @@
     "y": 305000,
     "z": 0
    }
+  },
+  "vehicle": {
+   "vehicleType": "TransportAircraft",
+   "vehicleId": "DummyTransportAircraft_C"
   }
  },
  {
@@ -198,6 +202,10 @@
     "y": 310000,
     "z": 0
    }
+  },
+  "vehicle": {
+   "vehicleType": "WheeledVehicle",
+   "vehicleId": "BP_Mirado_A_03_C"
   }
  },
  {
@@ -213,6 +221,10 @@
     "y": 480000,
     "z": 0
    }
+  },
+  "vehicle": {
+   "vehicleType": "FloatingVehicle",
+   "vehicleId": "Boat_PG117_C"
   }
  },
  {
@@ -327,7 +339,9 @@
     "y": 320000,
     "z": 0
    }
-  }
+  },
+  "damageTypeCategory": "Damage_Explosion_Grenade",
+  "damageCauserName": "ProjGrenade_C"
  },
  {
   "_T": "LogPlayerKillV2",
@@ -684,7 +698,12 @@
     "y": 330000,
     "z": 0
    }
-  }
+  },
+  "killerDamageInfo": {
+   "damageTypeCategory": "Damage_Molotov",
+   "damageCauserName": "ProjMolotov_C"
+  },
+  "finishDamageInfo": {}
  },
  {
   "_T": "LogPlayerKillV2",

@@ -180,12 +180,19 @@
     var i = indexAt(p.t, tt);
     if (i < 0) return null;
     var x = p.x[i], y = p.y[i];
+    var heading = 0;
     if (i < p.t.length - 1 && !dead) {
       var k = (tt - p.t[i]) / (p.t[i + 1] - p.t[i]);
+      heading = Math.atan2(p.y[i + 1] - y, p.x[i + 1] - x);
       x += (p.x[i + 1] - x) * k;
       y += (p.y[i + 1] - y) * k;
+    } else if (i > 0) {
+      heading = Math.atan2(y - p.y[i - 1], x - p.x[i - 1]);
     }
-    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t) };
+    // 탄 것: 지금 기록 기준. 다음 기록에서 차에 타면 그 사이의 절반이 지난 뒤부터 차량으로 (10초 간격이라 대략)
+    var v = p.v ? p.v[i] : 0;
+    if (!v && p.v && i < p.v.length - 1 && !dead) v = p.v[i + 1] && (tt - p.t[i]) > (p.t[i + 1] - p.t[i]) / 2 ? p.v[i + 1] : 0;
+    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t), vehicle: dead ? 0 : v, heading: heading };
   }
 
   function isKnocked(p, t) {
@@ -318,16 +325,132 @@
     ctx.restore();
   }
 
+  /** 보급상자: 낙하산(반원 + 줄) 아래 끈 두른 상자 */
   function drawPackages(until) {
     R.events.forEach(function (e) {
       if (e.type !== 'package' || e.t > until) return;
+      packageIcon(sx(e.x), sy(e.y));
+    });
+  }
+
+  function packageIcon(x, y) {
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = colors.ink;
+    // 낙하산
+    ctx.beginPath();
+    ctx.arc(x, y - 9, 8, Math.PI, 0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y - 9); ctx.lineTo(x - 5, y - 2);
+    ctx.moveTo(x + 8, y - 9); ctx.lineTo(x + 5, y - 2);
+    ctx.stroke();
+    // 상자
+    ctx.fillStyle = colors.card;
+    ctx.lineWidth = 2;
+    ctx.fillRect(x - 6, y - 2, 12, 11);
+    ctx.strokeRect(x - 6, y - 2, 12, 11);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 2); ctx.lineTo(x, y + 9);       // 끈
+    ctx.moveTo(x - 6, y + 3.5); ctx.lineTo(x + 6, y + 3.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /**
+   * 차량·보트 아이콘 (위에서 본 모양, 가는 방향으로 회전). color = 탄 사람 색
+   * 차량: 둥근 직사각형 + 앞유리, 보트: 앞이 뾰족한 배
+   */
+  function vehicleIcon(x, y, heading, kind, color, hollow) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(heading);
+    ctx.beginPath();
+    if (kind === 2) {
+      ctx.moveTo(13, 0);
+      ctx.quadraticCurveTo(4, -8, -10, -7);
+      ctx.lineTo(-10, 7);
+      ctx.quadraticCurveTo(4, 8, 13, 0);
+    } else {
+      roundRect(-11, -6.5, 22, 13, 4);
+    }
+    ctx.closePath();
+    ctx.fillStyle = hollow ? colors.dark : color;
+    ctx.fill();
+    ctx.lineWidth = hollow ? 2.5 : 2;
+    ctx.strokeStyle = hollow ? color : colors.dark;
+    ctx.stroke();
+    // 앞쪽 표시 (앞유리 / 뱃머리 선)
+    ctx.beginPath();
+    if (kind === 2) { ctx.moveTo(2, -4); ctx.lineTo(2, 4); }
+    else { ctx.moveTo(4, -4.5); ctx.lineTo(4, 4.5); }
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = hollow ? color : colors.dark;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+  }
+
+  /**
+   * 우리 팀이 공격 투척으로 적을 기절·킬한 순간의 이펙트 (그 자리에서 약 1.5초)
+   *  - 수류탄·C4·접착 폭탄: 하얀 섬광 + 노란 충격파 고리 + 파편 선
+   *  - 화염병: 불꽃 여러 개가 일렁이다 꺼짐
+   */
+  var EFFECT_SECONDS = 1.6;
+  function drawThrowableEffects(t) {
+    R.events.forEach(function (e) {
+      if (!e.cause || (e.type !== 'knock' && e.type !== 'kill')) return;
+      var actor = byName[e.actor];
+      if (!actor || actor.team !== R.myTeam) return;   // 우리 팀이 한 것만
+      var age = t - e.t;
+      if (age < 0 || age > EFFECT_SECONDS) return;
+      var k = age / EFFECT_SECONDS;                     // 0 → 1
       var x = sx(e.x), y = sy(e.y);
       ctx.save();
-      ctx.fillStyle = colors.card;
-      ctx.strokeStyle = colors.ink;
-      ctx.lineWidth = 2;
-      ctx.fillRect(x - 6, y - 6, 12, 12);
-      ctx.strokeRect(x - 6, y - 6, 12, 12);
+      if (e.cause === 'molotov') {
+        for (var i = 0; i < 7; i++) {
+          var a = i / 7 * Math.PI * 2;
+          var r = 6 + 8 * Math.sin(i * 1.7 + k * 6);
+          var fx = x + Math.cos(a) * r, fy = y + Math.sin(a) * r - k * 6;
+          ctx.globalAlpha = (1 - k) * 0.9;
+          ctx.fillStyle = i % 2 ? colors.primary : colors.ink;
+          ctx.beginPath();
+          ctx.arc(fx, fy, 4 + 3 * Math.sin(k * 9 + i), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // 섬광
+        ctx.globalAlpha = Math.max(0, 1 - k * 2.5);
+        ctx.fillStyle = colors.ink;
+        ctx.beginPath(); ctx.arc(x, y, 6 + 10 * k, 0, Math.PI * 2); ctx.fill();
+        // 충격파
+        ctx.globalAlpha = 1 - k;
+        ctx.strokeStyle = colors.primary;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, 8 + 30 * k, 0, Math.PI * 2); ctx.stroke();
+        // 파편
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 2;
+        for (var j = 0; j < 8; j++) {
+          var b = j / 8 * Math.PI * 2 + 0.3;
+          var r1 = 10 + 24 * k, r2 = r1 + 7;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(b) * r1, y + Math.sin(b) * r1);
+          ctx.lineTo(x + Math.cos(b) * r2, y + Math.sin(b) * r2);
+          ctx.stroke();
+        }
+      }
       ctx.restore();
     });
   }
@@ -429,14 +552,18 @@
       var x = sx(pos.x), y = sy(pos.y);
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.beginPath();
-      ctx.arc(x, y, 7, 0, Math.PI * 2);
-      if (pos.knocked) {
-        ctx.fillStyle = colors.dark; ctx.fill();
-        ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.stroke();
+      if (pos.vehicle) {
+        vehicleIcon(x, y, pos.heading, pos.vehicle, color, false);
       } else {
-        ctx.fillStyle = color; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = colors.dark; ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        if (pos.knocked) {
+          ctx.fillStyle = colors.dark; ctx.fill();
+          ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.stroke();
+        } else {
+          ctx.fillStyle = color; ctx.fill();
+          ctx.lineWidth = 2; ctx.strokeStyle = colors.dark; ctx.stroke();
+        }
       }
       if (!labeled[p.team]) {
         labeled[p.team] = true;
@@ -452,6 +579,7 @@
     });
 
     drawHits(t);
+    drawThrowableEffects(t);
 
     // 우리 팀 (나를 맨 위에)
     team.slice().reverse().forEach(function (m) {
@@ -464,7 +592,12 @@
         ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = colors.primary;
         ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       }
-      badge(x, y, 9.5, color, String(m.n), pos.knocked);
+      if (pos.vehicle) {
+        vehicleIcon(x, y, pos.heading, pos.vehicle, color, false);
+        badge(x + 12, y - 11, 7, color, String(m.n), false);
+      } else {
+        badge(x, y, 9.5, color, String(m.n), pos.knocked);
+      }
     });
 
     updatePanels(t);

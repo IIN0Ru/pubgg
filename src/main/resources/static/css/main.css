@@ -2026,6 +2026,30 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 .replay__line--taken { border-top: 2px dashed var(--muted); }
 
+/* 범례 아이콘 (지도 위 모양을 작게 흉내) */
+.replay__icon-car {
+    width: 16px;
+    height: 9px;
+    border-radius: 3px;
+    background: var(--ink);
+    box-shadow: inset -5px 0 0 -3px var(--canvas);
+}
+
+.replay__icon-crate {
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--ink);
+    background: linear-gradient(var(--ink), var(--ink)) center / 2px 100% no-repeat;
+}
+
+.replay__icon-boom {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--primary);
+}
+
 /* 오른쪽 패널 */
 .replay__side {
     display: flex;
