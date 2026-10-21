@@ -34,6 +34,7 @@ import java.util.Map;
  *  - LogParachuteLanding        착지 (우리 팀만)
  *  - LogVehicleRide / Leave     차량 타고 내림 (우리 팀만). 비행기에서 뛰어내린 기록으로 비행기 경로도 구함
  *  - LogCarePackageLand         보급상자 떨어진 곳
+ *  - LogPlayerTakeDamage        총 명중 (우리 팀이 맞힘 / 우리 팀이 맞음). 총알 방향은 기록에 없어서 맞은 것만
  *
  * 좌표는 cm → m, 시각은 초 단위 정수로 줄인다.
  */
@@ -78,6 +79,7 @@ public class ReplayBuilder {
         private final List<Replay.Phase> phases = new ArrayList<>();
         private int lastNextR = -1;
         private final List<Replay.Event> events = new ArrayList<>();
+        private final List<Replay.Hit> hits = new ArrayList<>();
         // 비행기에서 뛰어내린 곳들 (시각 순)
         private final List<int[]> jumps = new ArrayList<>();
 
@@ -128,6 +130,7 @@ public class ReplayBuilder {
                     }
                 }
                 case "LogVehicleRide", "LogVehicleLeave" -> onVehicle(e, t, type.equals("LogVehicleRide"));
+                case "LogPlayerTakeDamage" -> onDamage(e, t);
                 case "LogCarePackageLand" -> {
                     JsonNode loc = e.path("itemPackage").path("location");
                     events.add(new Replay.Event(t, "package", m(loc.path("x").asDouble()), m(loc.path("y").asDouble()),
@@ -198,6 +201,29 @@ public class ReplayBuilder {
             events.add(new Replay.Event(t, type, m(x(victim)), m(y(victim)), name(attacker), name(victim), ours, text));
         }
 
+        // ---------- 총 명중 ----------
+
+        /** 총으로 맞힌 것만. 우리 팀끼리 맞힌 것(오사)은 뺀다 */
+        private void onDamage(JsonNode e, int t) {
+            if (!"Damage_Gun".equals(e.path("damageTypeCategory").asText(""))) {
+                return;
+            }
+            JsonNode attacker = e.path("attacker");
+            JsonNode victim = e.path("victim");
+            if (attacker.path("accountId").asText("").isEmpty()) {
+                return;
+            }
+            learnTeam(attacker);
+            learnTeam(victim);
+            boolean byUs = isMyTeam(attacker);
+            boolean onUs = isMyTeam(victim);
+            if (byUs == onUs) {
+                return;   // 우리와 상관없거나, 우리끼리
+            }
+            hits.add(new Replay.Hit(t, m(x(attacker)), m(y(attacker)), m(x(victim)), m(y(victim)),
+                    byUs, name(attacker), name(victim)));
+        }
+
         // ---------- 차량 · 비행기 ----------
 
         private void onVehicle(JsonNode e, int t, boolean ride) {
@@ -224,7 +250,7 @@ public class ReplayBuilder {
             List<Replay.Track> players = tracks.values().stream().map(TrackBuilder::build).toList();
             events.sort(Comparator.comparingInt(Replay.Event::t));
             return new Replay(matchId, map, lastT, me, myTeam == null ? -1 : myTeam,
-                    players, List.copyOf(zones), List.copyOf(phases), List.copyOf(events), plane(), fights());
+                    players, List.copyOf(zones), List.copyOf(phases), List.copyOf(events), List.copyOf(hits), plane(), fights());
         }
 
         /** 첫 낙하 지점과 마지막 낙하 지점을 이은 선. 낙하 기록이 2개 미만이면 모름 */

@@ -21,6 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  - 340초: 남의 팀끼리 킬 (우리 팀 아님)
  *  - 비행기 낙하 60·90·120초 → 경로 (1000,1000) → (6000,6000)
  *  - 다음 안전구역이 200초, 400초에 작아짐 → 페이즈 1, 2
+ *  - 피해 6건 중 리플레이 명중선은 2건: 168초 내가 Enemy_07 을 맞힘, 190초 Enemy_12 가 DuoFriend 를 맞힘
+ *    (자기장·수류탄 피해, 남의 팀끼리, 우리끼리 오사는 뺀다)
  */
 class ReplayBuilderTest {
 
@@ -87,6 +89,24 @@ class ReplayBuilderTest {
         Replay.Fight second = replay.fights().get(1);
         assertThat(second.knocked()).isEqualTo(1);
         assertThat(second.deaths()).isEqualTo(1);
+    }
+
+    @Test
+    void 총_명중은_우리_팀이_맞힌_것과_우리가_맞은_것만() {
+        assertThat(replay.hits()).hasSize(2);
+
+        Replay.Hit mine = replay.hits().get(0);
+        assertThat(mine.t()).isEqualTo(168);
+        assertThat(mine.ours()).isTrue();
+        assertThat(mine.attacker()).isEqualTo("N0-RU");
+        assertThat(mine.victim()).isEqualTo("Enemy_07");
+        assertThat(mine.ax()).isEqualTo(3200);
+        assertThat(mine.vx()).isEqualTo(3300);
+
+        Replay.Hit onUs = replay.hits().get(1);
+        assertThat(onUs.ours()).isFalse();
+        assertThat(onUs.attacker()).isEqualTo("Enemy_12");
+        assertThat(onUs.victim()).isEqualTo("DuoFriend");
     }
 
     @Test

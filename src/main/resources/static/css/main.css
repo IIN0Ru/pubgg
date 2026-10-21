@@ -2013,7 +2013,18 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .replay__dot--me { background: var(--primary); }
-.replay__dot--enemy { background: var(--muted); }
+/* 범례: 적은 팀마다 색이라 여러 색 점 대신 반반 원으로 "색이 여러 개"라는 것만 보여준다 */
+.replay__dot--enemy { background: linear-gradient(90deg, #FF7A59 50%, #5BC0EB 50%); }
+
+/* 범례: 명중선 */
+.replay__line {
+    width: 18px;
+    height: 0;
+    border-top: 3px solid var(--primary);
+    border-radius: 2px;
+}
+
+.replay__line--taken { border-top: 2px dashed var(--muted); }
 
 /* 오른쪽 패널 */
 .replay__side {

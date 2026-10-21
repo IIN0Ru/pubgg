@@ -22,6 +22,7 @@
   var EVENT_NEAR_SECONDS = 8; // 우리 팀 사건에 얽힌 적은 거리와 상관없이 이 시간 동안 보여준다
   var TRAIL_SECONDS = 90;    // 재생 중 보여주는 지나온 길 길이
   var KILL_MARK_SECONDS = 12; // ✕ 표시가 남아 있는 시간
+  var HIT_SECONDS = 1.5;     // 명중선이 남아 있는 시간
   var FOLLOW_WIDTH = 1400;   // 따라가기 때 화면 가로에 들어오는 거리 (m)
 
   // ---------- 화면 요소 ----------
@@ -66,6 +67,22 @@
   // ---------- 색 (main.css 변수) ----------
   // 지도 위 색: 어두운 지도 위에서 잘 보이게 고정 (다크 모드 값과 같음)
   var MAP_COLORS = { ink: '#FFFFFF', muted: '#9A9A9A', card: '#1A1A1A', dark: '#0A0A0A' };
+
+  // 적 팀 색: 근처에 여러 팀이 섞여 있을 때 구분하려고 지도 위에서만 쓰는 색 (디자인 규칙의 예외. NOTES 참고)
+  // 노랑(나)·흰색(팀원)·회색과 헷갈리지 않는 색만. 처음 마주친 순서대로 돌려 쓴다
+  // 서로 헷갈리지 않는 5가지만. 비슷한 파랑·보라·초록을 여러 개 넣으면 오히려 구분이 안 되고,
+  // 주황·노랑 계열은 나(노랑)와 헷갈려서 뺐다. 300m 안에 6팀 이상 붙는 일은 드물어서 넘치면 처음 색부터 다시 쓴다
+  var TEAM_PALETTE = ['#FF7A59', '#38BDF8', '#C084FC', '#4ADE80', '#F472B6'];
+  var teamColors = {};
+  var nextTeamColor = 0;
+
+  function teamColor(team) {
+    if (!(team in teamColors)) {
+      teamColors[team] = TEAM_PALETTE[nextTeamColor % TEAM_PALETTE.length];
+      nextTeamColor++;
+    }
+    return teamColors[team];
+  }
 
   function readColors() {
     var cs = getComputedStyle(document.documentElement);
@@ -397,23 +414,39 @@
       cross(sx(e.x), sy(e.y), e.ours ? colors.ink : colors.muted, a, 7);
     });
 
-    // 근처 적
+    // 근처 적: 팀마다 색, 팀마다 한 명 옆에 "N팀"
     var involved = involvedEnemies(t);
+    var labeled = {};
     enemies.forEach(function (p) {
       var pos = posAt(p, t);
       if (!pos || pos.dead) return;
       if (!involved[p.name] && !isNear(pos.x, pos.y, teamPos)) return;
+      var color = teamColor(p.team);
+      var x = sx(pos.x), y = sy(pos.y);
       ctx.save();
       ctx.beginPath();
-      ctx.arc(sx(pos.x), sy(pos.y), 6, 0, Math.PI * 2);
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
       if (pos.knocked) {
-        ctx.lineWidth = 2.5; ctx.strokeStyle = colors.muted; ctx.stroke();
+        ctx.fillStyle = colors.dark; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.stroke();
       } else {
-        ctx.fillStyle = colors.muted; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = '#0A0A0A'; ctx.stroke();
+        ctx.fillStyle = color; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = colors.dark; ctx.stroke();
+      }
+      if (!labeled[p.team]) {
+        labeled[p.team] = true;
+        ctx.font = '700 12px Pretendard, Inter, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = colors.dark;   // 글자 테두리: 지도 무늬 위에서도 읽히게
+        ctx.strokeText(p.team + '팀', x + 11, y - 10);
+        ctx.fillStyle = color;
+        ctx.fillText(p.team + '팀', x + 11, y - 10);
       }
       ctx.restore();
     });
+
+    drawHits(t);
 
     // 우리 팀 (나를 맨 위에)
     team.slice().reverse().forEach(function (m) {
@@ -447,7 +480,55 @@
       if (e.actor) names[e.actor] = true;
       if (e.target) names[e.target] = true;
     });
+    // 우리 팀과 총을 주고받은 적도 (멀리서 쏜 저격수 포함)
+    (R.hits || []).forEach(function (h) {
+      if (Math.abs(h.t - t) > EVENT_NEAR_SECONDS) return;
+      names[h.attacker] = true;
+      names[h.victim] = true;
+    });
     return names;
+  }
+
+  /**
+   * 명중선: 맞힌 순간부터 HIT_SECONDS 동안 쏜 사람 → 맞은 사람.
+   *  - 우리 팀이 맞힘: 노란 실선 (나는 굵게) + 맞은 적에 노란 고리
+   *  - 적이 우리를 맞힘: 흰 점선
+   * 선 끝은 지금 화면의 점 위치에 맞춘다 (점과 선이 어긋나지 않게). 사람을 못 찾으면 맞힌 순간 기록 위치
+   */
+  function drawHits(t) {
+    var me = root.getAttribute('data-me');
+    (R.hits || []).forEach(function (h) {
+      if (h.t > t || t - h.t > HIT_SECONDS) return;
+      var a = byName[h.attacker] ? posAt(byName[h.attacker], t) : null;
+      var v = byName[h.victim] ? posAt(byName[h.victim], t) : null;
+      var ax = sx(a ? a.x : h.ax), ay = sy(a ? a.y : h.ay);
+      var vx = sx(v ? v.x : h.vx), vy = sy(v ? v.y : h.vy);
+      var alpha = 1 - (t - h.t) / HIT_SECONDS;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.15, alpha);
+      ctx.lineCap = 'round';
+      if (h.ours) {
+        var mine = byName[h.attacker] && byName[h.attacker].id === me;
+        ctx.strokeStyle = colors.primary;
+        ctx.lineWidth = mine ? 3 : 2;
+      } else {
+        ctx.strokeStyle = colors.ink;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+      }
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(vx, vy);
+      ctx.stroke();
+      if (h.ours) {
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(vx, vy, 12, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
   }
 
   // ---------- 동선 전체 보기 ----------

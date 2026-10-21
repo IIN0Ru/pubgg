@@ -61,6 +61,22 @@
   }
  },
  {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:11:40Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 408000,
+    "y": 408000
+   },
+   "safetyZoneRadius": 580000,
+   "poisonGasWarningPosition": {
+    "x": 0,
+    "y": 0
+   },
+   "poisonGasWarningRadius": 0
+  }
+ },
+ {
   "_T": "LogVehicleLeave",
   "_D": "2026-10-19T14:12:00Z",
   "character": {
@@ -260,68 +276,32 @@
   }
  },
  {
-  "_T": "LogGameStatePeriodic",
-  "_D": "2026-10-19T14:11:40Z",
-  "gameState": {
-   "safetyZonePosition": {
-    "x": 408000,
-    "y": 408000
-   },
-   "safetyZoneRadius": 580000,
-   "poisonGasWarningPosition": {
-    "x": 0,
-    "y": 0
-   },
-   "poisonGasWarningRadius": 0
-  }
- },
- {
-  "_T": "LogGameStatePeriodic",
-  "_D": "2026-10-19T14:13:20Z",
-  "gameState": {
-   "safetyZonePosition": {
-    "x": 408000,
-    "y": 408000
-   },
-   "safetyZoneRadius": 580000,
-   "poisonGasWarningPosition": {
-    "x": 350000,
-    "y": 340000
-   },
-   "poisonGasWarningRadius": 200000
-  }
- },
- {
-  "_T": "LogGameStatePeriodic",
-  "_D": "2026-10-19T14:13:30Z",
-  "gameState": {
-   "safetyZonePosition": {
-    "x": 400000,
-    "y": 400000
-   },
-   "safetyZoneRadius": 500000,
-   "poisonGasWarningPosition": {
-    "x": 350000,
-    "y": 340000
-   },
-   "poisonGasWarningRadius": 200000
-  }
- },
- {
-  "_T": "LogGameStatePeriodic",
-  "_D": "2026-10-19T14:16:40Z",
-  "gameState": {
-   "safetyZonePosition": {
-    "x": 350000,
-    "y": 340000
-   },
-   "safetyZoneRadius": 200000,
-   "poisonGasWarningPosition": {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:12:48Z",
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
     "x": 330000,
-    "y": 330000
-   },
-   "poisonGasWarningRadius": 110000
-  }
+    "y": 320000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Gun",
+  "damage": 30
  },
  {
   "_T": "LogPlayerMakeGroggy",
@@ -398,6 +378,136 @@
   }
  },
  {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:13:10Z",
+  "attacker": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 310000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Gun",
+  "damage": 25
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:13:11Z",
+  "attacker": {},
+  "victim": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_BlueZone",
+  "damage": 2
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:13:12Z",
+  "attacker": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 310000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_Grenade",
+  "damage": 40
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:13:13Z",
+  "attacker": {
+   "accountId": "account.x",
+   "name": "Other",
+   "teamId": 5,
+   "health": 100,
+   "location": {
+    "x": 10000,
+    "y": 10000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.y",
+   "name": "Other2",
+   "teamId": 6,
+   "health": 100,
+   "location": {
+    "x": 10000,
+    "y": 12000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Gun",
+  "damage": 20
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:13:14Z",
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Gun",
+  "damage": 10
+ },
+ {
   "_T": "LogPlayerMakeGroggy",
   "_D": "2026-10-19T14:13:15Z",
   "attacker": {
@@ -424,6 +534,38 @@
   }
  },
  {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:13:20Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 408000,
+    "y": 408000
+   },
+   "safetyZoneRadius": 580000,
+   "poisonGasWarningPosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "poisonGasWarningRadius": 200000
+  }
+ },
+ {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:13:30Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 400000,
+    "y": 400000
+   },
+   "safetyZoneRadius": 500000,
+   "poisonGasWarningPosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "poisonGasWarningRadius": 200000
+  }
+ },
+ {
   "_T": "LogPlayerRevive",
   "_D": "2026-10-19T14:13:35Z",
   "reviver": {
@@ -445,6 +587,37 @@
    "location": {
     "x": 322000,
     "y": 315000,
+    "z": 0
+   }
+  }
+ },
+ {
+  "_T": "LogVehicleRide",
+  "_D": "2026-10-19T14:14:10Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "vehicle": {
+   "vehicleType": "WheeledVehicle",
+   "vehicleId": "BP_Mirado_A_03_C"
+  }
+ },
+ {
+  "_T": "LogCarePackageLand",
+  "_D": "2026-10-19T14:15:00Z",
+  "itemPackage": {
+   "itemPackageId": "Carapackage_RedBox_C",
+   "location": {
+    "x": 360000,
+    "y": 350000,
     "z": 0
    }
   }
@@ -540,34 +713,19 @@
   }
  },
  {
-  "_T": "LogVehicleRide",
-  "_D": "2026-10-19T14:14:10Z",
-  "character": {
-   "accountId": "account.mate",
-   "name": "DuoFriend",
-   "teamId": 1,
-   "health": 100,
-   "location": {
+  "_T": "LogGameStatePeriodic",
+  "_D": "2026-10-19T14:16:40Z",
+  "gameState": {
+   "safetyZonePosition": {
+    "x": 350000,
+    "y": 340000
+   },
+   "safetyZoneRadius": 200000,
+   "poisonGasWarningPosition": {
     "x": 330000,
-    "y": 330000,
-    "z": 0
-   }
-  },
-  "vehicle": {
-   "vehicleType": "WheeledVehicle",
-   "vehicleId": "BP_Mirado_A_03_C"
-  }
- },
- {
-  "_T": "LogCarePackageLand",
-  "_D": "2026-10-19T14:15:00Z",
-  "itemPackage": {
-   "itemPackageId": "Carapackage_RedBox_C",
-   "location": {
-    "x": 360000,
-    "y": 350000,
-    "z": 0
-   }
+    "y": 330000
+   },
+   "poisonGasWarningRadius": 110000
   }
  },
  {

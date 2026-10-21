@@ -18,6 +18,7 @@ import java.util.List;
  * @param zones       자기장 기록 (약 10초마다)
  * @param phases      페이즈가 바뀐 시각
  * @param events      기절·킬·부활·착지·차량·보급 등
+ * @param hits        총 명중: 우리 팀이 맞힌 것 + 적이 우리 팀을 맞힌 것 (빗나간 총알은 기록에 없음)
  * @param plane       비행기 경로 (알 수 없으면 null)
  * @param fights      우리 팀 교전 묶음 (동선 전체 보기에서 번호로 표시)
  */
@@ -30,6 +31,7 @@ public record Replay(String matchId,
                      List<Zone> zones,
                      List<Phase> phases,
                      List<Event> events,
+                     List<Hit> hits,
                      Plane plane,
                      List<Fight> fights) {
 
@@ -71,6 +73,21 @@ public record Replay(String matchId,
      * @param text   목록에 보여줄 한 줄
      */
     public record Event(int t, String type, int x, int y, String actor, String target, boolean ours, String text) {
+    }
+
+    /**
+     * 총 명중 한 번. 맞힌 순간 쏜 사람 → 맞은 사람 위치에 선을 긋는 데 쓴다.
+     *
+     * @param t        시각 (초)
+     * @param ax       쏜 사람 위치 x (m)
+     * @param ay       쏜 사람 위치 y (m)
+     * @param vx       맞은 사람 위치 x (m)
+     * @param vy       맞은 사람 위치 y (m)
+     * @param ours     우리 팀이 쏜 것이면 true, 적이 우리 팀을 맞힌 것이면 false
+     * @param attacker 쏜 사람 닉네임
+     * @param victim   맞은 사람 닉네임
+     */
+    public record Hit(int t, int ax, int ay, int vx, int vy, boolean ours, String attacker, String victim) {
     }
 
     /** 비행기 경로: 첫 낙하 지점에서 마지막 낙하 지점까지를 이은 직선 */
