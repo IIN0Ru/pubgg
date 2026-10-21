@@ -72,12 +72,13 @@ class ReplayControllerTest {
     void 데이터는_JSON_으로() throws Exception {
         Replay replay = new Replay(MATCH, MapInfo.of("Baltic_Main").orElseThrow(), 600, PLAYER, 1,
                 List.of(new Replay.Track(PLAYER, "N0-RU", 1, new int[]{10, 20}, new int[]{100, 110}, new int[]{200, 210}, new int[]{0, 1}, null)),
-                List.of(), List.of(), List.of(), List.of(), null, List.of());
+                List.of(), List.of(), List.of(), List.of(), null, List.of(), List.of(), List.of());
         when(replayService.replay(Platform.STEAM, MATCH, PLAYER)).thenReturn(replay);
 
         mvc.perform(get("/api/replay").param("platform", "steam").param("match", MATCH).param("player", PLAYER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.map.image").value("/images/maps/erangel.png"))
+                .andExpect(jsonPath("$.map.tiles").value("/images/maps/tiles/erangel"))
+                .andExpect(jsonPath("$.map.levels").value(5))
                 .andExpect(jsonPath("$.players[0].t[1]").value(20));
     }
 

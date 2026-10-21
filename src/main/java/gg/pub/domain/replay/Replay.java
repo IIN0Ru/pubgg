@@ -21,6 +21,8 @@ import java.util.List;
  * @param hits        총 명중: 우리 팀이 맞힌 것 + 적이 우리 팀을 맞힌 것 (빗나간 총알은 기록에 없음)
  * @param plane       비행기 경로 (알 수 없으면 null)
  * @param fights      우리 팀 교전 묶음 (동선 전체 보기에서 번호로 표시)
+ * @param blasts      우리 팀이 피해를 준 투척·박격포·판처 한 발씩 (터진 곳은 맞은 사람 위치로 추정)
+ * @param heals       우리 팀 회복·부스트템 사용
  */
 public record Replay(String matchId,
                      MapInfo map,
@@ -33,7 +35,9 @@ public record Replay(String matchId,
                      List<Event> events,
                      List<Hit> hits,
                      Plane plane,
-                     List<Fight> fights) {
+                     List<Fight> fights,
+                     List<Blast> blasts,
+                     List<Heal> heals) {
 
     /**
      * 한 사람의 이동 기록. 같은 순서의 t[i], x[i], y[i] 가 한 점이다 (배열로 보내야 JSON 이 작다).
@@ -76,7 +80,9 @@ public record Replay(String matchId,
      * @param target 당한 사람 닉네임. 없으면 null
      * @param ours   우리 팀이 관련된 사건인지 (경기 흐름 목록에는 이것만 나온다)
      * @param text   목록에 보여줄 한 줄
-     * @param cause  기절·킬을 공격 투척으로 했으면 grenade / molotov / c4 / sticky, 아니면 null
+     * @param cause  기절·킬을 무엇으로 했는지. 총이면 null.
+     *               grenade / molotov / c4 / sticky (투척), mortar (박격포), panzer (판처파우스트),
+     *               melee (근접 무기), meleeThrow (근접 무기 던짐), punch (주먹)
      */
     public record Event(int t, String type, int x, int y, String actor, String target, boolean ours, String text,
                         String cause) {
@@ -95,6 +101,36 @@ public record Replay(String matchId,
      * @param victim   맞은 사람 닉네임
      */
     public record Hit(int t, int ax, int ay, int vx, int vy, boolean ours, String attacker, String victim) {
+    }
+
+    /**
+     * 우리 팀이 던지거나 쏜 폭발물 한 발 (적에게 피해를 준 것만).
+     * 기록에는 터진 좌표가 없어서, 같은 한 발에 맞은 적들의 위치 가운데를 터진 곳으로 본다 (피해 범위가 몇 m 라 오차가 작음).
+     *
+     * @param t        터진 시각 (첫 피해, 초)
+     * @param kind     grenade / molotov / c4 / sticky / mortar / panzer
+     * @param fromX    던진·쏜 사람 위치 x (m)
+     * @param fromY    던진·쏜 사람 위치 y (m)
+     * @param x        터진 곳 x (추정, m)
+     * @param y        터진 곳 y (추정, m)
+     * @param attacker 던진·쏜 사람 닉네임
+     * @param result   kill / knock / hit (이 한 발로 잡았는지)
+     * @param victims  맞은 적 수
+     */
+    public record Blast(int t, String kind, int fromX, int fromY, int x, int y, String attacker, String result,
+                        int victims) {
+    }
+
+    /**
+     * 우리 팀 회복·부스트템 사용.
+     *
+     * @param t    시각 (초)
+     * @param name 쓴 사람 닉네임
+     * @param x    위치 x (m)
+     * @param y    위치 y (m)
+     * @param item 아이템 이름 (구급상자, 에너지 드링크 ...)
+     */
+    public record Heal(int t, String name, int x, int y, String item) {
     }
 
     /** 비행기 경로: 첫 낙하 지점에서 마지막 낙하 지점까지를 이은 직선 */

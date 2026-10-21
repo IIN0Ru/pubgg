@@ -2104,6 +2104,15 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--primary);
 }
 
+/* 근접: 사선 세 줄 (가운데 노랑) */
+.replay__icon-slash {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg,
+        transparent 18%, var(--ink) 18% 28%, transparent 28% 45%,
+        var(--primary) 45% 55%, transparent 55% 72%, var(--ink) 72% 82%, transparent 82%);
+}
+
 /* 오른쪽 패널 */
 .replay__side {
     display: flex;

@@ -288,6 +288,26 @@
   }
  },
  {
+  "_T": "LogPlayerUseThrowable",
+  "_D": "2026-10-19T14:12:44Z",
+  "attackId": 501,
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "attackType": "Weapon",
+  "weapon": {
+   "itemId": "Item_Weapon_Grenade_C"
+  }
+ },
+ {
   "_T": "LogPlayerTakeDamage",
   "_D": "2026-10-19T14:12:48Z",
   "attacker": {
@@ -314,6 +334,96 @@
   },
   "damageTypeCategory": "Damage_Gun",
   "damage": 30
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:12:49Z",
+  "attackId": 501,
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e1",
+   "name": "Enemy_07",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 320000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_Grenade",
+  "damageCauserName": "ProjGrenade_C",
+  "damage": 80
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:12:49Z",
+  "attackId": 501,
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e3",
+   "name": "Enemy_08",
+   "teamId": 2,
+   "health": 100,
+   "location": {
+    "x": 334000,
+    "y": 324000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_Grenade",
+  "damageCauserName": "ProjGrenade_C",
+  "damage": 40
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:12:49Z",
+  "attackId": 501,
+  "attacker": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_Grenade",
+  "damageCauserName": "ProjGrenade_C",
+  "damage": 5
  },
  {
   "_T": "LogPlayerMakeGroggy",
@@ -389,6 +499,42 @@
     "y": 315000,
     "z": 0
    }
+  }
+ },
+ {
+  "_T": "LogItemUse",
+  "_D": "2026-10-19T14:12:58Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "item": {
+   "itemId": "Item_Boost_EnergyDrink_C"
+  }
+ },
+ {
+  "_T": "LogItemUse",
+  "_D": "2026-10-19T14:13:00Z",
+  "character": {
+   "accountId": "account.me",
+   "name": "N0-RU",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 320000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "item": {
+   "itemId": "Item_Armor_D_01_Lv2_C"
   }
  },
  {
@@ -606,6 +752,42 @@
   }
  },
  {
+  "_T": "LogItemUse",
+  "_D": "2026-10-19T14:13:40Z",
+  "character": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 322000,
+    "y": 315000,
+    "z": 0
+   }
+  },
+  "item": {
+   "itemId": "Item_Heal_FirstAid_C"
+  }
+ },
+ {
+  "_T": "LogItemUse",
+  "_D": "2026-10-19T14:13:41Z",
+  "character": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 340000,
+    "y": 310000,
+    "z": 0
+   }
+  },
+  "item": {
+   "itemId": "Item_Heal_Bandage_C"
+  }
+ },
+ {
   "_T": "LogVehicleRide",
   "_D": "2026-10-19T14:14:10Z",
   "character": {
@@ -623,6 +805,94 @@
    "vehicleType": "WheeledVehicle",
    "vehicleId": "BP_Mirado_A_03_C"
   }
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:14:30Z",
+  "attackId": 0,
+  "attacker": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e2",
+   "name": "Enemy_12",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 350000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_Mortar",
+  "damageCauserName": "Mortar_Projectile_C",
+  "damage": 30
+ },
+ {
+  "_T": "LogPlayerTakeDamage",
+  "_D": "2026-10-19T14:14:40Z",
+  "attackId": 0,
+  "attacker": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e4",
+   "name": "Enemy_13",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 352000,
+    "y": 331000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_PanzerFaustWarhead",
+  "damageCauserName": "PanzerFaust100M_Projectile_C",
+  "damage": 100
+ },
+ {
+  "_T": "LogPlayerMakeGroggy",
+  "_D": "2026-10-19T14:14:41Z",
+  "attacker": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 330000,
+    "y": 330000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e4",
+   "name": "Enemy_13",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 352000,
+    "y": 331000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_Explosion_PanzerFaustWarhead",
+  "damageCauserName": "PanzerFaust100M_Projectile_C"
  },
  {
   "_T": "LogCarePackageLand",
@@ -730,6 +1000,34 @@
     "z": 0
    }
   }
+ },
+ {
+  "_T": "LogPlayerMakeGroggy",
+  "_D": "2026-10-19T14:16:10Z",
+  "attacker": {
+   "accountId": "account.mate",
+   "name": "DuoFriend",
+   "teamId": 1,
+   "health": 100,
+   "location": {
+    "x": 345000,
+    "y": 335000,
+    "z": 0
+   }
+  },
+  "victim": {
+   "accountId": "account.e5",
+   "name": "Enemy_14",
+   "teamId": 3,
+   "health": 100,
+   "location": {
+    "x": 346000,
+    "y": 336000,
+    "z": 0
+   }
+  },
+  "damageTypeCategory": "Damage_MeleeThrow",
+  "damageCauserName": "WeapPanProjectile_C"
  },
  {
   "_T": "LogGameStatePeriodic",

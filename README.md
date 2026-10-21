@@ -27,6 +27,7 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 이번 시즌 경쟁전 티어·RP + 최근 10경기 vs 시즌 비교
 - [x] 다크/라이트 모드, 검색 중 표시, 링크 미리보기 문구(og), 폰 배치·디자인 수치 정리 (UI/UX 리뷰 반영)
 - [x] 2D 리플레이 (경쟁전): 재생·배속·타임라인, 경기 흐름 누르면 이동, 근처 적만, 동선 전체 + 교전 번호, 확대·이동·따라가기
+  - 고해상도 지도 조각(타일)을 보이는 만큼만 불러오기, 명중선, 차량·보급 아이콘, 폭발물(터진 곳 추정)·근접·회복 이펙트
 - [ ] 카드 이미지 공유(디스코드), 리플레이 그리기·공유
 
 ## 실행 방법 (IntelliJ)
@@ -60,7 +61,7 @@ src/main/java/gg/pub/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
 │   ├── ReplayService.java     2D 리플레이 데이터 (경쟁전만, 캐시)
-│   ├── ReplayBuilder.java     텔레메트리 → 리플레이 데이터 (위치·자기장·사건·교전)
+│   ├── ReplayBuilder.java     텔레메트리 → 리플레이 데이터 (위치·자기장·사건·교전·폭발물·회복)
 │   ├── SeasonService.java     이번 시즌 티어·기록 (시즌 ID 6시간 저장, 실패하면 티어 없이)
 │   ├── MatchRecordService.java 경기 하나 → 작은 기록(MatchRecord)으로 줄이고 캐시
 │   ├── PlayCardService.java   플레이 카드 계산 (기본 정보 + 칭호·게이지)
@@ -121,4 +122,4 @@ NOTES.md                       개발 기록 (무엇을 정했고 AI와 어떻�
 
 
 ## 자료 출처
-- 리플레이 맵 이미지: PUBG 공식 API 자료 [pubg/api-assets](https://github.com/pubg/api-assets) (Assets/Maps). PUBG API 이용약관에 따라 사용
+- 리플레이 맵 이미지: PUBG 공식 API 자료 [pubg/api-assets](https://github.com/pubg/api-assets) (Assets/Maps, High_Res 를 512px WebP 조각으로 잘라 static/images/maps/tiles 에). PUBG API 이용약관에 따라 사용

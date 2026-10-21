@@ -51,7 +51,8 @@
 
   // ---------- 상태 ----------
   var R = null;               // 경기 데이터
-  var img = new Image();
+  var tiles = {};             // 지도 조각 "단계/x_y" → Image
+  var TILE_PX = 512;
   var team = [];              // 우리 팀 (나 먼저) {track, n}
   var enemies = [];
   var byName = {};            // 닉네임 → track
@@ -111,15 +112,16 @@
       .then(function (data) {
         R = data;
         prepare();
-        img.onload = function () {
+        // 지도 전체 한 조각(단계 0)이 오면 시작. 더 자세한 조각은 확대한 만큼 그때그때 불러온다
+        var base = tile(0, 0, 0);
+        base.onload = function () {
           statusEl.hidden = true;
           fitAll();
           resize();
           paintTime();   // 처음 시각(착지 직전)을 시간 표시·타임라인에 반영
           requestAnimationFrame(loop);
         };
-        img.onerror = function () { statusEl.textContent = '지도 이미지를 불러오지 못했어요.'; };
-        img.src = R.map.image;
+        base.onerror = function () { statusEl.textContent = '지도 이미지를 불러오지 못했어요.'; };
       })
       .catch(function (err) {
         statusEl.textContent = err.message || '리플레이를 불러오지 못했어요.';
@@ -268,14 +270,58 @@
     return hatch;
   }
 
+  /** 지도 조각 하나. 처음 부르면 불러오기 시작하고, 다 오기 전까지는 complete 가 false */
+  function tile(z, x, y) {
+    var key = z + '/' + x + '_' + y;
+    var t = tiles[key];
+    if (!t) {
+      t = tiles[key] = new Image();
+      t.decoding = 'async';
+      t.src = R.map.tiles + '/' + key + '.webp';
+    }
+    return t;
+  }
+
+  function ready(t) { return t && t.complete && t.naturalWidth > 0; }
+
+  /**
+   * 지도: 화면 픽셀에 맞는 단계를 고르고, 보이는 조각만 그린다.
+   * 아직 안 온 조각 자리는 이미 받아 둔 덜 자세한 단계가 아래에 깔려 있어서 비지 않는다.
+   */
+  function drawMap() {
+    var s = R.map.size;
+    var px = s * view.scale * size.dpr;   // 지도 한 변이 화면에서 몇 기기 픽셀인지
+    var want = Math.max(0, Math.min(R.map.levels - 1, Math.ceil(Math.log2(px / TILE_PX))));
+    // 화면에 보이는 지도 범위 (m)
+    var x0 = view.cx - size.w / 2 / view.scale, x1 = view.cx + size.w / 2 / view.scale;
+    var y0 = view.cy - size.h / 2 / view.scale, y1 = view.cy + size.h / 2 / view.scale;
+    ctx.imageSmoothingQuality = 'high';
+    for (var z = 0; z <= want; z++) {
+      var n = 1 << z, m = s / n;           // 한 변 조각 수, 조각 한 변(m)
+      var ix0 = Math.max(0, Math.floor(x0 / m)), ix1 = Math.min(n - 1, Math.floor(x1 / m));
+      var iy0 = Math.max(0, Math.floor(y0 / m)), iy1 = Math.min(n - 1, Math.floor(y1 / m));
+      for (var ix = ix0; ix <= ix1; ix++) {
+        for (var iy = iy0; iy <= iy1; iy++) {
+          var key = z + '/' + ix + '_' + iy;
+          // 원하는 단계만 새로 부르고, 그 아래 단계는 이미 받아 둔 것만 깔개로 쓴다
+          var t = z === want ? tile(z, ix, iy) : tiles[key];
+          if (!ready(t)) continue;
+          // 조각 사이 틈이 보이지 않게 0.5px 겹쳐 그림
+          var dx = sx(ix * m), dy = sy(iy * m), d = m * view.scale;
+          ctx.drawImage(t, dx - 0.25, dy - 0.25, d + 0.5, d + 0.5);
+        }
+      }
+    }
+  }
+
   function draw() {
-    if (!R || !img.complete || !size.w) return;
+    if (!R || !ready(tiles['0/0_0']) || !size.w) return;
     ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
     ctx.fillStyle = colors.canvas;
     ctx.fillRect(0, 0, size.w, size.h);
 
     var s = R.map.size;
-    ctx.drawImage(img, sx(0), sy(0), s * view.scale, s * view.scale);
+    drawMap();
     ctx.fillStyle = 'rgba(10,10,10,0.28)';   // 지도를 살짝 어둡게 해서 점이 잘 보이게
     ctx.fillRect(sx(0), sy(0), s * view.scale, s * view.scale);
 
@@ -402,57 +448,246 @@
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
   }
 
-  /**
-   * 우리 팀이 공격 투척으로 적을 기절·킬한 순간의 이펙트 (그 자리에서 약 1.5초)
-   *  - 수류탄·C4·접착 폭탄: 하얀 섬광 + 노란 충격파 고리 + 파편 선
-   *  - 화염병: 불꽃 여러 개가 일렁이다 꺼짐
+  // ---------- 이펙트 (실제 시간 기준) ----------
+  /*
+   * 이펙트는 재생이 그 순간을 지나갈 때 시작해서, 배속과 상관없이 실제 시간으로 FX_MS 동안 보인다.
+   * (경기 시간으로 재면 16배속에서 0.1초만 보여서 안 보임)
+   * 위치는 지도 좌표로 들고 있어서 화면을 옮기거나 확대해도 제자리에 남는다.
+   *  - 폭발물(blasts): 던진 곳 → 터진 곳 궤적 뒤에 폭발. 터진 곳은 맞은 적들 위치로 추정한 값
+   *      수류탄·C4·접착 폭탄·박격포·판처 = 섬광 + 노란 충격파 + 파편 / 화염병 = 불꽃
+   *      박격포는 높게 휘는 궤적, 판처는 곧은 로켓 연기. 잡은 한 발은 크게, 맞히기만 한 건 작게
+   *  - 근접(events.cause = melee / meleeThrow / punch): 맞은 자리에 베는 자국. 던진 근접무기는 날아가는 것부터
    */
-  var EFFECT_SECONDS = 1.6;
-  function drawThrowableEffects(t) {
+  var FX_MS = 1500;          // 터진 뒤 이펙트 길이
+  var FLIGHT_MS = 380;       // 궤적(날아가는 동안) 길이. 박격포는 더 길게
+  var fxSources = null;      // 시각 순 [{t, kind, ...}]
+  var fx = [];               // 지금 보이는 이펙트 {src, at: 시작한 performance.now()}
+
+  function buildFxSources() {
+    fxSources = [];
+    (R.blasts || []).forEach(function (b) {
+      fxSources.push({ t: b.t, fx: 'blast', b: b });
+    });
     R.events.forEach(function (e) {
-      if (!e.cause || (e.type !== 'knock' && e.type !== 'kill')) return;
+      if (!e.ours || (e.type !== 'knock' && e.type !== 'kill')) return;
+      if (e.cause !== 'melee' && e.cause !== 'meleeThrow' && e.cause !== 'punch') return;
       var actor = byName[e.actor];
       if (!actor || actor.team !== R.myTeam) return;   // 우리 팀이 한 것만
-      var age = t - e.t;
-      if (age < 0 || age > EFFECT_SECONDS) return;
-      var k = age / EFFECT_SECONDS;                     // 0 → 1
-      var x = sx(e.x), y = sy(e.y);
+      fxSources.push({ t: e.t, fx: 'melee', e: e });
+    });
+    (R.heals || []).forEach(function (h) {
+      fxSources.push({ t: h.t, fx: 'heal', h: h });
+    });
+    fxSources.sort(function (a, b) { return a.t - b.t; });
+  }
+
+  /** 재생이 from → to 로 지나간 사이에 있는 순간들의 이펙트를 시작 */
+  function spawnEffects(from, to, now) {
+    if (!fxSources) buildFxSources();
+    if (to - from > 60) return;   // 크게 건너뛴 건 재생이 아니라 이동
+    fxSources.forEach(function (src) {
+      if (src.t > from && src.t <= to) fx.push({ src: src, at: now });
+    });
+  }
+
+  function clearEffects() { fx = []; }
+
+  /**
+   * layer 'under' = 폭발물 (점 아래에 깔아서 사람 위치를 가리지 않게)
+   * layer 'over'  = 근접·회복 (바로 옆에서 일어나서 우리 팀 점에 가려지므로 맨 위에)
+   */
+  function drawEffects(now, layer) {
+    if (layer === 'under') fx = fx.filter(function (f) { return now - f.at < fxLength(f.src); });
+    fx.forEach(function (f) {
+      if ((f.src.fx === 'blast') !== (layer === 'under')) return;
+      var ms = now - f.at;
       ctx.save();
-      if (e.cause === 'molotov') {
-        for (var i = 0; i < 7; i++) {
-          var a = i / 7 * Math.PI * 2;
-          var r = 6 + 8 * Math.sin(i * 1.7 + k * 6);
-          var fx = x + Math.cos(a) * r, fy = y + Math.sin(a) * r - k * 6;
-          ctx.globalAlpha = (1 - k) * 0.9;
-          ctx.fillStyle = i % 2 ? colors.primary : colors.ink;
-          ctx.beginPath();
-          ctx.arc(fx, fy, 4 + 3 * Math.sin(k * 9 + i), 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else {
-        // 섬광
-        ctx.globalAlpha = Math.max(0, 1 - k * 2.5);
-        ctx.fillStyle = colors.ink;
-        ctx.beginPath(); ctx.arc(x, y, 6 + 10 * k, 0, Math.PI * 2); ctx.fill();
-        // 충격파
-        ctx.globalAlpha = 1 - k;
-        ctx.strokeStyle = colors.primary;
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(x, y, 8 + 30 * k, 0, Math.PI * 2); ctx.stroke();
-        // 파편
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 2;
-        for (var j = 0; j < 8; j++) {
-          var b = j / 8 * Math.PI * 2 + 0.3;
-          var r1 = 10 + 24 * k, r2 = r1 + 7;
-          ctx.beginPath();
-          ctx.moveTo(x + Math.cos(b) * r1, y + Math.sin(b) * r1);
-          ctx.lineTo(x + Math.cos(b) * r2, y + Math.sin(b) * r2);
-          ctx.stroke();
-        }
-      }
+      if (f.src.fx === 'blast') drawBlast(f.src.b, ms);
+      else if (f.src.fx === 'melee') drawMelee(f.src.e, ms);
+      else drawHeal(f.src.h, ms);
       ctx.restore();
     });
+  }
+
+  function flightMs(kind) { return kind === 'mortar' ? 650 : kind === 'panzer' ? 260 : FLIGHT_MS; }
+
+  function fxLength(src) {
+    if (src.fx === 'blast') return flightMs(src.b.kind) + (src.b.kind === 'molotov' ? FX_MS * 1.4 : FX_MS);
+    if (src.fx === 'melee') return (src.e.cause === 'meleeThrow' ? FLIGHT_MS : 0) + FX_MS;
+    return HEAL_MS;
+  }
+
+  /** 잡은 한 발은 크게, 기절은 조금 작게, 맞히기만 했으면 작게 */
+  function blastSize(b) {
+    var big = b.kind === 'c4' || b.kind === 'mortar' || b.kind === 'panzer' ? 1.25 : 1;
+    return big * (b.result === 'kill' ? 1.15 : b.result === 'knock' ? 1 : 0.65);
+  }
+
+  function drawBlast(b, ms) {
+    var fly = flightMs(b.kind);
+    var x0 = sx(b.fromX), y0 = sy(b.fromY), x1 = sx(b.x), y1 = sy(b.y);
+    var dist = Math.hypot(x1 - x0, y1 - y0);
+    if (ms < fly) {
+      var k = ms / fly;
+      if (b.kind === 'panzer') {
+        // 로켓: 곧게 날아가며 뒤에 연기
+        var hx = x0 + (x1 - x0) * k, hy = y0 + (y1 - y0) * k;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = MAP_COLORS.ink;
+        ctx.globalAlpha = 0.35; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(hx, hy); ctx.stroke();
+        ctx.globalAlpha = 1; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x0 + (hx - x0) * 0.6, y0 + (hy - y0) * 0.6); ctx.lineTo(hx, hy); ctx.stroke();
+        ctx.fillStyle = colors.primary;
+        ctx.beginPath(); ctx.arc(hx, hy, 3.5, 0, Math.PI * 2); ctx.fill();
+        return;
+      }
+      // 포물선: 화면에서 위로 휜다 (박격포는 높게)
+      var lift = Math.min(160, dist * (b.kind === 'mortar' ? 0.9 : 0.35) + 12);
+      var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - lift;
+      var px = (1 - k) * (1 - k) * x0 + 2 * (1 - k) * k * cx + k * k * x1;
+      var py = (1 - k) * (1 - k) * y0 + 2 * (1 - k) * k * cy + k * k * y1;
+      ctx.setLineDash([3, 4]);
+      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = MAP_COLORS.ink;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      for (var i = 1; i <= 16; i++) {
+        var u = k * i / 16;
+        ctx.lineTo((1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * cx + u * u * x1,
+                   (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * cy + u * u * y1);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = b.kind === 'molotov' ? colors.primary : MAP_COLORS.ink;
+      ctx.strokeStyle = MAP_COLORS.dark;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      return;
+    }
+    var size = blastSize(b);
+    if (b.kind === 'molotov') { drawFire(x1, y1, (ms - fly) / (FX_MS * 1.4), size); return; }
+    drawExplosion(x1, y1, (ms - fly) / FX_MS, size);
+  }
+
+  /** 폭발: 하얀 섬광 + 노란 충격파 고리 두 겹 + 파편. k = 0 → 1 */
+  function drawExplosion(x, y, k, size) {
+    var e = 1 - Math.pow(1 - k, 3);   // 처음에 빨리 퍼지고 천천히 멈춤
+    // 섬광
+    ctx.globalAlpha = Math.max(0, 1 - k * 2.2);
+    ctx.fillStyle = MAP_COLORS.ink;
+    ctx.beginPath(); ctx.arc(x, y, (10 + 16 * e) * size, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = Math.max(0, 0.55 - k);
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath(); ctx.arc(x, y, (18 + 22 * e) * size, 0, Math.PI * 2); ctx.fill();
+    // 충격파
+    ctx.globalAlpha = Math.max(0, 1 - k);
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 4 * size;
+    ctx.beginPath(); ctx.arc(x, y, (12 + 44 * e) * size, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = Math.max(0, 0.6 - k);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, (8 + 30 * e) * size, 0, Math.PI * 2); ctx.stroke();
+    // 파편
+    ctx.globalAlpha = Math.max(0, 1 - k * 1.2);
+    ctx.strokeStyle = MAP_COLORS.ink;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 2.5;
+    for (var j = 0; j < 10; j++) {
+      var a = j / 10 * Math.PI * 2 + 0.3;
+      var r1 = (14 + 38 * e) * size, r2 = r1 + 9 * size;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+      ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+      ctx.stroke();
+    }
+  }
+
+  /** 화염병: 불 번진 자리(흐린 원) 위에 불꽃이 일렁이다 꺼짐 */
+  function drawFire(x, y, k, size) {
+    var fade = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
+    ctx.globalAlpha = 0.28 * fade;
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath(); ctx.arc(x, y, 26 * size * Math.min(1, k * 5), 0, Math.PI * 2); ctx.fill();
+    for (var i = 0; i < 11; i++) {
+      var a = i / 11 * Math.PI * 2 + i;
+      var r = (6 + 15 * ((i * 37) % 10) / 10) * size * Math.min(1, k * 5);
+      var fx = x + Math.cos(a) * r, fy = y + Math.sin(a) * r - Math.abs(Math.sin(k * 14 + i)) * 5;
+      var h = (5 + 4 * Math.abs(Math.sin(k * 11 + i * 1.3))) * size;
+      ctx.globalAlpha = 0.95 * fade;
+      ctx.fillStyle = i % 3 ? colors.primary : MAP_COLORS.ink;
+      ctx.beginPath();   // 불꽃 모양 (아래 둥글고 위가 뾰족)
+      ctx.moveTo(fx, fy - h * 1.6);
+      ctx.quadraticCurveTo(fx + h, fy, fx, fy + h * 0.6);
+      ctx.quadraticCurveTo(fx - h, fy, fx, fy - h * 1.6);
+      ctx.fill();
+    }
+  }
+
+  /** 근접: 맞은 자리에 베는 자국 세 줄 (주먹은 별 모양 충격). 던진 근접무기는 돌면서 날아가는 것부터 */
+  function drawMelee(e, ms) {
+    var x = sx(e.x), y = sy(e.y);
+    if (e.cause === 'meleeThrow') {
+      var from = posAt(byName[e.actor], e.t);
+      if (ms < FLIGHT_MS) {
+        if (!from) return;
+        var k = ms / FLIGHT_MS, x0 = sx(from.x), y0 = sy(from.y);
+        var px = x0 + (x - x0) * k, py = y0 + (y - y0) * k;
+        ctx.translate(px, py);
+        ctx.rotate(k * Math.PI * 6);
+        ctx.fillStyle = MAP_COLORS.ink;
+        ctx.strokeStyle = MAP_COLORS.dark;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();   // 프라이팬 머리
+        ctx.fillRect(4, -1.5, 8, 3);                                                   // 손잡이
+        return;
+      }
+      ms -= FLIGHT_MS;
+    }
+    var k2 = ms / FX_MS;
+    var draw = Math.min(1, k2 * 5);           // 0.3초 동안 그어지고
+    var fade = Math.max(0, 1 - Math.max(0, k2 - 0.4) / 0.6);
+    ctx.globalAlpha = fade;
+    ctx.lineCap = 'round';
+    if (e.cause === 'punch') {
+      ctx.strokeStyle = colors.primary;
+      ctx.lineWidth = 3;
+      for (var j = 0; j < 8; j++) {
+        var a = j / 8 * Math.PI * 2;
+        var r1 = 8, r2 = 8 + 14 * draw * (j % 2 ? 0.6 : 1);
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+        ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+        ctx.stroke();
+      }
+      return;
+    }
+    for (var i = -1; i <= 1; i++) {
+      var ox = i * 9, len = 40;
+      var x0s = x - len / 2 + ox - 4, y0s = y - len / 2 + ox * 0.2 - 4;
+      var x1s = x0s + len * draw, y1s = y0s + len * draw;
+      ctx.strokeStyle = MAP_COLORS.dark;
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(x0s, y0s); ctx.lineTo(x1s, y1s); ctx.stroke();
+      ctx.strokeStyle = i === 0 ? colors.primary : MAP_COLORS.ink;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x0s, y0s); ctx.lineTo(x1s, y1s); ctx.stroke();
+    }
+  }
+
+  /** 회복: 시안 선택 전 임시 (점 둘레 고리) */
+  var HEAL_MS = 1200;
+  function drawHeal(h, ms) {
+    var m = byName[h.name];
+    var p = m ? posAt(m, state.t) : null;   // 쓴 사람을 따라다님
+    var x = sx(p ? p.x : h.x), y = sy(p ? p.y : h.y);
+    var k = ms / HEAL_MS;
+    ctx.globalAlpha = 1 - k;
+    ctx.strokeStyle = MAP_COLORS.ink;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, 14 + 10 * k, 0, Math.PI * 2); ctx.stroke();
   }
 
   function trail(p, from, to, color, width, alpha) {
@@ -579,7 +814,7 @@
     });
 
     drawHits(t);
-    drawThrowableEffects(t);
+    drawEffects(performance.now(), 'under');
 
     // 우리 팀 (나를 맨 위에)
     team.slice().reverse().forEach(function (m) {
@@ -599,6 +834,7 @@
         badge(x, y, 9.5, color, String(m.n), pos.knocked);
       }
     });
+    drawEffects(performance.now(), 'over');
 
     updatePanels(t);
   }
@@ -895,18 +1131,22 @@
   function seek(t) {
     state.t = Math.max(0, Math.min(R.duration, t));
     state.lastFeed = -2;
+    clearEffects();
     paintTime();
     draw();
   }
 
   // ---------- 재생 ----------
   var lastFrame = 0;
-  function loop(now) {
-    var dt = lastFrame ? (now - lastFrame) / 1000 : 0;
+  function loop() {
+    var now = performance.now();   // 이펙트와 같은 시계 (rAF 시각은 브라우저마다 기준이 조금 달라서)
+    var dt = lastFrame ? Math.min(0.25, (now - lastFrame) / 1000) : 0;   // 탭을 오래 비웠다 와도 크게 안 건너뜀
     lastFrame = now;
     if (state.playing && state.mode === 'play') {
+      var before = state.t;
       state.t += dt * state.speed;
       if (state.t >= R.duration) { state.t = R.duration; setPlaying(false); }
+      spawnEffects(before, state.t, now);
       paintTime();
     }
     if (state.follow && state.mode === 'play') followTeam(dt);
