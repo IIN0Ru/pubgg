@@ -286,6 +286,12 @@ public class ReplayBuilder {
             sample(victim, t);
             if (!id(attacker).isEmpty() && !id(attacker).equals(vid)) {
                 sample(attacker, t);
+                // 총으로 맞혔으면 쏜 방향 = 쏜 사람 → 맞은 사람 (추정 시야)
+                if (e.path("damageTypeCategory").asText("").startsWith("Damage_Gun")
+                        && attacker.path("location").isObject() && victim.path("location").isObject()) {
+                    double deg = Math.toDegrees(Math.atan2(y(victim) - y(attacker), x(victim) - x(attacker)));
+                    track(attacker).aim(t, (int) Math.round((deg + 360) % 360));
+                }
             }
             learnTeam(victim);
             if (damage <= 0 || !isMyTeam(victim)) {
@@ -877,6 +883,16 @@ public class ReplayBuilder {
         final int team;
         Integer diedAt;
         private final List<int[]> points = new ArrayList<>();
+        private final List<int[]> aims = new ArrayList<>();
+
+        /** 같은 초에 여러 번 맞히면 마지막 방향만 */
+        void aim(int t, int degrees) {
+            if (!aims.isEmpty() && aims.get(aims.size() - 1)[0] == t) {
+                aims.set(aims.size() - 1, new int[]{t, degrees});
+            } else {
+                aims.add(new int[]{t, degrees});
+            }
+        }
 
         TrackBuilder(String id, String name, int team) {
             this.id = id;
@@ -907,7 +923,12 @@ public class ReplayBuilder {
                 v[i] = points.get(i)[3];
                 hp[i] = points.get(i)[4];
             }
-            return new Replay.Track(id, name, team, t, x, y, v, hp, diedAt);
+            int[] at = new int[aims.size()], aa = new int[aims.size()];
+            for (int i = 0; i < aims.size(); i++) {
+                at[i] = aims.get(i)[0];
+                aa[i] = aims.get(i)[1];
+            }
+            return new Replay.Track(id, name, team, t, x, y, v, hp, diedAt, at, aa);
         }
     }
 }

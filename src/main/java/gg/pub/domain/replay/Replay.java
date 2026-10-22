@@ -53,8 +53,11 @@ public record Replay(String matchId,
      * @param v      그 순간 탄 것: 0 = 걸어서, 1 = 차량(바이크 포함), 2 = 보트
      * @param hp     그 순간 체력 (0~100). 위치 기록의 체력에서 그 뒤 받은 피해·회복을 더하고 뺀 값
      * @param diedAt 죽은 시각 (초). 끝까지 살았으면 null
+     * @param at     총을 맞힌 시각들 (초). 추정 시야에서 "이때 이쪽을 보고 쐈다"로 씀
+     * @param aa     그때 쏜 방향 (도, 0 = 지도 오른쪽, 시계 방향으로 증가 = 화면 아래쪽)
      */
-    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, int[] v, int[] hp, Integer diedAt) {
+    public record Track(String id, String name, int team, int[] t, int[] x, int[] y, int[] v, int[] hp, Integer diedAt,
+                        int[] at, int[] aa) {
 
         public static final int ON_FOOT = 0;
         public static final int CAR = 1;

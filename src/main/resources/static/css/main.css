@@ -2106,6 +2106,15 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--primary);
 }
 
+/* 추정 시야: 오른쪽으로 번지는 부채꼴 */
+.replay__icon-vision {
+    width: 14px;
+    height: 12px;
+    background: radial-gradient(circle at 0 50%, var(--ink), transparent 70%);
+    clip-path: polygon(0 50%, 100% 0, 100% 100%);
+    opacity: 0.7;
+}
+
 /* 회복: 초록 플러스 (지도 위 회복 이펙트와 같은 고정색, CLAUDE.md 예외) */
 .replay__icon-heal {
     width: 12px;

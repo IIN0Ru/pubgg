@@ -138,6 +138,16 @@ class ReplayBuilderTest {
     }
 
     @Test
+    void 총을_맞힌_방향을_기록한다() {
+        // 168초 내가 Enemy_07 을 맞힘: (3200,3150) → (3300,3200) = 오른쪽 아래 약 27도
+        // 194초 내가 DuoFriend 를 맞힘(오사): (3200,3150) → (3220,3150) = 오른쪽 0도. 수류탄은 안 셈
+        Replay.Track me = track("N0-RU");
+        assertThat(me.at()).containsExactly(168, 194);
+        assertThat(me.aa()).containsExactly(27, 0);
+        assertThat(track("DuoFriend").at()).isEmpty();
+    }
+
+    @Test
     void 우리_팀이_받은_피해_한_줄씩() {
         // 190초 Enemy_12 가 DuoFriend 를 Beryl 로 머리에 맞힘. 15m 위, 187m 거리
         Replay.Hurt h = replay.hurts().stream().filter(x -> x.t() == 190).findFirst().orElseThrow();

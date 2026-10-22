@@ -204,10 +204,11 @@
     var i = indexAt(p.t, tt);
     if (i < 0) return null;
     var x = p.x[i], y = p.y[i];
-    var heading = 0;
+    var heading = 0, speed = 0;
     if (i < p.t.length - 1 && !dead) {
       var k = (tt - p.t[i]) / (p.t[i + 1] - p.t[i]);
       heading = Math.atan2(p.y[i + 1] - y, p.x[i + 1] - x);
+      speed = Math.hypot(p.x[i + 1] - x, p.y[i + 1] - y) / Math.max(1, p.t[i + 1] - p.t[i]);   // m/초
       x += (p.x[i + 1] - x) * k;
       y += (p.y[i + 1] - y) * k;
     } else if (i > 0) {
@@ -218,7 +219,8 @@
     if (!v && p.v && i < p.v.length - 1 && !dead) v = p.v[i + 1] && (tt - p.t[i]) > (p.t[i + 1] - p.t[i]) / 2 ? p.v[i + 1] : 0;
     // 체력: 맞거나 회복한 순간 바로 바뀌므로 사이를 잇지 않고 마지막 기록 값
     var hp = p.hp ? p.hp[i] : null;
-    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t), vehicle: dead ? 0 : v, heading: heading, hp: hp };
+    return { x: x, y: y, dead: dead, knocked: !dead && isKnocked(p, t), vehicle: dead ? 0 : v, heading: heading, hp: hp,
+             speed: speed, i: i };
   }
 
   function isKnocked(p, t) {
@@ -714,6 +716,45 @@
     ctx.restore();
   }
 
+  // ---------- 추정 시야 ----------
+  /*
+   * 경기 기록에는 보는 방향이 없어서 추정한다.
+   *  - 최근 3초 안에 총을 맞혔으면 그 방향 (쏜 사람 → 맞은 사람). 확실하니 좁고 진하게
+   *  - 아니면 움직이는 방향 (10초 간격 위치 사이). 넓고 흐리게
+   *  - 서 있으면(초당 0.8m 미만) 20초 안에 쏜 방향, 그것도 없으면 마지막으로 움직였던 방향
+   */
+  var AIM_HOLD = 3, AIM_REMEMBER = 20, STILL_SPEED = 0.8;
+  function visionAt(p, pos, t) {
+    var ai = p.at && p.at.length ? indexAt(p.at, t + 0.5) : -1;
+    var aim = ai >= 0 ? p.aa[ai] * Math.PI / 180 : null;
+    var since = ai >= 0 ? t - p.at[ai] : Infinity;
+    if (aim !== null && since <= AIM_HOLD) return { a: aim, shoot: true };
+    if (pos.speed >= STILL_SPEED) return { a: pos.heading, shoot: false };
+    if (aim !== null && since <= AIM_REMEMBER) return { a: aim, shoot: false };
+    for (var j = Math.min(pos.i, p.t.length - 2); j >= 0 && p.t[pos.i] - p.t[j] <= 60; j--) {
+      var dx = p.x[j + 1] - p.x[j], dy = p.y[j + 1] - p.y[j];
+      if (Math.hypot(dx, dy) >= 5) return { a: Math.atan2(dy, dx), shoot: false };
+    }
+    return null;   // 처음부터 서 있었으면 그리지 않음
+  }
+
+  /** 부채꼴 시야: 점에서 앞으로 옅게 번지는 빛 */
+  function visionWedge(x, y, v, color, alpha) {
+    var half = v.shoot ? 0.35 : 0.75, r = v.shoot ? 110 : 80;
+    var g = ctx.createRadialGradient(x, y, 4, x, y, r);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.globalAlpha = alpha * (v.shoot ? 0.55 : 0.26);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.arc(x, y, r, v.a - half, v.a + half);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   /** 체력 막대: 점 아래 가운데. 바탕은 어둡게, 남은 만큼 색으로 */
   function hpBar(x, y, hp, w, color) {
     var h = w > 18 ? 4 : 3;
@@ -786,6 +827,11 @@
       if (alpha === 0) return;
       var color = teamColor(p.team);
       var x = sx(pos.x), y = sy(pos.y);
+      if (!pos.vehicle && !pos.knocked) {
+        var ev = visionAt(p, pos, t);
+        // 적은 사람이 많아서 움직이는 방향 시야는 더 옅게 (쏜 방향은 그대로)
+        if (ev) visionWedge(x, y, ev, color, ev.shoot ? alpha : alpha * 0.55);
+      }
       ctx.save();
       ctx.globalAlpha = alpha;
       if (pos.vehicle) {
@@ -818,6 +864,14 @@
 
     drawHits(t);
     drawEffects(performance.now(), 'under');
+
+    // 우리 팀 시야 (점보다 아래에 깔리게 먼저)
+    team.forEach(function (m) {
+      var pos = posAt(m.track, t);
+      if (!pos || pos.dead || pos.knocked || pos.vehicle) return;
+      var v = visionAt(m.track, pos, t);
+      if (v) visionWedge(sx(pos.x), sy(pos.y), v, v.shoot ? colors.primary : MAP_COLORS.ink, 1);
+    });
 
     // 우리 팀 (나를 맨 위에)
     team.slice().reverse().forEach(function (m) {
