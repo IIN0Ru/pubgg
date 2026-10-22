@@ -582,3 +582,13 @@
   - 범례는 폰에서 접어 둠
 - PC 화면은 그대로 (버튼은 조작줄에, 칸은 전부 보임)
 - 확인: 폰 크기 에뮬레이션(터치)으로 가로 넘침 없음, 붙은 지도, 탭 전환, 두 손가락 확대 확인. 한 손가락 스크롤은 headless 브라우저가 흉내 낸 스와이프로는 페이지 자체가 안 움직여서 확인 못 함 → 실제 폰에서 확인 필요
+
+## 2026-10-22 · 레퍼런스 사이트 정함
+
+- 같은 장르 게임들의 전적·전략·유틸 사이트를 훑은 뒤, 배그 사이트 중 아래 넷을 레퍼런스로 정함
+  - [PUBG Lookup](https://pubglookup.com): 경기 리포트(부위별 명중, 피해 타임라인, 킬 트리), 무기별 통계, 통산 vs 시즌, CSV
+  - [pubg.sh](https://pubg.sh): 브라우저 2D 리플레이 (React + canvas, 오픈소스 github.com/pubgsh/client)
+  - [Chicken Dinner Replays](https://minmax.gg/chickendinner): 순간 공유 중심의 단순한 2D 리플레이
+  - [Chicken Tracker](https://play.google.com/store/apps/details?id=com.aslansari.chickentracker): 안드로이드 앱. 시즌·랭크 전적, 친구, 최근 14일 경기, 자기장·이동 경로 지도
+- 뺀 것: pubg-replay.com (3D 라고 하지만 지도를 눕혀 보이게 한 정도라 참고 가치가 낮음)
+- 이 작업 환경에서는 자바스크립트로 그리는 사이트 내용이 안 읽혀서, 실제 비교는 사용자 컴퓨터 브라우저로 열어서 하기로
