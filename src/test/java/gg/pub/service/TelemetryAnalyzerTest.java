@@ -53,38 +53,22 @@ class TelemetryAnalyzerTest {
     }
 
     /**
-     * 교전 예시 (src/test/resources/pubg/telemetry-fights.json). 우리 팀 = 1, 나 = account.me
+     * 자기장 예시 (src/test/resources/pubg/telemetry-fights.json). 우리 팀 = 1, 나 = account.me
+     *  (교전·차량·보급 이벤트도 들어 있지만 자기장만 센다)
      *
-     *  14:10:00  3팀이 2팀 A1을 때림 (우리랑 상관없음)
-     *  14:10:05  내가 A1을 때림 → 2팀과 새 교전, 우리가 걸기(1). A1은 5초 전 3팀에게 맞음 → 하이에나(1)
-     *  14:10:20  A1이 나를 때림 → 같은 교전 (30초 안)
-     *  14:11:00  3팀 B1이 팀원을 때림 → 3팀과 새 교전, 걸리기(1)
-     *  14:11:10  내가 B1을 때림 → 같은 교전
-     *  14:12:00  내가 B1을 때림 → 50초 지나서 새 교전, 걸기(2). B1을 직전에 때린 건 우리 팀 → 하이에나 아님
-     *  14:12:30  자기장 피해 → 때린 사람 없음, 제외
-     *  14:13:00~ 내가 차 탐, A1 차 탐, 14:13:10 내가 내림
-     *  14:13:15  내린 지 5초, 차 탄 A1을 때림 → 해적 후보. 2팀과 새 교전, 걸기(3)
-     *  14:13:30  내가 A1 기절 → 해적(1)
-     *  14:13:40  걸어서 B1을 때림 → 해적 아님. 3팀과 새 교전, 걸기(4)
-     *  보급상자: 77번(두 번 주움), 88번 → 2개. 팀원 99번은 제외
      *  자기장: 2페이즈에 줄어들기 시작한 건 제외.
      *    14:16:00 3페이즈 새 원(중심 200000, 반지름 40000) → 14:16:10 내 위치가 딱 중심 → 운 1.0
      *    14:16:15 파란 원이 줄기 시작 → 14:16:20 내 위치가 중심에서 30000 → 운영 0.75
      *    14:16:25 계속 줄어드는 중 → 새로 재지 않음
-     *  14:17:00  내가 죽음 → 이후 팀원 교전, 보급 55번은 제외
+     *  14:17:00  내가 죽음
      */
     @Test
-    void 교전_해적_하이에나_보급_자기장을_계산한다() throws IOException {
+    void 자기장_운영과_운을_계산한다() throws IOException {
         TelemetryStats stats;
         try (InputStream in = getClass().getResourceAsStream("/pubg/telemetry-fights.json")) {
             stats = analyzer.analyze(in, "account.me");
         }
 
-        assertThat(stats.engagementsStarted()).isEqualTo(4);
-        assertThat(stats.engagementsReceived()).isEqualTo(1);
-        assertThat(stats.hyenaEngagements()).isEqualTo(1);
-        assertThat(stats.pirateKnocks()).isEqualTo(1);
-        assertThat(stats.carePackages()).isEqualTo(2);
         assertThat(stats.zoneSamples()).isEqualTo(1);
         assertThat(stats.zoneRatioSum()).isEqualTo(0.75);
         assertThat(stats.zoneLuckSamples()).isEqualTo(1);

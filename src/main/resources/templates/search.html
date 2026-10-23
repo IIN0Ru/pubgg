@@ -73,21 +73,10 @@
         <span hidden th:if="${result != null}" data-remember-search
               th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}"></span>
 
-        <!-- 칭호(노랑, 누르면 설명) + 스타일 요약(테두리) -->
-        <ul class="tags" th:if="${c != null and (c.hasTitles() or !c.styleTags().isEmpty())}">
-            <li th:each="t : ${c.titles()}">
-                <button class="tag tag--title" type="button" data-title-toggle aria-expanded="false"
-                        th:attr="aria-controls='title-' + ${t.name()}" th:text="${t.getLabel()}">해적</button>
-            </li>
+        <!-- 스타일 요약 (테두리 태그) -->
+        <ul class="tags" th:if="${c != null and !c.styleTags().isEmpty()}">
             <li class="tag" th:each="s : ${c.styleTags()}" th:text="${s}">센터 운영</li>
         </ul>
-        <th:block th:if="${c != null and c.hasTitles()}">
-            <p class="title-note" th:each="t : ${c.titles()}" th:id="'title-' + ${t.name()}" hidden>
-                <b th:text="${t.getLabel()}">해적</b>
-                <span th:text="${t.getDescription()}">차를 타고 움직이는 적을 쫓아가서 잡아요</span>
-                <span class="title-note__criteria" th:text="'기준: ' + ${t.getCriteria()} + ' · 실력 점수가 아니라 플레이 습관이에요'">기준</span>
-            </p>
-        </th:block>
 
         <!-- 핵심 수치. 시즌 기록이 있으면 라벨 아래에 "시즌 2.76 ▲" -->
         <dl class="idcard__lines" th:if="${c != null}" th:with="cmp=${result.seasonComparison()}">

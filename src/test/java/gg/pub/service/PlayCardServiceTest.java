@@ -5,7 +5,6 @@ import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
-import gg.pub.domain.Title;
 import gg.pub.domain.WeaponClass;
 import gg.pub.domain.WeaponUsage;
 import gg.pub.pubgapi.PubgApiException;
@@ -92,19 +91,13 @@ class PlayCardServiceTest {
     }
 
     @Test
-    void 칭호와_게이지를_기준대로_매긴다() {
-        // 경기 2개: 해적 2 + 1 = 3번 → 해적 O
-        //          건 교전 6 + 4 = 10, 하이에나 2 + 1 = 3 → 30% → 하이에나 O
-        //          보급 1 + 0 = 1, 2판 평균 0.5 → 보급러 O
-        //          걸기 10, 걸리기 5 + 5 = 10 → 싸움걸기 50%
-        //          자기장 (1.0 + 0.2) ÷ (2 + 2) = 0.3 → 30%
-        TelemetryStats a = new TelemetryStats(Map.of(), 0, 6, 5, 2, 2, 1, 1.0, 2);
-        TelemetryStats b = new TelemetryStats(Map.of(), 0, 4, 5, 1, 1, 0, 0.2, 2);
+    void 자기장_운영을_경기별과_전체로_매긴다() {
+        // 자기장 (1.0 + 0.2) ÷ (2 + 2) = 0.3 → 30%, 경기별 1.0÷2 = 50%, 0.2÷2 = 10%
+        TelemetryStats a = new TelemetryStats(Map.of(), 0, 1.0, 2);
+        TelemetryStats b = new TelemetryStats(Map.of(), 0, 0.2, 2);
 
-        assertThat(PlayCardService.titles(List.of(a, b)))
-                .containsExactly(Title.PIRATE, Title.HYENA, Title.SUPPLY_HUNTER);
         assertThat(PlayCardService.zoneEdgePercent(List.of(a, b))).isEqualTo(30);
-        assertThat(PlayCardService.zoneMatchPercents(List.of(a, b))).containsExactly(50, 10);   // 1.0÷2, 0.2÷2
+        assertThat(PlayCardService.zoneMatchPercents(List.of(a, b))).containsExactly(50, 10);
 
         when(telemetryService.analyze(eq("m1"), anyString(), eq(ME))).thenReturn(a);
         when(telemetryService.analyze(eq("m2"), anyString(), eq(ME))).thenReturn(b);
@@ -113,7 +106,6 @@ class PlayCardServiceTest {
                 match("m2", "squad-fpp", 1, 0, 100, 3)), ME).orElseThrow();
 
         assertThat(card.zoneEdgePercent()).isEqualTo(30);
-        assertThat(card.titles()).hasSize(3);
     }
 
     @Test
@@ -130,15 +122,13 @@ class PlayCardServiceTest {
     }
 
     private static TelemetryStats luck(double sum, int samples) {
-        return new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0, sum, samples, null, null);
+        return new TelemetryStats(Map.of(), 0, 0, 0, sum, samples, null, null);
     }
 
     @Test
-    void 기준에_못_미치면_칭호가_없다() {
-        // 해적 2번(3번 미만), 하이에나 1/2(교전 3번 미만이라 판단 안 함), 보급 0
-        TelemetryStats t = new TelemetryStats(Map.of(), 0, 2, 0, 1, 2, 0, 0, 0);
+    void 자기장_기록이_없으면_비운다() {
+        TelemetryStats t = new TelemetryStats(Map.of(), 0);
 
-        assertThat(PlayCardService.titles(List.of(t))).isEmpty();
         assertThat(PlayCardService.zoneEdgePercent(List.of(t))).isNull();
     }
 
@@ -178,7 +168,7 @@ class PlayCardServiceTest {
     }
 
     private static PlayCardService.Analyzed analyzed(String zone, TelemetryStats.Bag bag) {
-        TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0,
                 new TelemetryStats.Landing(List.of(zone), 0, 0), bag);
         return new PlayCardService.Analyzed(match("m", "squad-fpp", 0, 0, 0, 5), stats);
     }

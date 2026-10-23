@@ -19,7 +19,7 @@ class PlayerMatchesShareTest {
     void 티어와_핵심_수치_스타일_활동시간을_한_줄로() {
         Farming farming = new Farming(Farming.BIG_CITY, "포친키", 7, 10, 8, 7.5, 3.2, 214);
         PlayCard card = new PlayCard(10, 20, 6, 8, 412, "FPP", List.of(), 2.0, 10,
-                List.of(Title.PIRATE), 38, List.of(38), 62, List.of(62), farming);
+                38, List.of(38), 62, List.of(62), farming);
         SeasonRank season = new SeasonRank("squad-fpp", "Platinum", "3", 2450, 120, 2.76, 330, 7.4, 61);
         // 한국 시간 22시 경기 3판 → 22시가 가운데인 21~24시
         List<MatchRecord> matches = List.of(match("2026-10-19T13:10:00Z"), match("2026-10-18T13:30:00Z"),
@@ -29,7 +29,7 @@ class PlayerMatchesShareTest {
 
         assertThat(result.shareTitle()).isEqualTo("N0-RU · 플래티넘 3");
         assertThat(result.shareDescription())
-                .isEqualTo("KDA 3.25 · 평균 딜 412 · 해적 · 센터 운영 · 대도시파 · 주로 21~24시");
+                .isEqualTo("KDA 3.25 · 평균 딜 412 · 센터 운영 · 대도시파 · 주로 21~24시");
     }
 
     @Test

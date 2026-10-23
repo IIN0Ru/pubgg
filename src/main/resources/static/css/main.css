@@ -592,45 +592,6 @@ body {
     color: var(--body);
 }
 
-.tag--title {
-    display: block;
-    border: 0;
-    background: var(--primary);
-    box-shadow: none;
-    color: var(--on-primary);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.tag--title:hover,
-.tag--title[aria-expanded="true"] { background: var(--primary-active); }
-
-.tag--title:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-/* 칭호를 누르면 보이는 설명 */
-.title-note {
-    margin: 10px 0 0;
-    padding: 12px 14px;
-    background: var(--surface-elevated);
-    border-radius: var(--radius);
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--body);
-}
-
-.title-note[hidden] { display: none; }
-
-.title-note b { color: var(--ink); margin-right: 4px; }
-
-.title-note__criteria {
-    display: block;
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--muted);
-}
-
 .idcard__lines {
     margin: 22px 0 0;
     padding-top: 20px;

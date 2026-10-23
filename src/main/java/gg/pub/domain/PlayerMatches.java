@@ -55,15 +55,14 @@ public record PlayerMatches(String nickname,
     }
 
     /**
-     * "KDA 3.42 · 평균 딜 412 · 해적 · 센터 운영 · 대도시파 · 주로 21~24시"
-     * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(칭호·스타일) + 언제 하는지
+     * "KDA 3.42 · 평균 딜 412 · 센터 운영 · 대도시파 · 주로 21~24시"
+     * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(스타일) + 언제 하는지
      */
     public String shareDescription() {
         List<String> parts = new ArrayList<>();
         if (card != null) {
             parts.add("KDA " + card.kdaText());
             parts.add("평균 딜 " + card.avgDamage());
-            card.titles().forEach(t -> parts.add(t.getLabel()));
             parts.addAll(card.styleTags());
         }
         if (activity != null && activity.hasData()) {

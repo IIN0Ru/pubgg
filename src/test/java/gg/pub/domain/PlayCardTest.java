@@ -17,7 +17,7 @@ class PlayCardTest {
         return new PlayCard(10, 30, 10, 8, 400, "FPP",
                 List.of(new WeaponUsage("Beryl M762", WeaponClass.AR_762, 48),
                         new WeaponUsage("Mini 14", WeaponClass.DMR, 31)),
-                2.0, 10, List.of(), zone, List.of(20, 50, 130), null, List.of(), farming);
+                2.0, 10, zone, List.of(20, 50, 130), null, List.of(), farming);
     }
 
     @Test
@@ -63,7 +63,7 @@ class PlayCardTest {
     }
 
     private static PlayCard luck(Integer percent, List<Integer> matches) {
-        return new PlayCard(10, 30, 10, 8, 400, "FPP", List.of(), 2.0, 10, List.of(),
+        return new PlayCard(10, 30, 10, 8, 400, "FPP", List.of(), 2.0, 10,
                 50, List.of(50), percent, matches, null);
     }
 

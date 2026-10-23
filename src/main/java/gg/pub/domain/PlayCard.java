@@ -16,7 +16,6 @@ import java.util.Locale;
  * @param mainWeapons       슬롯에 가장 오래 넣고 있던 주무기 (최대 2개)
  * @param avgThrowables     한 판 평균 투척 개수
  * @param analyzedMatches   텔레메트리 분석에 성공한 경기 수 (아래 항목들은 이 경기들 기준)
- * @param titles            받은 칭호 (해적, 하이에나, 보급러)
  * @param zoneEdgePercent   운영: 3페이즈부터 자기장이 줄어들기 시작할 때 흰 원 안 평균 위치 (0 = 중심, 100 = 경계). 기록이 없으면 null
  * @param zoneMatchPercents 위 값을 경기마다
  * @param zoneLuckPercent   자기장 운: 3페이즈부터 새 흰 원이 뜬 직후 내가 중심에 얼마나 가까웠는지 (100 = 중심, 0 = 경계·밖). 없으면 null
@@ -32,7 +31,6 @@ public record PlayCard(int matches,
                        List<WeaponUsage> mainWeapons,
                        double avgThrowables,
                        int analyzedMatches,
-                       List<Title> titles,
                        Integer zoneEdgePercent,
                        List<Integer> zoneMatchPercents,
                        Integer zoneLuckPercent,
@@ -57,10 +55,6 @@ public record PlayCard(int matches,
 
     public boolean hasWeapons() {
         return !mainWeapons.isEmpty();
-    }
-
-    public boolean hasTitles() {
-        return !titles.isEmpty();
     }
 
     public boolean hasZoneGauge() {

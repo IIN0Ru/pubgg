@@ -6,7 +6,6 @@ import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
-import gg.pub.domain.Title;
 import gg.pub.domain.WeaponCatalog;
 import gg.pub.domain.WeaponUsage;
 import org.slf4j.Logger;
@@ -43,10 +42,6 @@ public class PlayCardService {
 
     private static final Logger log = LoggerFactory.getLogger(PlayCardService.class);
 
-    static final int PIRATE_MIN_COUNT = 3;
-    static final double HYENA_MIN_RATIO = 0.3;
-    static final int HYENA_MIN_ENGAGEMENTS = 3;
-    static final double SUPPLY_MIN_PER_MATCH = 0.5;
 
     private final TelemetryService telemetryService;
 
@@ -97,7 +92,6 @@ public class PlayCardService {
                 topWeapons(telemetry, 2),
                 avgThrowables,
                 telemetry.size(),
-                titles(telemetry),
                 zoneEdgePercent(telemetry),
                 zoneMatchPercents(telemetry),
                 zoneLuckPercent(telemetry),
@@ -163,31 +157,6 @@ public class PlayCardService {
                         weaponByName.get(e.getKey()).type(),
                         (int) Math.round(e.getValue() * 100.0 / total)))
                 .toList();
-    }
-
-    /** 칭호 기준을 넘은 것만 */
-    static List<Title> titles(List<TelemetryStats> telemetry) {
-        if (telemetry.isEmpty()) {
-            return List.of();
-        }
-        List<Title> titles = new ArrayList<>();
-
-        int pirate = telemetry.stream().mapToInt(TelemetryStats::pirateKnocks).sum();
-        if (pirate >= PIRATE_MIN_COUNT) {
-            titles.add(Title.PIRATE);
-        }
-
-        int started = telemetry.stream().mapToInt(TelemetryStats::engagementsStarted).sum();
-        int hyena = telemetry.stream().mapToInt(TelemetryStats::hyenaEngagements).sum();
-        if (started >= HYENA_MIN_ENGAGEMENTS && (double) hyena / started >= HYENA_MIN_RATIO) {
-            titles.add(Title.HYENA);
-        }
-
-        int carePackages = telemetry.stream().mapToInt(TelemetryStats::carePackages).sum();
-        if ((double) carePackages / telemetry.size() >= SUPPLY_MIN_PER_MATCH) {
-            titles.add(Title.SUPPLY_HUNTER);
-        }
-        return List.copyOf(titles);
     }
 
     /** 운영: 3페이즈부터 자기장이 줄어들기 시작할 때 평균 위치. 0 = 중심, 100 = 경계 (경계 밖은 100으로) */
