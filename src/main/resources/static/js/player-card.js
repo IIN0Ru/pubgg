@@ -134,8 +134,10 @@ function pickMapArea(map) {
   c.width = CELLS_W; c.height = CELLS_H;
   const x = c.getContext('2d', { willReadFrequently: true });
   const sw = CELLS_W * 2, sh = CELLS_H * 2;
+  // 맵 전체에서 아무 곳이나 뽑되, 바다가 35% 넘거나 너무 어둡거나 아무것도 없는(도로·건물 1% 미만) 곳만 다시 뽑는다.
+  // (전에는 "도로·건물 8%" 에 가장 가까운 곳을 골라서 마을 근처만 반복해 나왔음)
   let best = null;
-  for (let t = 0; t < 30; t++) {
+  for (let t = 0; t < 40 && !best; t++) {
     const sx = Math.floor(Math.random() * (map.width - sw)), sy = Math.floor(Math.random() * (map.height - sh));
     x.drawImage(map, sx, sy, sw, sh, 0, 0, CELLS_W, CELLS_H);
     const d = x.getImageData(0, 0, CELLS_W, CELLS_H).data;
@@ -147,9 +149,7 @@ function pickMapArea(map) {
       if (l > 150) bright++;
       sum += l;
     }
-    if (water / n > 0.35 || sum / n < 35) continue;
-    const score = -Math.abs(bright / n - 0.08);   // 도로·건물이 8% 쯤 보이는 곳
-    if (!best || score > best.score) best = { score, sx, sy };
+    if (water / n <= 0.35 && sum / n >= 35 && bright / n >= 0.01) best = { sx, sy };
   }
   if (!best) best = { sx: (map.width - sw) / 2, sy: (map.height - sh) / 2 };
   x.drawImage(map, best.sx, best.sy, sw, sh, 0, 0, CELLS_W, CELLS_H);
