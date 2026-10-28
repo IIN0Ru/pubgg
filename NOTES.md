@@ -618,7 +618,7 @@
 - 클랜: 플레이어 응답의 clanId → `/clans/{id}` (1분 10번 제한에 같이 들어감). 실패하면 클랜 없이
 - 화면: `player-card.js` 가 카드 전체를 캔버스 하나에 그림 → 화면 = PNG(3배) = GIF(2배). GIF 는 gifenc, 첫 장면으로 색표를 정하고 다음 장면부터 바뀐 점만 담아서 약 300KB
 - 반팔티는 시트에 열쇠색(FE01FE / 그림자 C600C6)으로 그려 두고 화면에서 고른 색(그림자 ×0.78)으로 바꿈
-- 그림 자료(`static/images/card`)는 도트 작업 폴더(pubgg-sprite)의 `export_card_assets.py` 로 만듦: 총 17종 애니메이션 시트, 주무기 아이콘, 티어 아이콘(공식 Insignias 를 36px 도트로, 크리스탈은 직접 그림), 티어 테두리 9종, 맵 4장(2048px WebP)
+- 그림 자료(`static/images/card`)는 도트 작업 폴더(pubgg-sprite)의 `export_card_assets.py` 로 만듦: 총 17종 애니메이션 시트, 주무기 아이콘, 티어 아이콘(공식 Insignias 를 36px 도트로, 크리스탈은 게임 화면 캡처에서 숫자만 I~V 로 바꿔 만듦), 티어 테두리 9종, 맵 4장(2048px WebP)
 - 총 고르기: `anim/weapons.json` (사이트 총 이름 → 그림), 없으면 분류로 (AR→M416, DMR→Mini14, SR→Kar98k, SMG→MP5K, 샷건→S1897, LMG→M249)
 
 ### 확인

@@ -152,5 +152,5 @@ NOTES.md                       개발 기록 (무엇을 정했고 AI와 어떻�
 
 ## 자료 출처
 - 리플레이 맵 이미지: PUBG 공식 API 자료 [pubg/api-assets](https://github.com/pubg/api-assets) (Assets/Maps, High_Res 를 512px WebP 조각으로 잘라 static/images/maps/tiles 에). PUBG API 이용약관에 따라 사용
-- 플레이어 카드: 같은 자료의 글자 없는 맵(Maps/*_No_Text_High_Res → 2048px WebP), 티어 아이콘(Icons/Insignias, 서바이버는 Ranks [Deprecated]/Survivor)을 도트로 줄여서 사용. 크리스탈은 공식 아이콘이 없어서 직접 그림
+- 플레이어 카드: 같은 자료의 글자 없는 맵(Maps/*_No_Text_High_Res → 2048px WebP), 티어 아이콘(Icons/Insignias, 서바이버는 Ranks [Deprecated]/Survivor)을 도트로 줄여서 사용. 크리스탈은 공식 자료에 없어서 게임 화면 캡처(크리스탈 IV)에서 바탕을 지우고 숫자만 I~V 로 바꿔 만듦
 - GIF 만들기: [gifenc](https://github.com/mattdesl/gifenc) (MIT, static/js/vendor)
