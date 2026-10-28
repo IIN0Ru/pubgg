@@ -10,7 +10,11 @@
     <meta property="og:site_name" content="펍지지 PUB.GG">
     <meta property="og:title" th:content="${result != null} ? ${result.shareTitle()} : ${nickname}">
     <meta property="og:description" th:content="${result != null} ? ${result.shareDescription()} : '배그 플레이 스타일 분석'">
-    <meta name="twitter:card" content="summary">
+    <!-- 사이트에 저장한 플레이어 카드가 있으면 그 그림을 크게 (CardController /card/image) -->
+    <meta property="og:image" th:if="${cardImageUrl != null}" th:content="${cardImageUrl}">
+    <meta property="og:image:width" th:if="${cardImageUrl != null}" content="720">
+    <meta property="og:image:height" th:if="${cardImageUrl != null}" content="960">
+    <meta name="twitter:card" th:content="${cardImageUrl != null} ? 'summary_large_image' : 'summary'" content="summary">
     <!-- 디스코드는 이 색을 미리보기 카드 왼쪽 띠 색으로 쓴다 -->
     <meta name="theme-color" content="#FFD02F">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +41,12 @@
         </div>
 
         <div class="idcard__head">
+            <!-- 사이트에 저장한 플레이어 카드: 프로필처럼 작게, 움직이는 카드 (static/js/card-profile.js). 누르면 카드 화면 -->
+            <a class="idcard__mini" th:if="${savedJson != null}"
+               th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}" aria-label="플레이어 카드 보기">
+                <canvas width="192" height="256" data-card-profile
+                        th:attr="data-card=${cardJson},data-saved=${savedJson}"></canvas>
+            </a>
             <h1 class="idcard__name"
                 th:text="${result != null} ? ${result.nickname()} : ${nickname}">N0-RU</h1>
             <!-- 즐겨찾기 ☆ (브라우저에 저장, static/js/players.js) -->
@@ -125,7 +135,8 @@
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">공유 링크 복사</button>
         <!-- 공유용 도트 플레이어 카드 (GIF·PNG 저장) -->
         <a class="idcard__make" th:if="${result != null and c != null}"
-           th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}">플레이어 카드 만들기</a>
+           th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}"
+           th:text="${savedJson != null} ? '플레이어 카드 보기' : '플레이어 카드 만들기'">플레이어 카드 만들기</a>
     </section>
 
   </aside>
@@ -449,6 +460,7 @@
 <script src="/js/matches.js" th:src="@{/js/matches.js}"></script>
 <script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
 <script src="/js/card.js" th:src="@{/js/card.js}"></script>
+<script type="module" src="/js/card-profile.js" th:src="@{/js/card-profile.js}" th:if="${savedJson != null}"></script>
 
 <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 </body>

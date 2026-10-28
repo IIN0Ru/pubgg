@@ -1,6 +1,11 @@
 package gg.pub.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.pub.card.CardService;
+import gg.pub.card.SavedCard;
 import gg.pub.domain.Platform;
+import gg.pub.domain.ShareCard;
 import gg.pub.pubgapi.PubgApiException;
 import gg.pub.service.PlayerLookupService;
 import gg.pub.service.PlayerLookupService.Lookup;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Optional;
 
@@ -21,9 +27,13 @@ import java.util.Optional;
 public class HomeController {
 
     private final PlayerLookupService lookupService;
+    private final CardService cardService;
+    private final ObjectMapper objectMapper;
 
-    public HomeController(PlayerLookupService lookupService) {
+    public HomeController(PlayerLookupService lookupService, CardService cardService, ObjectMapper objectMapper) {
         this.lookupService = lookupService;
+        this.cardService = cardService;
+        this.objectMapper = objectMapper;
     }
 
     /** 첫 화면. templates/index.html 을 보여준다. */
@@ -63,11 +73,42 @@ public class HomeController {
             model.addAttribute("result", lookup.result());
             model.addAttribute("updatedAgo", lookupService.updatedAgoText(lookup));
             model.addAttribute("refreshWait", lookupService.secondsUntilRefresh(lookup));
+            addSavedCard(selected.get(), lookup, model);
         } catch (PubgApiException e) {
             // 플레이어 없음, 키 문제, 요청 초과 등: 화면에 안내 문구로 보여준다
             model.addAttribute("errorMessage", e.getMessage());
         }
         return "search";
+    }
+
+    /**
+     * 사이트에 저장한 플레이어 카드가 있으면: 왼쪽 위 작은 프로필 카드(움직임) + 링크 미리보기 그림.
+     * 숫자는 최신 검색 결과(ShareCard), 꾸민 모습은 저장한 것(SavedCard).
+     */
+    private void addSavedCard(Platform platform, Lookup lookup, Model model) {
+        String exact = lookup.result().nickname();
+        Optional<SavedCard> saved = cardService.find(platform, exact);
+        Optional<ShareCard> card = ShareCard.from(lookup.result());
+        if (saved.isEmpty() || card.isEmpty()) {
+            return;
+        }
+        model.addAttribute("savedJson", toJson(saved.get()));
+        model.addAttribute("cardJson", toJson(card.get()));
+        model.addAttribute("cardTier", card.get().tierFamily());
+        // 디스코드·카톡은 미리보기 그림 주소를 전체 주소(https://…)로 받아야 한다
+        model.addAttribute("cardImageUrl", ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/card/image")
+                .queryParam("platform", platform.getShard())
+                .queryParam("nickname", exact)
+                .encode().toUriString());
+    }
+
+    private String toJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("카드 값을 JSON 으로 못 바꿈", e);
+        }
     }
 
     /**

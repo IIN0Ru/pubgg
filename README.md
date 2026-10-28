@@ -32,7 +32,8 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
   - 고해상도 지도 조각(타일)을 보이는 만큼만 불러오기, 명중선, 차량·보급 아이콘, 폭발물(터진 곳 추정)·회복 이펙트
   - 체력 바, 죽기 전 30초 받은 피해, 교전 지표(기절→킬·복수·살림), 장면 링크(?t=), 킬 글에 무기·거리·헤드샷
 - [x] 플레이어 카드 (/card): 도트 캐릭터가 주무기를 꺼내 쏘는 애니메이션, 티어 도트 테두리, 4개 맵 중 랜덤 맵·랜덤 구역 배경, 전투 태그(기록) + 성향 태그(직접 고름, 주소에 저장), GIF·PNG 저장
-- [x] 플레이어 카드 옷 고르기: 외투(후드티·자켓·셔츠) + 하의(반바지·츄리닝·슬랙스) + 전신(길리슈트·북극곰), 반팔·외투·하의 색 8가지
+- [x] 플레이어 카드 옷 고르기: 외투(후드티·자켓·셔츠) + 하의(반바지·츄리닝·슬랙스) + 전신(길리슈트), 반팔·외투·하의 색 8가지
+- [x] 플레이어 카드 사이트 저장 (서버 폴더, 처음 저장한 브라우저만 수정) → 전적 화면에 움직이는 프로필 카드 + 링크 미리보기(og:image)
 - [ ] 리플레이 그리기·공유, 여성 캐릭터
 
 ## 실행 방법 (IntelliJ)
@@ -62,7 +63,7 @@ src/main/java/gg/pub/
 ├── web/
 │   ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 │   ├── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
-│   └── CardController.java    "/card" 공유용 플레이어 카드
+│   └── CardController.java    "/card" 플레이어 카드, "/api/card" 저장, "/card/image" 미리보기 그림
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
@@ -98,6 +99,8 @@ src/main/java/gg/pub/
     ├── CacheConfig.java       캐시 켜기
     └── ClockConfig.java       현재 시각 (테스트에서 바꿀 수 있게)
 
+src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 지금은 FileCardStore, DB 를 붙이면 구현 하나만 추가)
+
 src/main/resources/
 ├── application.properties     설정
 ├── templates/
@@ -108,7 +111,9 @@ src/main/resources/
 ├── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 ├── static/images/maps/tiles/  리플레이 지도 조각 (아래 "리플레이 지도 조각" 참고)
 ├── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
-├── static/js/player-card.js   플레이어 카드 그리기·꾸미기·GIF/PNG 저장 (캔버스)
+├── static/js/card-render.js   플레이어 카드 그리기 (꾸미기 화면·전적 프로필 공용, 캔버스)
+├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·GIF/PNG 저장
+├── static/js/card-profile.js  전적 화면의 작은 프로필 카드
 ├── static/js/vendor/          gifenc (GIF 만들기, MIT)
 └── static/images/card/        플레이어 카드 그림 (총 17 × 옷 조합 14 애니메이션, 티어 아이콘·테두리, 글자 없는 맵)
 

@@ -31,7 +31,7 @@
         -->
         <figure class="pcard__stage">
             <canvas class="pcard__canvas" width="720" height="960" data-player-card
-                    th:attr="data-card=${cardJson},data-tier=${card.tierFamily()}"
+                    th:attr="data-card=${cardJson},data-saved=${savedJson},data-platform=${platform.shard}"
                     th:aria-label="${card.nickname()} + ' 플레이어 카드'" role="img"></canvas>
             <figcaption class="sr-only" th:text="${card.nickname()} + ' · ' + ${card.tierText()} + ' · KDA ' + ${card.kda()} + ' · 평균 딜 ' + ${card.avgDamage()}">카드 설명</figcaption>
         </figure>
@@ -72,7 +72,6 @@
                 <legend>전신 옷</legend>
                 <label><input type="radio" name="suit" value=""> 안 입음</label>
                 <label><input type="radio" name="suit" value="ghillie"> 길리슈트</label>
-                <label><input type="radio" name="suit" value="bear"> 북극곰</label>
             </fieldset>
             <fieldset class="pick pick--swatch" data-wear="tee">
                 <legend>반팔티 색</legend>
@@ -113,13 +112,14 @@
             </fieldset>
 
             <div class="pcard__actions">
-                <button class="pcard__btn pcard__btn--primary" type="button" data-card-gif>GIF 저장</button>
+                <button class="pcard__btn pcard__btn--primary" type="button" data-card-save>사이트에 저장</button>
+                <button class="pcard__btn" type="button" data-card-share>공유 링크 복사</button>
+                <button class="pcard__btn" type="button" data-card-reroll>배경 랜덤 설정</button>
+                <button class="pcard__btn" type="button" data-card-gif>GIF 저장</button>
                 <button class="pcard__btn" type="button" data-card-png>PNG 저장</button>
-                <button class="pcard__btn" type="button" data-card-reroll>배경 다른 구역</button>
-                <button class="pcard__btn" type="button" data-copy-link>공유 링크 복사</button>
             </div>
             <p class="pcard__status" role="status" data-card-status></p>
-            <p class="pcard__note">배경은 에란겔·미라마·태이고·론도 중 한 맵의 한 구역을 저장할 때마다 새로 골라요.</p>
+            <p class="pcard__note">사이트에 저장하면 전적 검색 화면에 프로필로 보이고, 공유 링크를 디스코드·카톡에 붙이면 카드가 미리보기로 나와요. 처음 저장한 브라우저에서만 다시 바꿀 수 있어요.</p>
         </form>
     </div>
 </main>
@@ -127,7 +127,6 @@
 <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 <script src="/js/players.js" th:src="@{/js/players.js}"></script>
 <script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
-<script src="/js/card.js" th:src="@{/js/card.js}"></script>
 <script type="module" src="/js/player-card.js" th:src="@{/js/player-card.js}" th:if="${card != null}"></script>
 </body>
 </html>

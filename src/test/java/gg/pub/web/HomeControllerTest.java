@@ -1,5 +1,6 @@
 package gg.pub.web;
 
+import gg.pub.card.CardService;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayerMatches;
 import gg.pub.pubgapi.PlayerNotFoundException;
@@ -31,6 +32,9 @@ class HomeControllerTest {
 
     @MockitoBean
     PlayerLookupService lookupService;
+
+    @MockitoBean
+    CardService cardService;   // 저장한 플레이어 카드 (없으면 빈 값)
 
     @Test
     void 첫_화면이_열린다() throws Exception {
