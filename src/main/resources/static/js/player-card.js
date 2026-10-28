@@ -4,7 +4,7 @@
  *  - 기록 값: <canvas data-card='{ShareCard JSON}'>
  *  - 사용자가 고르는 것(마이크·지향·구함·역할·반팔 색)은 주소 뒤에 붙인다 (?mic=o&aim=chicken,rank&tee=f0f0e8)
  *    → 공유 링크를 받은 사람도 같은 카드를 본다. DB 없음
- *  - 배경: 주 맵(글자 없는 공식 맵)에서 랜덤 구역. 도로·건물이 적당히 보이고 바다가 적은 곳을 고른다.
+ *  - 배경: 에란겔·미라마·태이고·론도 중 랜덤 맵(글자 없는 공식 맵)의 랜덤 구역. 도로·건물이 적당히 보이고 바다가 적은 곳을 고른다.
  *    처음 열 때, "배경 다른 구역", 저장할 때마다 새로 고른다
  *  - 캐릭터: 총별 애니메이션 시트(static/images/card/anim). 반팔티는 열쇠색(FE01FE/C600C6)을 고른 색으로 바꿔 그린다
  *
@@ -43,6 +43,12 @@ const loadImage = (src) => new Promise((ok, fail) => {
   im.src = src;
 });
 const loadJson = (src) => fetch(src).then((r) => r.json());
+
+// 배경 맵: 고를 때마다 넷 중 하나. 한 번 받은 맵은 다시 받지 않는다
+const MAPS = ['erangel', 'miramar', 'taego', 'rondo'];
+const mapCache = {};
+const loadMap = (key) => (mapCache[key] = mapCache[key] || loadImage(BASE + 'maps/' + key + '.webp'));
+const randomMap = () => loadMap(MAPS[Math.floor(Math.random() * MAPS.length)]);
 
 // ---------- 주소 ↔ 고른 값 ----------
 
@@ -308,14 +314,15 @@ function play() {
   tick();
 }
 
-function update(reroll) {
+async function update(reroll) {
+  const map = reroll || !state ? await randomMap() : null;
   const c = formChoices();
   writeChoices(c);
   const teeChanged = !state || state.choices.tee !== c.tee;
   state = {
     choices: c,
     sheet: teeChanged ? recolorSheet(A.sheet, c.tee) : state.sheet,
-    area: reroll || !state ? pickMapArea(A.map) : state.area,
+    area: reroll || !state ? pickMapArea(map) : state.area,
     tags: styleTags(c),
   };
 }
@@ -332,8 +339,8 @@ function download(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-function savePng() {
-  update(true);
+async function savePng() {
+  await update(true);
   const c = document.createElement('canvas');
   c.width = W * 3; c.height = H * 3;
   // 총을 들고 있는 장면 (애니메이션 가운데쯤)
@@ -343,7 +350,7 @@ function savePng() {
 }
 
 async function saveGif() {
-  update(true);
+  await update(true);
   status.textContent = 'GIF 만드는 중…';
   await new Promise((r) => setTimeout(r, 30));
   const scale = 2;
@@ -383,26 +390,27 @@ async function saveGif() {
 async function start() {
   const weapons = await loadJson(BASE + 'anim/weapons.json');
   const gunKey = weapons[card.weaponName] || CLASS_GUN[card.weaponClass] || 'M416';
-  const [metaAll, palette, sheet, map, frameImg, tierIcon, gunIcon] = await Promise.all([
+  const [metaAll, palette, sheet, frameImg, tierIcon, gunIcon] = await Promise.all([
     loadJson(BASE + 'anim/meta.json'),
     loadJson(BASE + 'frames/palette.json'),
     loadImage(BASE + 'anim/' + gunKey + '.png'),
-    loadImage(BASE + 'maps/' + card.mapKey + '.webp'),
     loadImage(BASE + 'frames/' + card.tierFamily + '.png'),
     loadImage(BASE + 'tiers/' + card.tierIcon + '.png'),
     loadImage(BASE + 'guns/' + gunKey + '.png'),
     document.fonts ? document.fonts.ready : null,
   ]);
-  A = { meta: metaAll[gunKey], palette, sheet, map, frame: frameImg, tierIcon, gunIcon };
+  A = { meta: metaAll[gunKey], palette, sheet, frame: frameImg, tierIcon, gunIcon };
   canvas.style.setProperty('--tier-glow', (palette[card.tierFamily] || palette.Unranked)[1]);
   fillForm(readChoices());
-  update(false);
+  await update(false);
   started = performance.now();
   play();
 
   form.addEventListener('change', () => update(false));
-  document.querySelector('[data-card-reroll]').addEventListener('click', () => update(true));
-  document.querySelector('[data-card-png]').addEventListener('click', savePng);
+  document.querySelector('[data-card-reroll]').addEventListener('click', () => update(true));   // 화면은 재생 중이라 다음 장면부터 바뀐 배경
+  document.querySelector('[data-card-png]').addEventListener('click', () => {
+    savePng().catch((e) => { status.textContent = 'PNG 를 만들지 못했어요.'; console.error(e); });
+  });
   document.querySelector('[data-card-gif]').addEventListener('click', () => {
     saveGif().catch((e) => { status.textContent = 'GIF 를 만들지 못했어요.'; console.error(e); });
   });

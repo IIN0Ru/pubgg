@@ -46,7 +46,6 @@ class ShareCardTest {
         assertThat(c.weaponClass()).isEqualTo("AR_762");
         // 헤드샷 3/10 = 30%, TOP10 2/4 = 50%
         assertThat(c.combatTags()).containsExactly("외곽 운영", "대도시파", "헤드샷 30%", "TOP10 50%", "투척 2.1개");
-        assertThat(c.mapKey()).isEqualTo("miramar");
         assertThat(c.matches()).isEqualTo(4);
         assertThat(c.peakHours()).isEqualTo("21~24시");
     }
@@ -68,15 +67,6 @@ class ShareCardTest {
         ShareCard c = ShareCard.from(result).orElseThrow();
 
         assertThat(c.combatTags()).contains("헤드샷 50%", "TOP10 0%");
-        assertThat(c.mapKey()).isEqualTo("rondo");
-    }
-
-    @Test
-    void 맵이_같은_수면_최근_맵_이미지가_없는_맵은_에란겔() {
-        assertThat(ShareCard.mainMap(List.of(game("Tiger_Main", 0, 0, 1), game("Desert_Main", 0, 0, 1))))
-                .isEqualTo("taego");
-        assertThat(ShareCard.mainMap(List.of(game("Savage_Main", 0, 0, 1)))).isEqualTo("erangel");
-        assertThat(ShareCard.mainMap(List.of())).isEqualTo("erangel");
     }
 
     @Test

@@ -3,9 +3,7 @@ package gg.pub.domain;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 공유용 플레이어 카드 (/card 화면). 검색 결과(PlayerMatches)에서 카드에 그릴 것만 뽑는다.
@@ -24,7 +22,6 @@ import java.util.stream.Collectors;
  * @param weaponClass 주무기 분류 (WeaponClass 이름). 그릴 총 그림을 못 찾으면 분류로 대신 고른다
  * @param combatTags  전투 태그 (# 없이): 외곽 운영, 대도시파, 헤드샷 32%, TOP10 60%, 투척 2.1개
  * @param peakHours   주 활동 시간 "21~24시" (없으면 빈 문자열). 성향 줄 맨 앞에 붙는다
- * @param mapKey      배경 맵: erangel / miramar / taego / rondo
  * @param matches     계산에 쓴 경쟁전 경기 수 (최대 10)
  */
 public record ShareCard(String nickname,
@@ -38,17 +35,7 @@ public record ShareCard(String nickname,
                         String weaponClass,
                         List<String> combatTags,
                         String peakHours,
-                        String mapKey,
                         int matches) {
-
-    /** 카드 배경으로 쓸 수 있는 맵 (글자 없는 공식 맵 이미지가 있는 것). 나머지 맵은 에란겔로 */
-    static final Map<String, String> MAP_KEYS = Map.of(
-            "Baltic_Main", "erangel",
-            "Erangel_Main", "erangel",
-            "Desert_Main", "miramar",
-            "Tiger_Main", "taego",
-            "Neon_Main", "rondo");
-    static final String DEFAULT_MAP = "erangel";
 
     private static final String[] ROMAN = {"I", "II", "III", "IV", "V"};
 
@@ -84,7 +71,6 @@ public record ShareCard(String nickname,
                 weapon == null ? WeaponClass.OTHER.name() : weapon.type().name(),
                 combat,
                 activity != null && activity.hasData() ? activity.peakText() : "",
-                mainMap(games),
                 c.matches()));
     }
 
@@ -102,19 +88,6 @@ public record ShareCard(String nickname,
         }
         long top = games.stream().filter(MatchRecord::isTop10).count();
         return (int) Math.round(top * 100.0 / games.size());
-    }
-
-    /** 가장 많이 한 맵. 같으면 더 최근에 한 맵. 이미지가 없는 맵이면 에란겔 */
-    static String mainMap(List<MatchRecord> games) {
-        Map<String, Long> counts = games.stream()
-                .collect(Collectors.groupingBy(MatchRecord::mapName, Collectors.counting()));
-        String best = null;
-        for (MatchRecord g : games) {   // 최신순이라 같은 수면 먼저 나온(최근) 맵이 남는다
-            if (best == null || counts.get(g.mapName()) > counts.get(best)) {
-                best = g.mapName();
-            }
-        }
-        return best == null ? DEFAULT_MAP : MAP_KEYS.getOrDefault(best, DEFAULT_MAP);
     }
 
     /** [테두리 계열, 아이콘 파일, 글자] */
