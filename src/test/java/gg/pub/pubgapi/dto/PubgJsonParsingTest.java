@@ -29,7 +29,19 @@ class PubgJsonParsingTest {
         PlayerResponse.Player player = response.data().get(0);
         assertThat(player.id()).isEqualTo("account.test0001");
         assertThat(player.attributes().name()).isEqualTo("N0-RU");
+        assertThat(player.attributes().clanId()).isEqualTo("clan.test0001");
         assertThat(player.matchIds()).containsExactly("match-0001", "match-0002");
+    }
+
+    @Test
+    void 클랜_응답에서_이름과_태그를_읽는다() throws IOException {
+        ClanResponse clan = mapper.readValue("""
+                {"data":{"type":"clan","id":"clan.test0001",
+                 "attributes":{"clanName":"헬멧연구소","clanTag":"HLMT","clanLevel":5,"clanMemberCount":30}}}
+                """, ClanResponse.class);
+
+        assertThat(clan.data().attributes().clanName()).isEqualTo("헬멧연구소");
+        assertThat(clan.data().attributes().clanTag()).isEqualTo("HLMT");
     }
 
     @Test

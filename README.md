@@ -31,7 +31,8 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 2D 리플레이 (경쟁전): 재생·배속·타임라인, 경기 흐름 누르면 이동, 근처 적만, 동선 전체 + 교전 번호, 확대·이동·따라가기
   - 고해상도 지도 조각(타일)을 보이는 만큼만 불러오기, 명중선, 차량·보급 아이콘, 폭발물(터진 곳 추정)·회복 이펙트
   - 체력 바, 죽기 전 30초 받은 피해, 교전 지표(기절→킬·복수·살림), 장면 링크(?t=), 킬 글에 무기·거리·헤드샷
-- [ ] 카드 이미지 공유(디스코드), 리플레이 그리기·공유
+- [x] 플레이어 카드 (/card): 도트 캐릭터가 주무기를 꺼내 쏘는 애니메이션, 티어 도트 테두리, 주 맵 랜덤 구역 배경, 전투 태그(기록) + 성향 태그(직접 고름, 주소에 저장), 반팔 색, GIF·PNG 저장
+- [ ] 캐릭터 옷 고르기(외투·하의·전신), 리플레이 그리기·공유
 
 ## 실행 방법 (IntelliJ)
 
@@ -59,7 +60,8 @@ src/main/java/gg/pub/
 ├── PubggApplication.java      앱 시작점
 ├── web/
 │   ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
-│   └── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
+│   ├── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
+│   └── CardController.java    "/card" 공유용 플레이어 카드
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
@@ -84,6 +86,7 @@ src/main/java/gg/pub/
 │   ├── SeasonRank.java        시즌 티어 + 최근 vs 시즌 비교
 │   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
 │   ├── PlayCard.java          플레이 카드
+│   ├── ShareCard.java         공유용 플레이어 카드에 그릴 값 (티어·클랜·전투 태그·주 맵)
 │   ├── WeaponCatalog.java     무기 ID → 이름·분류 (5.56 AR, DMR, SR ...)
 │   ├── DropZones.java         랭크 맵 대도시 목록 (지역 ID / 론도는 좌표)
 │   ├── Farming.java           파밍 정보
@@ -99,10 +102,14 @@ src/main/resources/
 ├── templates/
 │   ├── fragments/topbar.html  모든 페이지 상단 바 (로고 + 닉네임 검색)
 │   ├── index.html             첫 화면(히어로)
-│   └── search.html            검색 결과: 플레이 카드 + 최근 경기 목록
+│   ├── search.html            검색 결과: 플레이 카드 + 최근 경기 목록
+│   └── card.html              공유용 플레이어 카드 + 꾸미기
 ├── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 ├── static/images/maps/tiles/  리플레이 지도 조각 (아래 "리플레이 지도 조각" 참고)
-└── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
+├── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
+├── static/js/player-card.js   플레이어 카드 그리기·꾸미기·GIF/PNG 저장 (캔버스)
+├── static/js/vendor/          gifenc (GIF 만들기, MIT)
+└── static/images/card/        플레이어 카드 그림 (총별 애니메이션, 티어 아이콘·테두리, 글자 없는 맵)
 
 DESIGN.md                      디자인 기준 파일
 CLAUDE.md                      AI 작업용 안내 (DESIGN.md를 불러옴)
@@ -145,3 +152,5 @@ NOTES.md                       개발 기록 (무엇을 정했고 AI와 어떻�
 
 ## 자료 출처
 - 리플레이 맵 이미지: PUBG 공식 API 자료 [pubg/api-assets](https://github.com/pubg/api-assets) (Assets/Maps, High_Res 를 512px WebP 조각으로 잘라 static/images/maps/tiles 에). PUBG API 이용약관에 따라 사용
+- 플레이어 카드: 같은 자료의 글자 없는 맵(Maps/*_No_Text_High_Res → 2048px WebP), 티어 아이콘(Icons/Insignias, 서바이버는 Ranks [Deprecated]/Survivor)을 도트로 줄여서 사용. 크리스탈은 공식 아이콘이 없어서 직접 그림
+- GIF 만들기: [gifenc](https://github.com/mattdesl/gifenc) (MIT, static/js/vendor)

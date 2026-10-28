@@ -2458,3 +2458,176 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     .replay__speed { margin-left: auto; }
     .page-replay .topsearch { display: none; }   /* 리플레이는 위 검색창 대신 지도부터 (← 전적 링크로 돌아감) */
 }
+
+/* =========================================================
+   플레이어 카드 (/card)
+   카드 그림은 player-card.js 가 캔버스에 그린다 (카드 안 색은 고정. CLAUDE.md 예외).
+   여기는 카드 둘레와 꾸미기 칸만.
+   ========================================================= */
+.pcard {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 24px 96px;
+}
+
+.pcard__back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--muted);
+    font-size: 14px;
+    text-decoration: none;
+}
+.pcard__back:hover { color: var(--ink); }
+
+.pcard__notice {
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: var(--surface-card);
+    color: var(--body);
+}
+
+.pcard__layout {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+}
+
+.pcard__stage { margin: 0; position: sticky; top: 88px; }
+
+.pcard__canvas {
+    display: block;
+    width: 360px;
+    max-width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    image-rendering: pixelated;
+    /* 티어 색으로 빛 번짐 (--tier-glow 는 player-card.js 가 티어 색으로 넣는다) */
+    filter: drop-shadow(0 0 10px var(--tier-glow, transparent));
+}
+
+.pcard__title {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--ink);
+}
+
+.pcard__lead { margin: 0 0 24px; color: var(--body); font-size: 15px; }
+
+.pick {
+    margin: 0 0 16px;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pick legend {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.pick legend small { margin-left: 4px; font-weight: 500; color: var(--muted); }
+
+.pick label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* 고르는 칸은 알약 모양 태그 (DESIGN.md badge-pill). 고르면 노랑 */
+.pick label:not(:has(.pick__swatch)) {
+    padding: 6px 12px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-pill);
+    background: var(--surface-card);
+    color: var(--body);
+    font-size: 13px;
+    font-weight: 500;
+}
+.pick input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.pick label:has(input:checked):not(:has(.pick__swatch)) {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--on-primary);
+}
+.pick label:has(input:focus-visible) {
+    outline: 2px solid var(--primary-text);
+    outline-offset: 2px;
+    border-radius: var(--radius-pill);
+}
+
+.pick__swatch {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--hairline-strong);
+}
+.pick label:has(input:checked) .pick__swatch {
+    border-color: var(--primary-text);
+    box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--primary-text);
+}
+
+.pcard__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.pcard__btn {
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--surface-elevated);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pcard__btn:hover { background: var(--hairline-strong); }
+.pcard__btn--primary { background: var(--primary); color: var(--on-primary); }
+.pcard__btn--primary:hover { background: var(--primary-active); }
+.pcard__btn:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+
+.pcard__status { min-height: 20px; margin: 12px 0 0; color: var(--body); font-size: 14px; }
+.pcard__note { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+/* 검색 화면 → 카드 만들기 버튼 */
+.idcard__make {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    margin-top: 8px;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.idcard__make:hover { background: var(--primary-active); }
+.idcard__make:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+
+@media (max-width: 860px) {
+    .pcard { padding: 16px 16px 64px; }
+    .pcard__layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .pcard__stage { position: static; display: flex; justify-content: center; }
+    .pcard__title { font-size: 24px; }
+}

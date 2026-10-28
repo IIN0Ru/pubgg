@@ -1,12 +1,15 @@
 package gg.pub.service;
 
 import gg.pub.config.PubgApiProperties;
+import gg.pub.domain.Clan;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.PlayerMatches;
 import gg.pub.domain.SeasonRank;
 import gg.pub.pubgapi.PubgApiClient;
+import gg.pub.pubgapi.PubgApiException;
+import gg.pub.pubgapi.dto.ClanResponse;
 import gg.pub.pubgapi.dto.PlayerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,7 @@ import java.util.concurrent.Semaphore;
  *  2. 경기들을 동시에 받아서 작은 기록(MatchRecord)으로 줄인다 (이미 받은 경기는 캐시에서)
  *  3. 그중 최신 경쟁전 10경기로 플레이 카드를 계산한다 (PlayCardService)
  *  4. 이번 시즌 경쟁전 티어·기록을 받는다 (SeasonService, 실패하면 티어 없이)
+ *  5. 클랜에 들어 있으면 클랜 이름·태그를 받는다 (실패하면 클랜 없이)
  *
  * 경기 목록, 함께한 팀원, 활동 시간대는 14일 전체 경기를 쓴다.
  */
@@ -73,7 +77,25 @@ public class PlayerService {
         PlayCard card = playCardService.build(competitive, accountId).orElse(null);
         SeasonRank season = seasonService.currentRank(platform, accountId).orElse(null);
         String exactName = player.attributes() != null ? player.attributes().name() : nickname;
-        return new PlayerMatches(exactName, platform, card, season, matches);
+        Clan clan = loadClan(platform, player.attributes() != null ? player.attributes().clanId() : null);
+        return new PlayerMatches(exactName, platform, card, season, matches, clan);
+    }
+
+    /** 클랜 이름·태그. 클랜이 없거나 못 받으면 null (클랜 때문에 검색이 실패하지 않게) */
+    private Clan loadClan(Platform platform, String clanId) {
+        if (clanId == null || clanId.isBlank()) {
+            return null;
+        }
+        try {
+            ClanResponse res = client.getClan(platform, clanId);
+            if (res == null || res.data() == null || res.data().attributes() == null) {
+                return null;
+            }
+            return new Clan(res.data().attributes().clanName(), res.data().attributes().clanTag());
+        } catch (PubgApiException e) {
+            log.warn("클랜 정보를 못 받음: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

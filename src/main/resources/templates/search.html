@@ -123,6 +123,9 @@
         </p>
 
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">공유 링크 복사</button>
+        <!-- 공유용 도트 플레이어 카드 (GIF·PNG 저장) -->
+        <a class="idcard__make" th:if="${result != null and c != null}"
+           th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}">플레이어 카드 만들기</a>
     </section>
 
   </aside>

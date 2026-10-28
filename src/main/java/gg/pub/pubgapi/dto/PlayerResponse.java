@@ -11,7 +11,7 @@ import java.util.List;
  * {
  *   "data": [{
  *     "id": "account.abc123",
- *     "attributes": { "name": "N0-RU", "shardId": "steam" },
+ *     "attributes": { "name": "N0-RU", "shardId": "steam", "clanId": "clan.abc" },
  *     "relationships": {
  *       "matches": { "data": [ { "type": "match", "id": "경기ID" }, ... ] }
  *     }
@@ -38,8 +38,9 @@ public record PlayerResponse(List<Player> data) {
         }
     }
 
+    /** clanId: 클랜에 들어 있지 않으면 비어 있거나 없음 */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Attributes(String name, String shardId) {
+    public record Attributes(String name, String shardId, String clanId) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

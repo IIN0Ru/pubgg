@@ -13,6 +13,7 @@ import java.util.List;
  * @param matches    최근 14일 경기 (모든 모드, 최신순)
  * @param teammates  자주 같이 한 팀원 (14일 전체 경기 기준)
  * @param activity   활동 시간대 (14일 전체 경기 기준)
+ * @param clan       클랜 (없거나 못 받았으면 null)
  */
 public record PlayerMatches(String nickname,
                             Platform platform,
@@ -20,17 +21,24 @@ public record PlayerMatches(String nickname,
                             SeasonRank season,
                             List<MatchRecord> matches,
                             List<Teammate> teammates,
-                            ActivityMap activity) {
+                            ActivityMap activity,
+                            Clan clan) {
 
     /** 자주 같이 한 팀원 최대 인원 */
     public static final int TEAMMATE_LIMIT = 5;
 
     /** 경기 목록만 주면 팀원·활동 시간대는 여기서 계산한다 */
     public PlayerMatches(String nickname, Platform platform, PlayCard card, SeasonRank season,
-                         List<MatchRecord> matches) {
+                         List<MatchRecord> matches, Clan clan) {
         this(nickname, platform, card, season, matches,
                 Teammate.fromMatches(matches, TEAMMATE_LIMIT),
-                ActivityMap.fromMatches(matches));
+                ActivityMap.fromMatches(matches), clan);
+    }
+
+    /** 클랜 없이 */
+    public PlayerMatches(String nickname, Platform platform, PlayCard card, SeasonRank season,
+                         List<MatchRecord> matches) {
+        this(nickname, platform, card, season, matches, null);
     }
 
     /** 시즌 기록 없이 (테스트용) */

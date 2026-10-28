@@ -1,6 +1,7 @@
 package gg.pub.pubgapi;
 
 import gg.pub.config.PubgApiProperties;
+import gg.pub.pubgapi.dto.ClanResponse;
 import gg.pub.pubgapi.dto.MatchResponse;
 import gg.pub.pubgapi.dto.PlayerResponse;
 import gg.pub.pubgapi.dto.RankedStatsResponse;
@@ -29,6 +30,7 @@ import java.util.zip.GZIPInputStream;
  *  3. 텔레메트리(경기 상세 기록 파일) 읽기 → readTelemetry
  *  4. 시즌 목록 받기 → getSeasons
  *  5. 한 시즌 경쟁전 기록 받기 → getRankedStats
+ *  6. 클랜 이름·태그 받기 → getClan
  *
  * 받은 데이터를 계산하거나 화면에 맞게 바꾸는 일은 여기서 하지 않고 Service 가 한다.
  *
@@ -129,6 +131,11 @@ public class PubgApiClient {
         } catch (ResourceAccessException e) {
             throw new PubgApiException("PUBG 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.", e);
         }
+    }
+
+    /** 클랜 이름·태그 (플레이어 조회처럼 1분 10번 제한에 들어간다) */
+    public ClanResponse getClan(Platform platform, String clanId) {
+        return getJson("/shards/{shard}/clans/{id}", ClanResponse.class, platform.getShard(), clanId);
     }
 
     /** 단순 GET (오류는 상태 코드별 문장으로) */

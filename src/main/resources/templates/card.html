@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${nickname} + ' 플레이어 카드 | 펍지지'">플레이어 카드 | 펍지지</title>
+    <meta name="theme-color" content="#FFD02F">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <script th:replace="~{fragments/theme :: init}"></script>
+    <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
+</head>
+<body class="page-card">
+
+<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
+
+<main class="pcard">
+    <a class="pcard__back" th:href="@{/search(platform=${platform.shard},nickname=${nickname})}">← 전적으로 돌아가기</a>
+
+    <p class="pcard__notice" th:if="${errorMessage != null}" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
+    <p class="pcard__notice" th:if="${errorMessage == null and card == null}">
+        최근 14일 안에 경쟁전 기록이 없어서 플레이어 카드를 만들지 못했어요.
+    </p>
+
+    <div class="pcard__layout" th:if="${card != null}">
+        <!--
+            카드는 player-card.js 가 캔버스에 그린다 (GIF·PNG 저장도 같은 그림).
+            data-card: 기록에서 뽑은 값 (ShareCard). 성향 태그·반팔 색은 주소(?mic=…)에서 읽는다.
+        -->
+        <figure class="pcard__stage">
+            <canvas class="pcard__canvas" width="720" height="960" data-player-card
+                    th:attr="data-card=${cardJson},data-tier=${card.tierFamily()}"
+                    th:aria-label="${card.nickname()} + ' 플레이어 카드'" role="img"></canvas>
+            <figcaption class="sr-only" th:text="${card.nickname()} + ' · ' + ${card.tierText()} + ' · KDA ' + ${card.kda()} + ' · 평균 딜 ' + ${card.avgDamage()}">카드 설명</figcaption>
+        </figure>
+
+        <form class="pcard__edit" data-card-form aria-label="카드 꾸미기">
+            <h1 class="pcard__title">플레이어 카드</h1>
+            <p class="pcard__lead">전투 태그는 최근 경쟁전 기록으로 자동으로 붙어요. 성향은 직접 골라 주세요.</p>
+
+            <fieldset class="pick">
+                <legend>마이크</legend>
+                <label><input type="radio" name="mic" value=""> 안 고름</label>
+                <label><input type="radio" name="mic" value="o"> 마이크 O</label>
+                <label><input type="radio" name="mic" value="x"> 마이크 X</label>
+                <label><input type="radio" name="mic" value="listen"> 듣기만</label>
+            </fieldset>
+            <fieldset class="pick">
+                <legend>지향 <small>여러 개 가능</small></legend>
+                <label><input type="checkbox" name="aim" value="chicken"> 치킨지향</label>
+                <label><input type="checkbox" name="aim" value="rank"> 순위지향</label>
+                <label><input type="checkbox" name="aim" value="social"> 친목지향</label>
+            </fieldset>
+            <fieldset class="pick">
+                <legend>구함 <small>여러 개 가능</small></legend>
+                <label><input type="checkbox" name="find" value="duo"> 듀오 구함</label>
+                <label><input type="checkbox" name="find" value="squad"> 스쿼드 구함</label>
+                <label><input type="checkbox" name="find" value="clan"> 클랜원 모집</label>
+            </fieldset>
+            <fieldset class="pick">
+                <legend>역할 <small>여러 개 가능</small></legend>
+                <label><input type="checkbox" name="role" value="igl"> IGL</label>
+                <label><input type="checkbox" name="role" value="front"> 1선</label>
+                <label><input type="checkbox" name="role" value="second"> 2선</label>
+                <label><input type="checkbox" name="role" value="turret"> 포탑</label>
+            </fieldset>
+            <fieldset class="pick pick--swatch">
+                <legend>반팔티 색</legend>
+                <!-- 캐릭터 옷 색이라 사이트 색 변수 대신 고정값 (player-card.js TEE_COLORS 와 같게) -->
+                <label th:each="t : ${teeColors}">
+                    <input type="radio" name="tee" th:value="${t[0]}">
+                    <span class="pick__swatch" th:style="'background:#' + ${t[0]}" th:title="${t[1]}"></span>
+                    <span class="sr-only" th:text="${t[1]}">흰색</span>
+                </label>
+            </fieldset>
+
+            <div class="pcard__actions">
+                <button class="pcard__btn pcard__btn--primary" type="button" data-card-gif>GIF 저장</button>
+                <button class="pcard__btn" type="button" data-card-png>PNG 저장</button>
+                <button class="pcard__btn" type="button" data-card-reroll>배경 다른 구역</button>
+                <button class="pcard__btn" type="button" data-copy-link>공유 링크 복사</button>
+            </div>
+            <p class="pcard__status" role="status" data-card-status></p>
+            <p class="pcard__note">배경은 주 맵(최근 경쟁전에서 가장 많이 한 맵)에서 저장할 때마다 다른 구역을 골라요.</p>
+        </form>
+    </div>
+</main>
+
+<script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+<script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
+<script src="/js/card.js" th:src="@{/js/card.js}"></script>
+<script type="module" src="/js/player-card.js" th:src="@{/js/player-card.js}" th:if="${card != null}"></script>
+</body>
+</html>
