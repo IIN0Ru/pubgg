@@ -2,11 +2,13 @@
  * 플레이어 카드 (/card). 카드 전체를 캔버스 하나에 그린다 → 화면에 보이는 그림 = PNG = GIF.
  *
  *  - 기록 값: <canvas data-card='{ShareCard JSON}'>
- *  - 사용자가 고르는 것(마이크·지향·구함·역할·반팔 색)은 주소 뒤에 붙인다 (?mic=o&aim=chicken,rank&tee=f0f0e8)
+ *  - 사용자가 고르는 것(마이크·지향·구함·역할, 옷·옷 색)은 주소 뒤에 붙인다
+ *    (?mic=o&aim=chicken,rank&tee=f0f0e8&outer=hoodie&oc=3a64c8&bottom=training&bc=2a2a2e&suit=ghillie)
  *    → 공유 링크를 받은 사람도 같은 카드를 본다. DB 없음
  *  - 배경: 에란겔·미라마·태이고·론도 중 랜덤 맵(글자 없는 공식 맵)의 랜덤 구역. 도로·건물이 적당히 보이고 바다가 적은 곳을 고른다.
  *    처음 열 때, "배경 다른 구역", 저장할 때마다 새로 고른다
- *  - 캐릭터: 총별 애니메이션 시트(static/images/card/anim). 반팔티는 열쇠색(FE01FE/C600C6)을 고른 색으로 바꿔 그린다
+ *  - 캐릭터: 총·옷 조합별 애니메이션 시트(static/images/card/anim/<총>/<외투>-<하의>.png, 전신 옷은 suit-<이름>).
+ *    반팔·외투·하의는 열쇠색으로 그려져 있고, anim/keys.json(열쇠색 → 밝기 비율)대로 고른 색을 입힌다
  *
  * 색: 카드 안은 사이트 테마와 상관없이 고정 (맵 사진·티어 색·옷 색이라). CLAUDE.md 예외 참고.
  *     티어 색은 static/images/card/frames/palette.json (테두리 그림과 같은 값)
@@ -16,9 +18,10 @@ import { GIFEncoder, quantize, applyPalette } from './vendor/gifenc.esm.js';
 const BASE = '/images/card/';
 const W = 360, H = 480;          // 카드 크기 (논리 단위). 화면은 2배, PNG 는 3배로 그린다
 const INNER = 12;                // 도트 테두리 두께 (3칸 × 4)
-const KEY_TEE = [254, 1, 254], KEY_TEE_SHADE = [198, 0, 198];
 const TEE_DEFAULT = 'f0f0e8';
-const TEE_SHADE = 0.78;          // 반팔 그림자 = 고른 색 × 0.78 (도트 원본과 같은 비율)
+const OUTERS = ['none', 'hoodie', 'jacket', 'shirt'];
+const BOTTOMS = ['shorts', 'training', 'slacks'];
+const SUITS = ['ghillie', 'bear'];
 
 // 주무기 → 그릴 총. weapons.json 에 없으면 분류로
 const CLASS_GUN = { AR_556: 'M416', AR_762: 'M416', DMR: 'Mini14', SR: 'Kar98k', SMG: 'MP5K', SHOTGUN: 'S1897', LMG: 'M249', OTHER: 'M416' };
@@ -52,14 +55,21 @@ const randomMap = () => loadMap(MAPS[Math.floor(Math.random() * MAPS.length)]);
 
 // ---------- 주소 ↔ 고른 값 ----------
 
+const hexOr = (v, fallback) => (/^[0-9a-f]{6}$/.test((v || '').toLowerCase()) ? v.toLowerCase() : fallback);
+const oneOf = (v, list, fallback) => (list.includes(v) ? v : fallback);
+
 function readChoices() {
   const q = new URLSearchParams(location.search);
   const list = (k) => (q.get(k) || '').split(',').filter((v) => PICKS[k][v]);
-  const tee = (q.get('tee') || '').toLowerCase();
   return {
     mic: PICKS.mic[q.get('mic')] ? q.get('mic') : '',
     aim: list('aim'), find: list('find'), role: list('role'),
-    tee: /^[0-9a-f]{6}$/.test(tee) ? tee : TEE_DEFAULT,
+    tee: hexOr(q.get('tee'), TEE_DEFAULT),
+    suit: oneOf(q.get('suit'), SUITS, ''),
+    outer: oneOf(q.get('outer'), OUTERS, 'none'),
+    oc: hexOr(q.get('oc'), ''),          // 빈 값 = 옷 원래 색
+    bottom: oneOf(q.get('bottom'), BOTTOMS, 'shorts'),
+    bc: hexOr(q.get('bc'), ''),
   };
 }
 
@@ -71,6 +81,11 @@ function writeChoices(c) {
   set('find', c.find.join(','));
   set('role', c.role.join(','));
   set('tee', c.tee === TEE_DEFAULT ? '' : c.tee);
+  set('suit', c.suit);
+  set('outer', c.outer === 'none' ? '' : c.outer);
+  set('oc', c.oc);
+  set('bottom', c.bottom === 'shorts' ? '' : c.bottom);
+  set('bc', c.bc);
   history.replaceState(null, '', location.pathname + '?' + q.toString());
 }
 
@@ -85,7 +100,19 @@ function formChoices() {
   const one = (n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
   // 체크박스는 화면 순서(= PICKS 순서)대로
   const many = (n) => [...form.querySelectorAll(`input[name="${n}"]:checked`)].map((el) => el.value);
-  return { mic: one('mic'), aim: many('aim'), find: many('find'), role: many('role'), tee: one('tee') || TEE_DEFAULT };
+  return {
+    mic: one('mic'), aim: many('aim'), find: many('find'), role: many('role'),
+    tee: one('tee') || TEE_DEFAULT, suit: one('suit'),
+    outer: one('outer') || 'none', oc: one('oc'), bottom: one('bottom') || 'shorts', bc: one('bc'),
+  };
+}
+
+/** 전신 옷이면 반팔·외투·하의 칸을 잠그고, 색을 못 바꾸는 외투(없음·셔츠)면 외투 색 칸을 잠근다 */
+function syncWear(c) {
+  form.querySelectorAll('[data-wear]').forEach((fs) => {
+    const w = fs.dataset.wear;
+    fs.disabled = !!c.suit || (w === 'oc' && !A.keys.outer[c.outer]);
+  });
 }
 
 /** 성향 줄: 마이크 → 주 활동 시간(기록) → 지향 → 구함 → 역할 */
@@ -104,24 +131,49 @@ function styleTags(c) {
 const hexRgb = (h) => [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-/** 반팔티 열쇠색을 고른 색으로 바꾼 시트 */
-function recolorSheet(sheet, teeHex) {
-  const c = document.createElement('canvas');
-  c.width = sheet.width; c.height = sheet.height;
-  const x = c.getContext('2d');
+/** 고른 옷의 시트 (총·조합별로 처음 쓸 때만 받는다) */
+const sheetCache = {};
+function comboOf(c) {
+  return c.suit ? 'suit-' + c.suit : c.outer + '-' + c.bottom;
+}
+function loadSheet(c) {
+  const src = BASE + 'anim/' + A.gun + '/' + comboOf(c) + '.png';
+  return (sheetCache[src] = sheetCache[src] || loadImage(src));
+}
+
+/**
+ * 열쇠색을 고른 색으로 바꾼 시트.
+ * keys.json: 부위마다 [r, g, b, 밝기 비율] — 그 열쇠색 자리는 고른 색 × 비율 (소매 그림자까지 들어 있음)
+ */
+function recolorSheet(sheet, c) {
+  const k = A.keys;
+  const parts = [];
+  if (!c.suit) {
+    parts.push([k.tee, c.tee]);
+    if (k.outer[c.outer]) parts.push([k.outer[c.outer], c.oc || k.default.outer[c.outer]]);
+    parts.push([k.bottom[c.bottom], c.bc || k.default.bottom[c.bottom]]);
+  }
+  const table = new Map();
+  for (const [list, hex] of parts) {
+    const base = hexRgb(hex);
+    for (const [r, g, b, ratio] of list) {
+      table.set((r << 16) | (g << 8) | b, base.map((v) => Math.min(255, Math.floor(v * ratio))));
+    }
+  }
+  const out = document.createElement('canvas');
+  out.width = sheet.width; out.height = sheet.height;
+  const x = out.getContext('2d');
   x.drawImage(sheet, 0, 0);
-  const img = x.getImageData(0, 0, c.width, c.height);
+  if (!table.size) return out;
+  const img = x.getImageData(0, 0, out.width, out.height);
   const d = img.data;
-  const base = hexRgb(teeHex), shade = base.map((v) => Math.round(v * TEE_SHADE));
   for (let i = 0; i < d.length; i += 4) {
     if (d[i + 3] === 0) continue;
-    const r = d[i], g = d[i + 1], b = d[i + 2];
-    const to = r === KEY_TEE[0] && g === KEY_TEE[1] && b === KEY_TEE[2] ? base
-      : r === KEY_TEE_SHADE[0] && g === KEY_TEE_SHADE[1] && b === KEY_TEE_SHADE[2] ? shade : null;
+    const to = table.get((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
     if (to) { d[i] = to[0]; d[i + 1] = to[1]; d[i + 2] = to[2]; }
   }
   x.putImageData(img, 0, 0);
-  return c;
+  return out;
 }
 
 /**
@@ -314,15 +366,18 @@ function play() {
   tick();
 }
 
+const looksKey = (c) => [c.tee, c.suit, c.outer, c.oc, c.bottom, c.bc].join('|');
+
 async function update(reroll) {
-  const map = reroll || !state ? await randomMap() : null;
   const c = formChoices();
   writeChoices(c);
-  const teeChanged = !state || state.choices.tee !== c.tee;
+  syncWear(c);
+  const [map, sheet] = await Promise.all([reroll || !state ? randomMap() : null, loadSheet(c)]);
+  const sameLook = state && looksKey(state.choices) === looksKey(c);
   state = {
     choices: c,
-    sheet: teeChanged ? recolorSheet(A.sheet, c.tee) : state.sheet,
-    area: reroll || !state ? pickMapArea(map) : state.area,
+    sheet: sameLook ? state.sheet : recolorSheet(sheet, c),
+    area: map ? pickMapArea(map) : state.area,
     tags: styleTags(c),
   };
 }
@@ -390,16 +445,16 @@ async function saveGif() {
 async function start() {
   const weapons = await loadJson(BASE + 'anim/weapons.json');
   const gunKey = weapons[card.weaponName] || CLASS_GUN[card.weaponClass] || 'M416';
-  const [metaAll, palette, sheet, frameImg, tierIcon, gunIcon] = await Promise.all([
+  const [metaAll, palette, keys, frameImg, tierIcon, gunIcon] = await Promise.all([
     loadJson(BASE + 'anim/meta.json'),
     loadJson(BASE + 'frames/palette.json'),
-    loadImage(BASE + 'anim/' + gunKey + '.png'),
+    loadJson(BASE + 'anim/keys.json'),
     loadImage(BASE + 'frames/' + card.tierFamily + '.png'),
     loadImage(BASE + 'tiers/' + card.tierIcon + '.png'),
     loadImage(BASE + 'guns/' + gunKey + '.png'),
     document.fonts ? document.fonts.ready : null,
   ]);
-  A = { meta: metaAll[gunKey], palette, sheet, frame: frameImg, tierIcon, gunIcon };
+  A = { gun: gunKey, meta: metaAll[gunKey], palette, keys, frame: frameImg, tierIcon, gunIcon };
   canvas.style.setProperty('--tier-glow', (palette[card.tierFamily] || palette.Unranked)[1]);
   fillForm(readChoices());
   await update(false);

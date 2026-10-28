@@ -66,11 +66,47 @@
                 <label><input type="checkbox" name="role" value="second"> 2선</label>
                 <label><input type="checkbox" name="role" value="turret"> 포탑</label>
             </fieldset>
-            <fieldset class="pick pick--swatch">
+            <h2 class="pcard__sub">캐릭터 옷</h2>
+            <!-- 옷 색은 캐릭터 색이라 사이트 색 변수 대신 고정값 (CardController.TEE_COLORS). 전신 옷을 입으면 나머지는 잠김 -->
+            <fieldset class="pick">
+                <legend>전신 옷</legend>
+                <label><input type="radio" name="suit" value=""> 안 입음</label>
+                <label><input type="radio" name="suit" value="ghillie"> 길리슈트</label>
+                <label><input type="radio" name="suit" value="bear"> 북극곰</label>
+            </fieldset>
+            <fieldset class="pick pick--swatch" data-wear="tee">
                 <legend>반팔티 색</legend>
-                <!-- 캐릭터 옷 색이라 사이트 색 변수 대신 고정값 (player-card.js TEE_COLORS 와 같게) -->
                 <label th:each="t : ${teeColors}">
                     <input type="radio" name="tee" th:value="${t[0]}">
+                    <span class="pick__swatch" th:style="'background:#' + ${t[0]}" th:title="${t[1]}"></span>
+                    <span class="sr-only" th:text="${t[1]}">흰색</span>
+                </label>
+            </fieldset>
+            <fieldset class="pick" data-wear="outer">
+                <legend>외투 <small>반팔 위에 입어요</small></legend>
+                <label><input type="radio" name="outer" value="none"> 없음</label>
+                <label><input type="radio" name="outer" value="hoodie"> 후드티</label>
+                <label><input type="radio" name="outer" value="jacket"> 자켓</label>
+                <label><input type="radio" name="outer" value="shirt"> 셔츠 <small>흰색</small></label>
+            </fieldset>
+            <fieldset class="pick pick--swatch" data-wear="oc">
+                <legend>외투 색</legend>
+                <label th:each="t : ${teeColors}">
+                    <input type="radio" name="oc" th:value="${t[0]}">
+                    <span class="pick__swatch" th:style="'background:#' + ${t[0]}" th:title="${t[1]}"></span>
+                    <span class="sr-only" th:text="${t[1]}">흰색</span>
+                </label>
+            </fieldset>
+            <fieldset class="pick" data-wear="bottom">
+                <legend>하의</legend>
+                <label><input type="radio" name="bottom" value="shorts"> 반바지</label>
+                <label><input type="radio" name="bottom" value="training"> 츄리닝</label>
+                <label><input type="radio" name="bottom" value="slacks"> 슬랙스</label>
+            </fieldset>
+            <fieldset class="pick pick--swatch" data-wear="bc">
+                <legend>하의 색</legend>
+                <label th:each="t : ${teeColors}">
+                    <input type="radio" name="bc" th:value="${t[0]}">
                     <span class="pick__swatch" th:style="'background:#' + ${t[0]}" th:title="${t[1]}"></span>
                     <span class="sr-only" th:text="${t[1]}">흰색</span>
                 </label>
