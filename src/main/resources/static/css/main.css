@@ -2645,21 +2645,44 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .pick:disabled label { cursor: not-allowed; }
 .pick label small { margin-left: 4px; color: inherit; opacity: 0.7; font-size: 11px; }
 
-/* 전적 화면: 사이트에 저장한 플레이어 카드를 프로필처럼 작게 (card-profile.js 가 그림) */
-.idcard__mini {
-    flex: 0 0 auto;
-    display: block;
-    width: 84px;
-    border-radius: var(--radius-sm);
+/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (card-profile.js 가 그림) */
+.idcard--player {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    overflow: visible;
 }
-.idcard__mini canvas {
+.idcard--player::before { display: none; }
+
+.idcard__card { display: block; border-radius: var(--radius-sm); }
+.idcard__card canvas {
     display: block;
     width: 100%;
+    max-width: 360px;
     aspect-ratio: 3 / 4;
     height: auto;
+    margin: 0 auto;
     image-rendering: pixelated;
-    filter: drop-shadow(0 0 6px var(--tier-glow, transparent));
+    filter: drop-shadow(0 0 10px var(--tier-glow, transparent));
 }
-.idcard__mini:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 3px; }
-.idcard__head:has(.idcard__mini) { align-items: center; justify-content: flex-start; }
-.idcard__head:has(.idcard__mini) .idcard__name { flex: 1 1 auto; min-width: 0; font-size: clamp(26px, 5vw, 34px); }
+.idcard__card:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 4px; }
+
+.idcard__bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.idcard__bar .refresh { margin: 0 0 0 auto; }
+.idcard__rp { color: var(--body); font-weight: 600; }
+
+.idcard__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+.idcard__actions .idcard__share,
+.idcard__actions .idcard__make { margin-top: 0; }

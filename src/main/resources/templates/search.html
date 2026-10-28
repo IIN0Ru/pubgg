@@ -33,7 +33,56 @@
   <!-- 1) 공유용 요약 카드 (PC: 왼쪽 위 / 폰: 맨 위) -->
   <aside class="side side--card">
 
-    <section class="idcard" th:with="c=${result != null ? result.card() : null}">
+    <!--
+        플레이어 카드 (경쟁전 기록이 있으면). 사이트에 저장한 모습(옷·태그·배경), 없으면 기본 옷 + 랜덤 배경으로.
+        숫자는 늘 최신 검색 결과. 그리기는 static/js/card-profile.js (카드 꾸미기 화면과 같은 그림)
+    -->
+    <section class="idcard idcard--player" th:if="${cardJson != null}">
+        <h1 class="sr-only" th:text="${result.nickname()}">N0-RU</h1>
+        <a class="idcard__card" th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}"
+           aria-label="플레이어 카드 꾸미기">
+            <canvas width="720" height="960" data-card-profile
+                    th:attr="data-card=${cardJson},data-saved=${savedJson}"
+                    th:aria-label="${result.shareTitle()} + ' 플레이어 카드'" role="img"></canvas>
+        </a>
+        <p class="sr-only" th:text="${result.shareDescription()}">KDA 3.42 · 평균 딜 412</p>
+
+        <!-- 카드 아래 한 줄: 플랫폼 · RP · 마지막 갱신 · 갱신 · 즐겨찾기 -->
+        <div class="idcard__bar">
+            <span class="idcard__platform" th:text="${platform.label}">스팀</span>
+            <span class="idcard__rp" th:if="${result.hasSeason() and result.season().isPlaced()}"
+                  th:text="${result.season().rankPointText()}">2,450 RP</span>
+            <form class="refresh" action="/refresh" th:action="@{/refresh}" method="post" data-loading>
+                <input type="hidden" name="platform" th:value="${platform.shard}">
+                <input type="hidden" name="nickname" th:value="${result.nickname()}">
+                <span class="refresh__ago" th:text="'갱신 ' + ${updatedAgo}">갱신 3분 전</span>
+                <span class="refresh__ago" role="status" data-loading-status hidden>· 갱신 중…</span>
+                <button class="refresh__button" type="submit" aria-label="전적 갱신" title="전적 갱신" data-loading-button
+                        th:disabled="${refreshWait > 0}"
+                        th:title="${refreshWait > 0} ? ${refreshWait / 60} + ':' + ${#numbers.formatInteger(refreshWait % 60, 2)} + ' 뒤에 다시 갱신할 수 있어요' : '전적 갱신'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 11a8 8 0 1 0-2.3 5.7"/>
+                        <path d="M20 4v7h-7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="fav" type="button" data-favorite-toggle aria-pressed="false" aria-label="즐겨찾기에 추가"
+                    th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}">☆</button>
+        </div>
+        <p class="refresh__message" role="status" th:if="${refreshMessage != null}" th:text="${refreshMessage}">방금 갱신했어요.</p>
+
+        <!-- 이 플레이어를 최근 검색에 기록 -->
+        <span hidden data-remember-search
+              th:attr="data-platform=${platform.shard},data-nickname=${result.nickname()},data-label=${platform.label}"></span>
+
+        <div class="idcard__actions">
+            <a class="idcard__make" th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}">카드 꾸미기</a>
+            <button class="idcard__share" type="button" data-copy-link>공유 링크 복사</button>
+        </div>
+    </section>
+
+    <section class="idcard" th:if="${cardJson == null}" th:with="c=${result != null ? result.card() : null}">
         <div class="idcard__meta">
             <span class="idcard__platform" th:text="${platform.label}">스팀</span>
             <span class="idcard__scope" th:if="${c != null}"
@@ -41,12 +90,6 @@
         </div>
 
         <div class="idcard__head">
-            <!-- 사이트에 저장한 플레이어 카드: 프로필처럼 작게, 움직이는 카드 (static/js/card-profile.js). 누르면 카드 화면 -->
-            <a class="idcard__mini" th:if="${savedJson != null}"
-               th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}" aria-label="플레이어 카드 보기">
-                <canvas width="192" height="256" data-card-profile
-                        th:attr="data-card=${cardJson},data-saved=${savedJson}"></canvas>
-            </a>
             <h1 class="idcard__name"
                 th:text="${result != null} ? ${result.nickname()} : ${nickname}">N0-RU</h1>
             <!-- 즐겨찾기 ☆ (브라우저에 저장, static/js/players.js) -->
@@ -133,10 +176,6 @@
         </p>
 
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">공유 링크 복사</button>
-        <!-- 공유용 도트 플레이어 카드 (GIF·PNG 저장) -->
-        <a class="idcard__make" th:if="${result != null and c != null}"
-           th:href="@{/card(platform=${platform.shard},nickname=${result.nickname()})}"
-           th:text="${savedJson != null} ? '플레이어 카드 보기' : '플레이어 카드 만들기'">플레이어 카드 만들기</a>
     </section>
 
   </aside>
@@ -460,7 +499,7 @@
 <script src="/js/matches.js" th:src="@{/js/matches.js}"></script>
 <script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
 <script src="/js/card.js" th:src="@{/js/card.js}"></script>
-<script type="module" src="/js/card-profile.js" th:src="@{/js/card-profile.js}" th:if="${savedJson != null}"></script>
+<script type="module" src="/js/card-profile.js" th:src="@{/js/card-profile.js}" th:if="${cardJson != null}"></script>
 
 <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 </body>

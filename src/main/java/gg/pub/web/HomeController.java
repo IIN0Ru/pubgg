@@ -3,7 +3,6 @@ package gg.pub.web;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.card.CardService;
-import gg.pub.card.SavedCard;
 import gg.pub.domain.Platform;
 import gg.pub.domain.ShareCard;
 import gg.pub.pubgapi.PubgApiException;
@@ -82,25 +81,26 @@ public class HomeController {
     }
 
     /**
-     * 사이트에 저장한 플레이어 카드가 있으면: 왼쪽 위 작은 프로필 카드(움직임) + 링크 미리보기 그림.
-     * 숫자는 최신 검색 결과(ShareCard), 꾸민 모습은 저장한 것(SavedCard).
+     * 왼쪽 위 플레이어 카드 (경쟁전 기록이 있으면 늘). 숫자는 최신 검색 결과(ShareCard),
+     * 꾸민 모습은 사이트에 저장한 것(SavedCard) — 저장한 적 없으면 빈 값(화면이 기본 옷 + 랜덤 배경으로 그림).
+     * 저장한 미리보기 그림이 있으면 링크 미리보기(og:image)에 쓴다.
      */
     private void addSavedCard(Platform platform, Lookup lookup, Model model) {
         String exact = lookup.result().nickname();
-        Optional<SavedCard> saved = cardService.find(platform, exact);
         Optional<ShareCard> card = ShareCard.from(lookup.result());
-        if (saved.isEmpty() || card.isEmpty()) {
+        if (card.isEmpty()) {
             return;
         }
-        model.addAttribute("savedJson", toJson(saved.get()));
         model.addAttribute("cardJson", toJson(card.get()));
-        model.addAttribute("cardTier", card.get().tierFamily());
-        // 디스코드·카톡은 미리보기 그림 주소를 전체 주소(https://…)로 받아야 한다
-        model.addAttribute("cardImageUrl", ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/card/image")
-                .queryParam("platform", platform.getShard())
-                .queryParam("nickname", exact)
-                .encode().toUriString());
+        model.addAttribute("savedJson", cardService.find(platform, exact).map(this::toJson).orElse(""));
+        if (cardService.image(platform, exact).isPresent()) {
+            // 디스코드·카톡은 미리보기 그림 주소를 전체 주소(https://…)로 받아야 한다
+            model.addAttribute("cardImageUrl", ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/card/image")
+                    .queryParam("platform", platform.getShard())
+                    .queryParam("nickname", exact)
+                    .encode().toUriString());
+        }
     }
 
     private String toJson(Object value) {

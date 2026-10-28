@@ -1,7 +1,11 @@
 package gg.pub.web;
 
 import gg.pub.card.CardService;
+import gg.pub.domain.Farming;
+import gg.pub.domain.MatchPlayer;
+import gg.pub.domain.MatchRecord;
 import gg.pub.domain.Platform;
+import gg.pub.domain.PlayCard;
 import gg.pub.domain.PlayerMatches;
 import gg.pub.pubgapi.PlayerNotFoundException;
 import gg.pub.service.PlayerLookupService;
@@ -98,5 +102,23 @@ class HomeControllerTest {
         mvc.perform(post("/refresh").param("platform", "steam").param("nickname", "N0-RU"))
                 .andExpect(flash().attributeExists("refreshMessage"));
     }
-}
 
+    @Test
+    void 경쟁전_카드가_있으면_플레이어_카드를_그릴_값을_넘긴다() throws Exception {
+        MatchPlayer me = new MatchPlayer("N0-RU", "me", 2, 0, 0, 300, 5, 0, 1, 0, 0, "alive");
+        MatchRecord game = new MatchRecord("m", Instant.parse("2026-10-19T13:10:00Z"), "squad-fpp", "Baltic_Main",
+                "competitive", 16, null, me, List.of());
+        PlayCard card = new PlayCard(1, 2, 0, 1, 300, "FPP", List.of(), 1.0, 1,
+                null, List.of(), null, List.of(), new Farming(null, null, 0, 0, 0, 0, 0, 0));
+        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card, List.of(game));
+        Lookup lookup = new Lookup(result, Instant.parse("2026-10-20T12:00:00Z"));
+        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.updatedAgoText(lookup)).thenReturn("3분 전");
+
+        mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("cardJson"))
+                .andExpect(model().attribute("savedJson", ""))              // 저장한 적 없음 → 기본 옷 + 랜덤 배경
+                .andExpect(model().attributeDoesNotExist("cardImageUrl"));  // 미리보기 그림도 없음
+    }
+}
