@@ -20,7 +20,7 @@ import java.util.Optional;
  * @param avgDamage   평균 딜량
  * @param weaponName  주무기 이름 ("Beryl"). 기록이 없으면 빈 문자열
  * @param weaponClass 주무기 분류 (WeaponClass 이름). 그릴 총 그림을 못 찾으면 분류로 대신 고른다
- * @param combatTags  전투 태그 (# 없이): 외곽 운영, 대도시파, 헤드샷 32%, TOP10 60%, 투척 2.1개
+ * @param combatTags  전투 태그 (# 없이): 외곽 운영, 대도시파밍, 헤드샷 32%, TOP10 60%, 투척 2.1개
  * @param peakHours   주 활동 시간 "21~24시" (없으면 빈 문자열). 성향 줄 맨 앞에 붙는다
  * @param matches     계산에 쓴 경쟁전 경기 수 (최대 10)
  */

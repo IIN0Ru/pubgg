@@ -103,7 +103,7 @@ public record PlayCard(int matches,
     static final int LEAN_HIGH = 55;
     static final int LEAN_LOW = 45;
 
-    /** 예: ["센터 운영", "대도시파"] — 성향이 반반이면 그 항목은 빠진다 */
+    /** 예: ["센터 운영", "대도시파밍"] — 성향이 반반이면 그 항목은 빠진다 */
     public List<String> styleTags() {
         List<String> tags = new ArrayList<>();
         if (zoneEdgePercent != null) {
@@ -113,8 +113,8 @@ public record PlayCard(int matches,
                 tags.add("외곽 운영");
             }
         }
-        if (farming != null && farming.hasDropStyle()) {
-            tags.add(farming.dropStyle());
+        if (farming != null && farming.hasFarmStyle()) {
+            tags.add(farming.farmStyle());
         }
         return tags;
     }

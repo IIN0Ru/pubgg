@@ -107,7 +107,7 @@
                 <dd th:text="${c.weaponNames()}">Beryl M762 · Mini 14</dd>
             </div>
             <div class="idcard__line" th:if="${c.farming() != null and c.farming().hasMainCity()}">
-                <dt>주 착지</dt>
+                <dt>주 파밍지</dt>
                 <dd th:text="${c.farming().mainCity()}">포친키</dd>
             </div>
             <div class="idcard__line" th:if="${result.activity().hasData()}">
@@ -211,9 +211,9 @@
 
         <article class="detail detail--wide" th:with="f=${c.farming()}">
             <h2 class="detail__title">파밍 <span>3페이즈 시작 때 가방</span></h2>
-            <p class="farming__style" th:if="${f != null and f.hasDropStyle()}">
-                <b th:text="${f.dropStyle()}">대도시파</b>
-                <span th:text="${f.bigCityDrops()} + '/' + ${f.drops()} + '판 대도시 착지'">7/10판 대도시 착지</span>
+            <p class="farming__style" th:if="${f != null and f.hasFarmStyle()}">
+                <b th:text="${f.farmStyle()}">대도시파밍</b>
+                <span th:text="${f.bigCityFarms()} + '/' + ${f.farmedMatches()} + '판 대도시에서 파밍'">7/10판 대도시에서 파밍</span>
             </p>
             <dl class="farming__bag" th:if="${f != null and f.hasBag()}">
                 <div><dt>힐템</dt><dd><span th:text="${f.avgHealsText()}">7.5</span><small>개</small></dd></div>
@@ -223,7 +223,7 @@
             <p class="detail__sub" th:if="${f != null and f.hasBag()}">
                 살아남은 <span th:text="${f.phase3Matches()}">8</span>경기 평균
             </p>
-            <p class="detail__empty" th:if="${f == null or (!f.hasDropStyle() and !f.hasBag())}">파밍 기록이 없어요.</p>
+            <p class="detail__empty" th:if="${f == null or (!f.hasFarmStyle() and !f.hasBag())}">파밍 기록이 없어요.</p>
         </article>
 
         <p class="details__note" th:if="${c.analyzedMatches() lt c.matches()}">

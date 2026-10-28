@@ -13,6 +13,7 @@ import java.util.Map;
  * @param zoneLuckSum         자기장 운: 3페이즈부터 새 흰 원이 뜬 직후 (1 − 중심까지 거리 ÷ 반지름, 0 아래는 0) 값들의 합
  * @param zoneLuckSamples     위 값을 잰 횟수 (페이즈 수)
  * @param landing             낙하산 착지 기록 (없으면 null)
+ * @param geared              헬멧·가방·조끼를 처음으로 다 갖춘 곳 (레벨 상관없이. 다 모으기 전에 죽었으면 null)
  * @param phase3              3페이즈 시작 순간의 가방 상태 (그 전에 죽었으면 null)
  */
 public record TelemetryStats(Map<String, Long> weaponSeconds,
@@ -22,9 +23,10 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
                              double zoneLuckSum,
                              int zoneLuckSamples,
                              Landing landing,
-                             Bag phase3) {
+                             Bag phase3,
+                             Landing geared) {
 
-    /** 착지 지점: 지역 ID(zone)와 좌표(cm) */
+    /** 지점 (착지·파밍을 끝낸 곳): 지역 ID(zone)와 좌표(cm) */
     public record Landing(List<String> zones, double x, double y) {
     }
 
@@ -40,11 +42,11 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
 
     /** 주무기·투척만 있는 기록 (테스트에서 간단히 만들 때) */
     public TelemetryStats(Map<String, Long> weaponSeconds, int throwables) {
-        this(weaponSeconds, throwables, 0, 0, 0, 0, null, null);
+        this(weaponSeconds, throwables, 0, 0, 0, 0, null, null, null);
     }
 
     /** 자기장 운영 값까지 (테스트용) */
     public TelemetryStats(Map<String, Long> weaponSeconds, int throwables, double zoneRatioSum, int zoneSamples) {
-        this(weaponSeconds, throwables, zoneRatioSum, zoneSamples, 0, 0, null, null);
+        this(weaponSeconds, throwables, zoneRatioSum, zoneSamples, 0, 0, null, null, null);
     }
 }

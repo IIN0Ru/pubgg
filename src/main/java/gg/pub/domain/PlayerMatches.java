@@ -63,7 +63,7 @@ public record PlayerMatches(String nickname,
     }
 
     /**
-     * "KDA 3.42 · 평균 딜 412 · 센터 운영 · 대도시파 · 주로 21~24시"
+     * "KDA 3.42 · 평균 딜 412 · 센터 운영 · 대도시파밍 · 주로 21~24시"
      * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(스타일) + 언제 하는지
      */
     public String shareDescription() {

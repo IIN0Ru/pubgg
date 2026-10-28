@@ -122,7 +122,7 @@ class PlayCardServiceTest {
     }
 
     private static TelemetryStats luck(double sum, int samples) {
-        return new TelemetryStats(Map.of(), 0, 0, 0, sum, samples, null, null);
+        return new TelemetryStats(Map.of(), 0, 0, 0, sum, samples, null, null, null);
     }
 
     @Test
@@ -133,8 +133,8 @@ class PlayCardServiceTest {
     }
 
     @Test
-    void 대도시에_절반_이상_내리면_대도시파() {
-        // 에란겔 4판: 포친키, 포친키, 학교(3페이즈 전 사망), 농장(대도시 아님)
+    void 헬멧_가방_조끼를_대도시에서_다_모은_판이_절반_이상이면_대도시파밍() {
+        // 에란겔 4판: 다 모은 곳이 포친키, 포친키, 학교(3페이즈 전 사망), 농장(대도시 아님)
         List<PlayCardService.Analyzed> analyzed = List.of(
                 analyzed("pochinki", new TelemetryStats.Bag(6, 2, 90)),
                 analyzed("pochinki", new TelemetryStats.Bag(4, 4, 110)),
@@ -143,9 +143,9 @@ class PlayCardServiceTest {
 
         Farming f = PlayCardService.farming(analyzed);
 
-        assertThat(f.drops()).isEqualTo(4);
-        assertThat(f.bigCityDrops()).isEqualTo(3);
-        assertThat(f.dropStyle()).isEqualTo(Farming.BIG_CITY);
+        assertThat(f.farmedMatches()).isEqualTo(4);
+        assertThat(f.bigCityFarms()).isEqualTo(3);
+        assertThat(f.farmStyle()).isEqualTo(Farming.BIG_CITY);
         assertThat(f.mainCity()).isEqualTo("포친키");
         assertThat(f.phase3Matches()).isEqualTo(3);           // 학교에서 죽은 판은 빼고
         assertThat(f.avgHealsText()).isEqualTo("6.0");        // (6 + 4 + 8) ÷ 3
@@ -154,7 +154,7 @@ class PlayCardServiceTest {
     }
 
     @Test
-    void 대도시가_절반보다_적으면_짤파밍파() {
+    void 대도시가_절반보다_적으면_짤파밍() {
         List<PlayCardService.Analyzed> analyzed = List.of(
                 analyzed("pochinki", null),
                 analyzed("farm", null),
@@ -162,14 +162,38 @@ class PlayCardServiceTest {
 
         Farming f = PlayCardService.farming(analyzed);
 
-        assertThat(f.dropStyle()).isEqualTo(Farming.SMALL_TOWN);
+        assertThat(f.farmStyle()).isEqualTo(Farming.SMALL_TOWN);
         assertThat(f.mainCity()).isNull();
         assertThat(f.hasBag()).isFalse();
     }
 
+    @Test
+    void 다_모으기_전에_죽은_판은_빼고_센다() {
+        // 다 모은 판: 농장, 채석장 (짤파밍) / 포친키에 내렸지만 다 모으기 전에 죽은 판 2개는 빠짐
+        List<PlayCardService.Analyzed> analyzed = List.of(
+                analyzed("farm", null),
+                analyzed("quarry", null),
+                analyzed((String) null, null),
+                analyzed((String) null, null));
+
+        Farming f = PlayCardService.farming(analyzed);
+
+        assertThat(f.farmedMatches()).isEqualTo(2);
+        assertThat(f.farmStyle()).isEqualTo(Farming.SMALL_TOWN);
+        assertThat(Farming.SMALL_TOWN).isEqualTo("짤파밍");
+    }
+
+    @Test
+    void 아무_판도_다_모으지_못했으면_파밍_장소_없음() {
+        Farming f = PlayCardService.farming(List.of(analyzed((String) null, null)));
+        assertThat(f.hasFarmStyle()).isFalse();
+    }
+
+    /** zone: 헬멧·가방·조끼를 다 모은 곳 (null 이면 다 모으기 전에 죽음). 착지는 늘 포친키 (판단에 안 씀) */
     private static PlayCardService.Analyzed analyzed(String zone, TelemetryStats.Bag bag) {
         TelemetryStats stats = new TelemetryStats(Map.of(), 0, 0, 0, 0, 0,
-                new TelemetryStats.Landing(List.of(zone), 0, 0), bag);
+                new TelemetryStats.Landing(List.of("pochinki"), 0, 0), bag,
+                zone == null ? null : new TelemetryStats.Landing(List.of(zone), 0, 0));
         return new PlayCardService.Analyzed(match("m", "squad-fpp", 0, 0, 0, 5), stats);
     }
 

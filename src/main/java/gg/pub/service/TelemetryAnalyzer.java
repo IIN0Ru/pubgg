@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.Set;
  *  - LogGameStatePeriodic                    → 자기장(다음 안전구역 흰 원, 지금 경계 파란 원)
  *  - LogPlayerKillV2                         → 내가 죽은 시각
  *  - LogParachuteLanding                     → 착지 지점 (지역 ID, 좌표)
+ *  - LogItemPickup* (헬멧·가방·조끼)          → 셋을 처음 다 갖춘 곳 (짤파밍 / 대도시파밍 판단)
  *  - LogItemPickup* / LogItemDrop / LogItemUse / LogItemPutToVehicleTrunk
  *                                            → 3페이즈 시작 순간의 회복·부스트템, 투척무기 개수와 주운 총알 수
  *
@@ -64,6 +66,28 @@ public class TelemetryAnalyzer {
     static final Set<String> AMMO_ITEMS = Set.of(
             "Item_Ammo_556mm_C", "Item_Ammo_762mm_C", "Item_Ammo_9mm_C", "Item_Ammo_45ACP_C",
             "Item_Ammo_300Magnum_C", "Item_Ammo_12Guage_C", "Item_Ammo_12GuageSlug_C", "Item_Ammo_57mm_C");
+
+    /**
+     * 헬멧·가방·조끼 종류. 아이템 분류(subCategory)로 보고, 없으면 아이템 ID 앞부분으로.
+     * 시작할 때 메는 낙하산(Item_Back_..._StartParachutePack_C)은 가방이 아니다.
+     */
+    static String gearKind(JsonNode item) {
+        String id = item.path("itemId").asText("");
+        if (id.contains("Parachute")) {
+            return null;
+        }
+        String sub = item.path("subCategory").asText("");
+        if ("Headgear".equals(sub) || id.startsWith("Item_Head_")) {
+            return "helmet";
+        }
+        if ("Backpack".equals(sub) || id.startsWith("Item_Back_")) {
+            return "bag";
+        }
+        if ("Vest".equals(sub) || id.startsWith("Item_Armor_")) {
+            return "vest";
+        }
+        return null;
+    }
 
     private final ObjectMapper mapper;
 
@@ -112,8 +136,10 @@ public class TelemetryAnalyzer {
         private double zoneLuckSum;
         private int zoneLuckSamples;
 
-        // 착지
+        // 착지, 헬멧·가방·조끼를 다 갖춘 곳
         private Landing landing;
+        private Landing geared;
+        private final Set<String> gear = new HashSet<>();
 
         // 가방 (3페이즈 시작 순간에 기록)
         private int heldHeals;
@@ -163,6 +189,7 @@ public class TelemetryAnalyzer {
                      "LogItemPickupFromCustomPackage", "LogItemPickupFromVehicleTrunk" -> {
                     if (isMe(e.path("character"))) {
                         onBagChange(e.path("item"), +1);
+                        onGear(e.path("character"), e.path("item"));
                     }
                 }
                 case "LogItemDrop", "LogItemPutToVehicleTrunk" -> {
@@ -178,17 +205,26 @@ public class TelemetryAnalyzer {
                 }
                 case "LogParachuteLanding" -> {
                     if (landing == null && isMe(e.path("character"))) {
-                        JsonNode c = e.path("character");
-                        List<String> zones = new ArrayList<>();
-                        c.path("zone").forEach(z -> zones.add(z.asText()));
-                        landing = new Landing(List.copyOf(zones),
-                                c.path("location").path("x").asDouble(),
-                                c.path("location").path("y").asDouble());
+                        landing = spot(e.path("character"));
                     }
                 }
                 default -> {
                     // 다른 이벤트는 지금은 쓰지 않는다
                 }
+            }
+        }
+
+        // ---------- 헬멧·가방·조끼 ----------
+
+        /** 헬멧·가방·조끼 중 하나를 주웠으면 기억하고, 셋이 처음 다 모인 순간의 내 위치를 남긴다 */
+        private void onGear(JsonNode character, JsonNode item) {
+            String kind = gearKind(item);
+            if (kind == null || geared != null) {
+                return;
+            }
+            gear.add(kind);
+            if (gear.size() == 3) {
+                geared = spot(character);
             }
         }
 
@@ -319,10 +355,20 @@ public class TelemetryAnalyzer {
                     zoneLuckSum,
                     zoneLuckSamples,
                     landing,
-                    phase3);
+                    phase3,
+                    geared);
         }
 
         // ---------- 도우미 ----------
+
+        /** 사람 기록(Character)의 지역 ID 와 좌표 */
+        private static Landing spot(JsonNode c) {
+            List<String> zones = new ArrayList<>();
+            c.path("zone").forEach(z -> zones.add(z.asText()));
+            return new Landing(List.copyOf(zones),
+                    c.path("location").path("x").asDouble(),
+                    c.path("location").path("y").asDouble());
+        }
 
         /** 이벤트에 나온 사람 중 나를 찾으면 내 팀 번호를 기억 */
         private void learnMyTeam(JsonNode e) {

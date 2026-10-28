@@ -50,7 +50,7 @@ class PlayCardTest {
     void 성향이_뚜렷하면_스타일_태그가_붙는다() {
         Farming farming = new Farming(Farming.BIG_CITY, "포친키", 7, 10, 8, 7.5, 3.2, 214);
 
-        assertThat(card(38, farming).styleTags()).containsExactly("센터 운영", "대도시파");
+        assertThat(card(38, farming).styleTags()).containsExactly("센터 운영", "대도시파밍");
         assertThat(card(70).styleTags()).containsExactly("외곽 운영");
     }
 

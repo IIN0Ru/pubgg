@@ -197,33 +197,34 @@ public class PlayCardService {
 
     /**
      * 파밍 정보.
-     *  - 착지: 대도시에 내린 판이 절반 이상이면 대도시파, 아니면 짤파밍파. 대도시파면 가장 많이 내린 도시도
+     *  - 파밍 장소: 헬멧·가방·조끼를 처음 다 갖춘 곳이 대도시인 판이 절반 이상이면 대도시파밍, 아니면 짤파밍.
+     *    다 갖추기 전에 죽은 판은 뺀다. 대도시파밍이면 가장 많이 파밍을 끝낸 도시도
      *  - 가방: 3페이즈까지 살아남은 판들의 3페이즈 시작 순간 평균
      */
     static Farming farming(List<Analyzed> analyzed) {
-        int drops = 0;
-        int bigDrops = 0;
+        int farmed = 0;
+        int bigFarms = 0;
         Map<String, Integer> cityCount = new LinkedHashMap<>();
 
         for (Analyzed a : analyzed) {
-            TelemetryStats.Landing landing = a.stats().landing();
+            TelemetryStats.Landing landing = a.stats().geared();
             if (landing == null) {
                 continue;
             }
-            drops++;
+            farmed++;
             String mapName = a.match().mapName();
             Optional<String> city = DropZones.bigCity(mapName, landing.zones(), landing.x(), landing.y());
             if (city.isPresent()) {
-                bigDrops++;
+                bigFarms++;
                 cityCount.merge(city.get(), 1, Integer::sum);
             }
         }
 
-        String dropStyle = null;
+        String farmStyle = null;
         String mainCity = null;
-        if (drops > 0) {
-            boolean bigCity = bigDrops * 2 >= drops;
-            dropStyle = bigCity ? Farming.BIG_CITY : Farming.SMALL_TOWN;
+        if (farmed > 0) {
+            boolean bigCity = bigFarms * 2 >= farmed;
+            farmStyle = bigCity ? Farming.BIG_CITY : Farming.SMALL_TOWN;
             if (bigCity) {
                 mainCity = cityCount.entrySet().stream()
                         .max(Map.Entry.comparingByValue())
@@ -240,6 +241,6 @@ public class PlayCardService {
         double avgThrowables = bags.stream().mapToInt(TelemetryStats.Bag::throwables).average().orElse(0);
         int avgAmmo = (int) Math.round(bags.stream().mapToInt(TelemetryStats.Bag::ammoPicked).average().orElse(0));
 
-        return new Farming(dropStyle, mainCity, bigDrops, drops, bags.size(), avgHeals, avgThrowables, avgAmmo);
+        return new Farming(farmStyle, mainCity, bigFarms, farmed, bags.size(), avgHeals, avgThrowables, avgAmmo);
     }
 }

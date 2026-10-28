@@ -29,7 +29,7 @@ class PlayerMatchesShareTest {
 
         assertThat(result.shareTitle()).isEqualTo("N0-RU · 플래티넘 3");
         assertThat(result.shareDescription())
-                .isEqualTo("KDA 3.25 · 평균 딜 412 · 센터 운영 · 대도시파 · 주로 21~24시");
+                .isEqualTo("KDA 3.25 · 평균 딜 412 · 센터 운영 · 대도시파밍 · 주로 21~24시");
     }
 
     @Test
