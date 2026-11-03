@@ -3,6 +3,7 @@ package gg.pub.card;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.domain.Platform;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -23,9 +24,11 @@ import java.util.Optional;
  *
  * 파일 이름은 닉네임(소문자)을 URL 안전 Base64 로 바꾼 것 (어떤 글자가 와도 경로가 깨지지 않게).
  * 쓸 때는 임시 파일에 쓰고 옮겨서, 쓰다 만 파일이 보이지 않게 한다.
- * 배포할 때는 이 폴더가 서버를 다시 켜도 남아 있어야 한다.
+ * 로컬 개발용이다 (prod 프로필이 아닐 때만 쓰인다). 운영에서는 서버를 다시 켜면 폴더가 사라지는 호스팅이 많아서
+ * DB 로 저장하는 JdbcCardStore 를 쓴다.
  */
 @Component
+@Profile("!prod")
 public class FileCardStore implements CardStore {
 
     private final Path root;
