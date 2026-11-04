@@ -3,6 +3,7 @@ package gg.pub.card;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.domain.Platform;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 /**
  * 플레이어 카드를 서버 폴더에 파일로 저장한다.
+ * pubgg.card-store=file 일 때만 쓴다 (기본은 DB — JdbcCardStore).
  *
  *  {pubgg.card-dir}/steam/<닉네임>.json   꾸민 값 + 수정 열쇠 해시
  *  {pubgg.card-dir}/steam/<닉네임>.png    디스코드·카톡 미리보기용 카드 그림
@@ -26,6 +28,7 @@ import java.util.Optional;
  * 배포할 때는 이 폴더가 서버를 다시 켜도 남아 있어야 한다.
  */
 @Component
+@ConditionalOnProperty(name = "pubgg.card-store", havingValue = "file")
 public class FileCardStore implements CardStore {
 
     private final Path root;

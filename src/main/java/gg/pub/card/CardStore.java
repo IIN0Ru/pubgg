@@ -6,8 +6,8 @@ import java.util.Optional;
 
 /**
  * 저장한 플레이어 카드를 넣고 꺼내는 곳.
- * 지금은 서버 폴더에 파일로 저장한다 (FileCardStore).
- * 나중에 DB 를 붙이면 이 인터페이스를 DB 로 구현한 클래스 하나만 새로 만들면 된다 (CardService·컨트롤러·화면은 그대로).
+ * 기본은 PostgreSQL (JdbcCardStore). pubgg.card-store=file 이면 서버 폴더 파일 (FileCardStore).
+ * 저장소를 바꿔도 CardService·컨트롤러·화면은 그대로다.
  */
 public interface CardStore {
 

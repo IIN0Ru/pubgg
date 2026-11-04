@@ -34,6 +34,17 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!-- DB 접속 (JdbcTemplate) + PostgreSQL 드라이버: 저장한 플레이어 카드를 넣어 둔다 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- 코드 수정 시 자동 재시작 (개발할 때만 사용) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

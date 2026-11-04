@@ -687,3 +687,19 @@
 - 무기 그림 가공: 공식 그림을 주축 각도로 수평으로 돌리고(총구 왼쪽) 투명 여백을 잘라 저장. 240px 원본이라 카드에서는 원본보다 크게 키우지 않음 (PNG 3배 저장 땐 약간 흐려질 수 있음)
 - 확인: JDK 만으로 도메인 로직(ShareCard·WeaponCatalog·CardChoices) 검증, 실제 card-render.js·player-card.js 를 브라우저(헤드리스 크롬)로 5가지 경우(두 총·한 총·기록 없음·그림 없는 총·태그 최대) 렌더, 폼 → 주소 → 저장 요청(옷 값 없음)까지 확인. Maven 테스트는 이 환경에서 못 돌림 → 직접 `mvn test` 필요
 - 남은 것: main.css 의 .pick__swatch 등 옷 색 칸 스타일은 안 쓰이지만 그대로 둠
+
+---
+
+## 2026-11-04 · 컨테이너(Docker) + PostgreSQL
+
+### 정한 것
+- 공개 배포는 나중, 먼저 "어디서든 같은 모습으로 돈다"를 만든다. AWS 가입(무료 기간 시계)은 출시 직전에
+- 카드 저장은 PostgreSQL 한 곳으로 통일 (꾸민 값 JSON·수정 열쇠 해시·미리보기 PNG 를 한 줄에). 컨테이너를 새로 만들면 파일이 사라지는 문제와, 저장소가 두 곳으로 갈라지는 문제를 같이 피함
+- 평소 개발은 `docker compose up -d db` + IntelliJ 로 앱 실행, 배포 전 점검은 `docker compose up --build` (메모리 1GB 제한)
+
+### 만든 것
+- `JdbcCardStore`(기본), `schema.sql`(player_card), `FileCardStore` 는 `pubgg.card-store=file` 일 때만, `Dockerfile`(빌드·실행 2단계, 비루트), `docker-compose.yml`, `.env.example`
+- 키·비밀번호는 이미지와 저장소에 넣지 않음 (`.env` 는 .gitignore)
+
+### 확인
+- schema.sql 과 저장·고침·읽기 SQL 을 실제 PostgreSQL 16 에서 두 번 실행해 확인. Maven·Docker 빌드는 이 환경에서 못 돌림 → 직접 `mvn test`, `docker compose up --build` 필요

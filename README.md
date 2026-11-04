@@ -49,10 +49,19 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
    - 등록 후 IntelliJ를 완전히 껐다 켜야 반영됨
    - 그래도 "API 키가 설정되지 않았어요"가 뜨면: 실행 버튼 옆 **PubggApplication ▼ → 구성 편집 → 환경 변수**에 `PUBG_API_KEY=키` 입력
      (JetBrains Toolbox로 켠 IntelliJ는 예전 환경 변수를 들고 있을 수 있음. 이 설정은 내 컴퓨터에만 저장되고 GitHub에 올라가지 않음)
-5. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
-6. 브라우저에서 http://localhost:8080 접속
+5. DB(PostgreSQL)를 켠다 — 저장한 플레이어 카드가 여기에 들어간다. Docker Desktop 을 켠 뒤 프로젝트 폴더에서
+   `docker compose up -d db` (처음 한 번 이미지를 받는다. 끌 때는 `docker compose down`, 데이터는 남는다)
+6. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
+7. 브라우저에서 http://localhost:8080 접속
 
 테스트는 `src/test/java` 폴더 오른쪽 클릭 → **모든 테스트 실행**.
+
+### 컨테이너로 실행 (배포 전 점검)
+
+`.env.example` 을 복사해 `.env` 를 만들고 `PUBG_API_KEY` 를 채운 뒤 `docker compose up --build`.
+앱과 DB 가 함께 뜨고 앱은 메모리 1GB 로 제한된다. `.env` 는 git 에 올라가지 않는다 (절대 커밋하지 말 것).
+IntelliJ 의 환경 변수는 컨테이너에 전달되지 않아서 컨테이너 쪽 키는 `.env` 로 준다.
+DB 없이 예전처럼 폴더에 저장하려면 환경 변수 `CARD_STORE=file`, `SQL_INIT_MODE=never`.
 
 코드를 새로 받았을 때(Git → 풀)는 실행 중인 서버를 멈췄다가 다시 실행해야 반영된다.
 
@@ -100,7 +109,7 @@ src/main/java/gg/pub/
     ├── CacheConfig.java       캐시 켜기
     └── ClockConfig.java       현재 시각 (테스트에서 바꿀 수 있게)
 
-src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 지금은 FileCardStore, DB 를 붙이면 구현 하나만 추가)
+src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 기본 JdbcCardStore(PostgreSQL), FileCardStore 는 CARD_STORE=file 일 때)
 
 src/main/resources/
 ├── application.properties     설정
