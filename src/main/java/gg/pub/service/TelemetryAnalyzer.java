@@ -124,6 +124,8 @@ public class TelemetryAnalyzer {
         private final Map<String, Deque<Instant>> equipped = new HashMap<>();
         private final Map<String, Long> weaponSeconds = new HashMap<>();
         private int throwables;
+        /** 투척무기 itemId → 던진 횟수 */
+        private final Map<String, Integer> throwCounts = new HashMap<>();
 
         // 자기장 (흰 원 = 다음 안전구역, 파란 원 = 지금 줄어드는 경계)
         private double zoneX, zoneY, zoneRadius;
@@ -176,6 +178,7 @@ public class TelemetryAnalyzer {
                     if (isMe(e.path("attacker"))) {
                         throwables++;
                         heldThrowables--;
+                        throwCounts.merge(e.path("weapon").path("itemId").asText(""), 1, Integer::sum);
                     }
                 }
                 case "LogPlayerPosition" -> onPosition(e, time);
@@ -356,7 +359,8 @@ public class TelemetryAnalyzer {
                     zoneLuckSamples,
                     landing,
                     phase3,
-                    geared);
+                    geared,
+                    Map.copyOf(throwCounts));
         }
 
         // ---------- 도우미 ----------

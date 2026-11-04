@@ -256,7 +256,14 @@
                 </li>
             </ul>
             <p class="detail__empty" th:unless="${c.hasWeapons()}">주무기 기록을 불러오지 못했어요.</p>
-            <p class="detail__sub">투척 사용 (판당) <b th:text="${c.avgThrowablesText()} + '개'">2.3개</b></p>
+            <ul class="weapons weapons--throw" th:if="${c.hasThrowable()}">
+                <li class="weapon">
+                    <span class="weapon__name" th:text="${c.mainThrowable().name()}">수류탄</span>
+                    <span class="weapon__type">주 투척</span>
+                    <span class="weapon__share" th:text="'판당 ' + ${c.mainThrowable().perMatchText()} + '번'">판당 1.1번</span>
+                </li>
+            </ul>
+            <p class="detail__sub" th:unless="${c.hasThrowable()}">투척을 거의 쓰지 않았어요.</p>
         </article>
 
         <article class="detail detail--wide" th:with="f=${c.farming()}">
@@ -311,7 +318,7 @@
 
         <ol class="matches">
             <li class="match" th:each="m : ${result.matches()}"
-                th:classappend="${m.isWin()} ? 'match--win' : (${m.isTop10()} ? 'match--top10' : '')"
+                th:classappend="${m.isWin()} ? 'match--win' : (${m.rank() == 2} ? 'match--second' : (${m.rank() == 3} ? 'match--third' : (${m.isTop10()} ? 'match--top10' : '')))"
                 th:attr="data-type=${m.typeKey()},data-pov=${m.perspectiveKey()},data-rank=${m.rank()}">
               <details>
                 <summary class="match__row">

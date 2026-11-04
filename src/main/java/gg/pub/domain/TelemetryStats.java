@@ -15,6 +15,7 @@ import java.util.Map;
  * @param landing             낙하산 착지 기록 (없으면 null)
  * @param geared              헬멧·가방·조끼를 처음으로 다 갖춘 곳 (레벨 상관없이. 다 모으기 전에 죽었으면 null)
  * @param phase3              3페이즈 시작 순간의 가방 상태 (그 전에 죽었으면 null)
+ * @param throwableCounts     투척무기별로 던진 횟수 (itemId → 횟수. 이름을 못 읽으면 빈 문자열 키)
  */
 public record TelemetryStats(Map<String, Long> weaponSeconds,
                              int throwables,
@@ -24,7 +25,8 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
                              int zoneLuckSamples,
                              Landing landing,
                              Bag phase3,
-                             Landing geared) {
+                             Landing geared,
+                             Map<String, Integer> throwableCounts) {
 
     /** 지점 (착지·파밍을 끝낸 곳): 지역 ID(zone)와 좌표(cm) */
     public record Landing(List<String> zones, double x, double y) {
@@ -38,6 +40,13 @@ public record TelemetryStats(Map<String, Long> weaponSeconds,
      * @param ammoPicked  그때까지 주운 총알 수 (쏜 양은 빼지 않음)
      */
     public record Bag(int heals, int throwables, int ammoPicked) {
+    }
+
+    /** 투척무기별 횟수 없이 (기존 호출·테스트용) */
+    public TelemetryStats(Map<String, Long> weaponSeconds, int throwables, double zoneRatioSum, int zoneSamples,
+                          double zoneLuckSum, int zoneLuckSamples, Landing landing, Bag phase3, Landing geared) {
+        this(weaponSeconds, throwables, zoneRatioSum, zoneSamples, zoneLuckSum, zoneLuckSamples,
+                landing, phase3, geared, Map.of());
     }
 
     /** 주무기·투척만 있는 기록 (테스트에서 간단히 만들 때) */

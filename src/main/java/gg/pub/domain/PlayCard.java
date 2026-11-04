@@ -21,6 +21,7 @@ import java.util.Locale;
  * @param zoneLuckPercent   자기장 운: 3페이즈부터 새 흰 원이 뜬 직후 내가 중심에 얼마나 가까웠는지 (100 = 중심, 0 = 경계·밖). 없으면 null
  * @param zoneLuckMatchPercents 위 값을 경기마다
  * @param farming           착지 성향, 3페이즈 시작 가방 상태
+ * @param mainThrowable     가장 많이 던진 투척무기와 판당 횟수 (하나도 안 던졌거나 기록이 없으면 null)
  */
 public record PlayCard(int matches,
                        int kills,
@@ -35,7 +36,17 @@ public record PlayCard(int matches,
                        List<Integer> zoneMatchPercents,
                        Integer zoneLuckPercent,
                        List<Integer> zoneLuckMatchPercents,
-                       Farming farming) {
+                       Farming farming,
+                       ThrowableUsage mainThrowable) {
+
+    /** 주 투척무기 없이 (기존 호출·테스트용) */
+    public PlayCard(int matches, int kills, int assists, int deaths, int avgDamage, String perspective,
+                    List<WeaponUsage> mainWeapons, double avgThrowables, int analyzedMatches,
+                    Integer zoneEdgePercent, List<Integer> zoneMatchPercents,
+                    Integer zoneLuckPercent, List<Integer> zoneLuckMatchPercents, Farming farming) {
+        this(matches, kills, assists, deaths, avgDamage, perspective, mainWeapons, avgThrowables, analyzedMatches,
+                zoneEdgePercent, zoneMatchPercents, zoneLuckPercent, zoneLuckMatchPercents, farming, null);
+    }
 
     /** KDA = (킬 + 어시스트) ÷ 죽은 판 수. 한 번도 안 죽었으면 (킬 + 어시스트) 그대로 */
     public double kda() {
@@ -51,6 +62,10 @@ public record PlayCard(int matches,
     /** "2.3" */
     public String avgThrowablesText() {
         return String.format(Locale.ROOT, "%.1f", avgThrowables);
+    }
+
+    public boolean hasThrowable() {
+        return mainThrowable != null;
     }
 
     public boolean hasWeapons() {
