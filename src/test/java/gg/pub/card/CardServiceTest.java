@@ -70,18 +70,17 @@ class CardServiceTest {
     void 꾸민_값은_아는_이름만_남기고_이상한_값은_거절() {
         Map<String, String> raw = new HashMap<>();
         raw.put("aim", "chicken,rank");
-        raw.put("tee", "C8423A");
-        raw.put("outer", "hoodie");
+        raw.put("mic", "O");
+        raw.put("outer", "hoodie");   // 캐릭터 옷은 없어졌다: 예전 값이 와도 조용히 버린다
+        raw.put("tee", "c8423a");
         raw.put("hack", "<script>");
-        raw.put("bc", "");
+        raw.put("find", "");
         assertThat(CardChoices.clean(raw))
-                .containsExactlyInAnyOrderEntriesOf(Map.of("aim", "chicken,rank", "tee", "c8423a", "outer", "hoodie"));
+                .containsExactlyInAnyOrderEntriesOf(Map.of("aim", "chicken,rank", "mic", "o"));
 
-        assertThatThrownBy(() -> CardChoices.clean(Map.of("suit", "bear")))   // 북극곰은 뺐음
-                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> CardChoices.clean(Map.of("role", "igl,boss")))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> CardChoices.clean(Map.of("oc", "red")))
+        assertThatThrownBy(() -> CardChoices.clean(Map.of("mic", "yes")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

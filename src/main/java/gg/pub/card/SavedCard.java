@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * @param platform   steam / kakao
  * @param nickname   PUBG 에 등록된 정확한 닉네임
- * @param choices    꾸민 값 (CardChoices 가 검사한 것만): mic, aim, find, role, tee, suit, outer, oc, bottom, bc
+ * @param choices    꾸민 값 (CardChoices 가 검사한 것만): mic, aim, find, role
  * @param background 배경 맵과 구역 (저장한 그대로 다시 그리려고)
  * @param savedAt    마지막으로 저장한 시각
  */

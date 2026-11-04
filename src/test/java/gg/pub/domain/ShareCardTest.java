@@ -20,7 +20,8 @@ class ShareCardTest {
     private static PlayCard card(int matches) {
         Farming farming = new Farming(Farming.BIG_CITY, "포친키", 7, 10, 8, 7.5, 3.2, 214);
         return new PlayCard(matches, 20, 6, 8, 412, "FPP",
-                List.of(new WeaponUsage("Beryl", WeaponClass.AR_762, 60)), 2.1, matches,
+                List.of(new WeaponUsage("Beryl M762", WeaponClass.AR_762, 60),
+                        new WeaponUsage("M416", WeaponClass.AR_556, 25)), 2.1, matches,
                 62, List.of(62), 50, List.of(50), farming);
     }
 
@@ -42,12 +43,37 @@ class ShareCardTest {
         assertThat(c.tierIcon()).isEqualTo("Diamond-2");
         assertThat(c.tierText()).isEqualTo("DIAMOND II");
         assertThat(c.kda()).isEqualTo("3.25");
-        assertThat(c.weaponName()).isEqualTo("Beryl");
-        assertThat(c.weaponClass()).isEqualTo("AR_762");
+        assertThat(c.mainGun()).isEqualTo(new ShareCard.Gun("Beryl M762", "7.62 AR", "Item_Weapon_BerylM762_C", 60));
+        // 보조무기 = 두 번째로 오래 든 주무기. M416 은 Duncans 변형이 아니라 기본 총 그림을 가리킨다
+        assertThat(c.subGun()).isEqualTo(new ShareCard.Gun("M416", "5.56 AR", "Item_Weapon_HK416_C", 25));
         // 헤드샷 3/10 = 30%, TOP10 2/4 = 50%
         assertThat(c.combatTags()).containsExactly("외곽 운영", "대도시파밍", "헤드샷 30%", "TOP10 50%", "투척 2.1개");
         assertThat(c.matches()).isEqualTo(4);
         assertThat(c.peakHours()).isEqualTo("21~24시");
+    }
+
+    @Test
+    void 주무기가_하나뿐이면_보조무기는_없다() {
+        Farming farming = new Farming(Farming.BIG_CITY, "포친키", 7, 10, 8, 7.5, 3.2, 214);
+        PlayCard one = new PlayCard(1, 5, 1, 1, 300, "FPP",
+                List.of(new WeaponUsage("AKM", WeaponClass.AR_762, 90)), 1.0, 1,
+                50, List.of(50), 50, List.of(50), farming);
+        PlayCard none = new PlayCard(1, 5, 1, 1, 300, "FPP", List.of(), 1.0, 1,
+                50, List.of(50), 50, List.of(50), farming);
+
+        ShareCard a = ShareCard.from(new PlayerMatches("N0-RU", Platform.STEAM, one, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
+        ShareCard b = ShareCard.from(new PlayerMatches("N0-RU", Platform.STEAM, none, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
+
+        assertThat(a.mainGun().image()).isEqualTo("Item_Weapon_AK47_C");
+        assertThat(a.subGun()).isNull();
+        assertThat(b.mainGun()).isNull();
+        assertThat(b.subGun()).isNull();
+    }
+
+    @Test
+    void 총_이름으로_그림_파일을_찾는다() {
+        assertThat(WeaponCatalog.imageId("QBU")).isEqualTo("Item_Weapon_QBU88_C");   // Mads 변형 말고 기본 총
+        assertThat(WeaponCatalog.imageId("없는총")).isEmpty();
     }
 
     @Test
