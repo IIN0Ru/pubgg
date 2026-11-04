@@ -221,10 +221,9 @@ function drawGunImage(x, img, cx, cy, maxW, maxH) {
   x.restore();
 }
 
-/** 무기 한 칸 (상자 안쪽): 제목 / 그림 / 이름·비율 / 종류. cx = 칸 가운데, maxW = 그림 최대 너비 */
-function drawGun(x, pal, title, gun, img, cx, top, h, maxW) {
-  label(x, title, cx, top + 17, pal[2], 'center');
-  const gunTop = top + 24, gunH = h - 24 - 34;
+/** 무기 한 칸 (상자 안쪽): 그림 / 이름·비율 / 종류. cx = 칸 가운데, maxW = 그림 최대 너비 */
+function drawGun(x, gun, img, cx, top, h, maxW) {
+  const gunTop = top + 12, gunH = h - 12 - 34;
   x.textAlign = 'center';
   if (img) {
     drawGunImage(x, img, cx, gunTop + gunH / 2, maxW, gunH);
@@ -247,16 +246,16 @@ function drawGun(x, pal, title, gun, img, cx, top, h, maxW) {
 }
 
 /** 무기 상자: 주무기·보조무기가 한 상자 안에 나란히 (보조무기가 없으면 주무기 하나) */
-function drawWeapons(x, A, pal, card, top, h) {
+function drawWeapons(x, A, card, top, h) {
   roundRect(x, LEFT, top, RIGHT - LEFT, h, 10);
   x.fillStyle = 'rgba(8,8,10,.62)'; x.fill();
   x.strokeStyle = 'rgba(255,255,255,.1)'; x.lineWidth = 1; x.stroke();
   if (card.subGun) {
     x.fillStyle = 'rgba(255,255,255,.1)'; x.fillRect(W / 2, top + 12, 1, h - 24);
-    drawGun(x, pal, '주무기', card.mainGun, A.gunImg.main, (LEFT + W / 2) / 2, top, h, 136);
-    drawGun(x, pal, '보조무기', card.subGun, A.gunImg.sub, (W / 2 + RIGHT) / 2, top, h, 136);
+    drawGun(x, card.mainGun, A.gunImg.main, (LEFT + W / 2) / 2, top, h, 136);
+    drawGun(x, card.subGun, A.gunImg.sub, (W / 2 + RIGHT) / 2, top, h, 136);
   } else {
-    drawGun(x, pal, '주무기', card.mainGun, A.gunImg.main, W / 2, top, h, 240);
+    drawGun(x, card.mainGun, A.gunImg.main, W / 2, top, h, 240);
   }
 }
 
@@ -322,7 +321,7 @@ export function draw(x, A, card, look, ms, scale) {
 
   let y = BODY_TOP;
   if (hasGun) {
-    drawWeapons(x, A, pal, card, y, panelH);
+    drawWeapons(x, A, card, y, panelH);
     y += panelH + PANEL_GAP;
   } else {
     y += 14;
