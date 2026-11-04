@@ -156,19 +156,30 @@ const YELLOW = '#FFD02F';   // 사이트 강조색 (--primary)
 const LEFT = 28, RIGHT = W - 28;   // 카드 안 글자·상자가 놓이는 가로 범위
 const BODY_TOP = 100;              // 머리(티어·닉네임) 아래 본문이 시작하는 곳
 const BODY_BOTTOM = 436;           // 본문이 끝나야 하는 곳 (아래는 "최근 경쟁전 N경기 기준" 줄)
-const SLOT_MAX = 140, SLOT_MIN = 84;   // 무기 칸 높이 범위 (태그가 많으면 줄어든다)
-const GAP_AFTER_SLOT = 28, ROW_GAP = 22;
+const PANEL_MAX = 116, PANEL_MIN = 84;   // 무기 상자 높이 범위 (태그가 많으면 줄어든다)
+const PANEL_GAP = 14;              // 무기 상자 아래 여백
+const STATS_H = 44, STATS_GAP = 18;      // KDA·딜 큰 숫자 줄과 그 아래 여백
+const MAX_COMBAT_LINES = 3;
+
+/** 작은 제목 (노란 글자, 자간 넓게) */
+function label(x, text, px, y, color, align = 'left') {
+  x.font = `700 10px ${FONT}`; x.fillStyle = color; x.textAlign = align;
+  if ('letterSpacing' in x) x.letterSpacing = '1px';
+  x.fillText(text, px, y);
+  if ('letterSpacing' in x) x.letterSpacing = '0px';
+  x.textAlign = 'left';
+}
 
 /** 태그 묶음을 놓을 자리 계산: [{text, x, y, w}] , 높이 */
 function layoutChips(x, tags, left, right) {
-  x.font = `500 11px ${FONT}`;
+  x.font = `600 11px ${FONT}`;
   const out = [];
   let cx = left, cy = 0;
   for (const t of tags) {
     const w = Math.ceil(x.measureText('#' + t).width) + 18;
     if (cx + w > right && cx > left) { cx = left; cy += 27; }
     out.push({ text: '#' + t, x: cx, y: cy, w });
-    cx += w + 5;
+    cx += w + 6;
   }
   return { chips: out, height: tags.length ? cy + 22 : 0 };
 }
@@ -176,11 +187,24 @@ function layoutChips(x, tags, left, right) {
 function drawChips(x, lay, top) {
   for (const c of lay.chips) {
     roundRect(x, c.x, top + c.y, c.w, 22, 11);
-    x.fillStyle = 'rgba(8,8,10,.7)'; x.fill();
-    x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 1; x.stroke();
-    x.font = `500 11px ${FONT}`; x.fillStyle = '#e2e2e2';
+    x.fillStyle = 'rgba(8,8,10,.72)'; x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.16)'; x.lineWidth = 1; x.stroke();
+    x.font = `600 11px ${FONT}`; x.fillStyle = '#eee';
     x.fillText(c.text, c.x + 9, top + c.y + 15);
   }
+}
+
+/** 전투 성향: 점으로 이은 글자 줄 (가로를 넘으면 다음 줄로) */
+function combatLines(x, tags, left, right) {
+  x.font = `500 11px ${FONT}`;
+  const lines = [];
+  let cur = '';
+  for (const t of tags) {
+    const next = cur ? cur + '  ·  ' + t : t;
+    if (cur && x.measureText(next).width > right - left) { lines.push(cur); cur = t; } else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines;
 }
 
 /** 총 그림을 (cx, cy) 가운데에 maxW×maxH 안으로 맞춰 그린다 (원본보다 크게 키우지 않음) */
@@ -189,34 +213,48 @@ function drawGunImage(x, img, cx, cy, maxW, maxH) {
   const w = img.width * k, h = img.height * k;
   x.save();
   x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
-  x.shadowColor = 'rgba(0,0,0,.65)'; x.shadowBlur = 12; x.shadowOffsetY = 4;
+  x.shadowColor = 'rgba(0,0,0,.7)'; x.shadowBlur = 12; x.shadowOffsetY = 5;
   x.drawImage(img, cx - w / 2, cy - h / 2, w, h);
   x.restore();
 }
 
-/** 무기 칸 하나 (주무기 / 보조무기) */
-function drawGunSlot(x, pal, label, gun, img, l, top, w, h) {
-  roundRect(x, l, top, w, h, 8);
-  x.fillStyle = 'rgba(8,8,10,.72)'; x.fill();
-  x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 1; x.stroke();
-
-  x.font = `500 9px ${FONT}`; x.fillStyle = pal[3];
-  x.fillText(label, l + 10, top + 17);
-  x.fillStyle = '#8a8a92'; x.textAlign = 'right';
-  x.fillText(gun.type, l + w - 10, top + 17); x.textAlign = 'left';
-
-  const imgTop = top + 24, imgH = h - 24 - 34;
+/** 무기 한 칸 (상자 안쪽): 제목 / 그림 / 이름·비율 / 종류. cx = 칸 가운데, maxW = 그림 최대 너비 */
+function drawGun(x, pal, title, gun, img, cx, top, h, maxW) {
+  label(x, title, cx, top + 17, pal[2], 'center');
+  const gunTop = top + 24, gunH = h - 24 - 34;
+  x.textAlign = 'center';
   if (img) {
-    drawGunImage(x, img, l + w / 2, imgTop + imgH / 2, Math.min(w - 20, 170), imgH);
-    x.font = `800 13px ${FONT}`; x.fillStyle = '#fff';
-    x.fillText(gun.name, l + 10, top + h - 14);
+    drawGunImage(x, img, cx, gunTop + gunH / 2, maxW, gunH);
   } else {
-    // 그림이 없는 총: 이름만 크게 (아래 줄에 또 쓰지 않음)
-    x.font = `800 20px ${FONT}`; x.fillStyle = '#fff'; x.textAlign = 'center';
-    x.fillText(gun.name, l + w / 2, imgTop + imgH / 2 + 7); x.textAlign = 'left';
+    // 그림이 없는 총(JS9 등)이거나 못 불러오면 이름만 크게
+    x.font = `800 22px ${FONT}`; x.fillStyle = '#fff';
+    x.fillText(gun.name, cx, gunTop + gunH / 2 + 8);
   }
-  x.font = `800 10px ${FONT}`; x.fillStyle = YELLOW; x.textAlign = 'right';
-  x.fillText(gun.share + '%', l + w - 10, top + h - 14); x.textAlign = 'left';
+  // 이름 + 비율 (그림이 없으면 비율만) 가운데 맞춤
+  const share = gun.share + '%';
+  x.font = `800 13px ${FONT}`;
+  const nameW = img ? x.measureText(gun.name).width + 6 : 0;
+  const shareW = x.measureText(share).width;
+  const start = cx - (nameW + shareW) / 2;
+  x.textAlign = 'left';
+  if (img) { x.fillStyle = '#fff'; x.fillText(gun.name, start, top + h - 20); }
+  x.fillStyle = YELLOW; x.fillText(share, start + nameW, top + h - 20);
+  x.font = `500 9px ${FONT}`; x.fillStyle = '#8a8a92'; x.textAlign = 'center';
+  x.fillText(gun.type, cx, top + h - 7); x.textAlign = 'left';
+}
+
+/** 무기 상자: 주무기·보조무기가 한 상자 안에 나란히 (보조무기가 없으면 주무기 하나) */
+function drawWeapons(x, A, pal, card, top, h) {
+  roundRect(x, LEFT, top, RIGHT - LEFT, h, 10);
+  x.fillStyle = 'rgba(8,8,10,.62)'; x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.1)'; x.lineWidth = 1; x.stroke();
+  if (card.subGun) {
+    x.fillStyle = 'rgba(255,255,255,.1)'; x.fillRect(W / 2, top + 12, 1, h - 24);
+    drawGun(x, pal, '주무기', card.mainGun, A.gunImg.main, (LEFT + W / 2) / 2, top, h, 136);
+    drawGun(x, pal, '보조무기', card.subGun, A.gunImg.sub, (W / 2 + RIGHT) / 2, top, h, 136);
+  } else {
+    drawGun(x, pal, '주무기', card.mainGun, A.gunImg.main, W / 2, top, h, 240);
+  }
 }
 
 /**
@@ -238,8 +276,8 @@ export function draw(x, A, card, look, ms, scale) {
   x.drawImage(look.area, INNER, INNER, W - INNER * 2, H - INNER * 2);
   const g = x.createLinearGradient(0, INNER, 0, H - INNER);
   g.addColorStop(0, 'rgba(10,10,12,.78)');
-  g.addColorStop(0.35, 'rgba(10,10,12,.35)');
-  g.addColorStop(0.7, 'rgba(10,10,12,.55)');
+  g.addColorStop(0.35, 'rgba(10,10,12,.4)');
+  g.addColorStop(0.7, 'rgba(10,10,12,.62)');
   g.addColorStop(1, 'rgba(10,10,12,.92)');
   x.fillStyle = g;
   x.fillRect(INNER, INNER, W - INNER * 2, H - INNER * 2);
@@ -252,64 +290,60 @@ export function draw(x, A, card, look, ms, scale) {
   x.textBaseline = 'alphabetic';
   if (card.clan) {
     x.font = `700 11px ${FONT}`; x.fillStyle = YELLOW;
-    x.fillText(card.clan, 96, ty); ty += 24;
+    x.fillText(card.clan, 96, ty); ty += 25;
   } else {
-    ty += 12;
+    ty += 14;
   }
-  x.font = `800 22px ${FONT}`; x.fillStyle = '#fff';
-  x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = 6; x.shadowOffsetY = 2;
+  x.save();
+  x.shadowColor = 'rgba(0,0,0,.85)'; x.shadowBlur = 6; x.shadowOffsetY = 2;
+  let size = 24;                      // 긴 닉네임은 글자를 줄여서 머리 칸에 맞춘다
+  for (; size > 15; size--) { x.font = `800 ${size}px ${FONT}`; if (x.measureText(card.nickname).width <= RIGHT - 96) break; }
+  x.font = `800 ${size}px ${FONT}`; x.fillStyle = '#fff';
   x.fillText(card.nickname, 96, ty);
-  x.shadowBlur = 0; x.shadowOffsetY = 0;
+  x.restore();
   x.font = `800 10px ${FONT}`; x.fillStyle = pal[2];
   if ('letterSpacing' in x) x.letterSpacing = '1.5px';
   x.fillText(card.tierText, 96, ty + 16);
   if ('letterSpacing' in x) x.letterSpacing = '0px';
 
-  // 본문: 무기 칸 → KDA·딜 줄 → 나의 키워드 → 전투 성향. 위에서부터 쌓고, 넘치면 무기 칸을 줄인다
+  // 본문: 무기 상자 → KDA·딜 큰 숫자 → 나의 키워드 → 전투 성향. 위에서부터 쌓고, 넘치면 무기 상자를 줄인다
   const keywords = layoutChips(x, look.tags, LEFT, RIGHT);
-  const combat = layoutChips(x, card.combatTags, LEFT, RIGHT);
-  const STATS = 26;                                          // KDA·딜 줄이 차지하는 높이
-  const kwBlock = keywords.height ? 8 + keywords.height + ROW_GAP : 0;
-  const cbBlock = combat.height ? 8 + combat.height : 0;
+  let lines = combatLines(x, card.combatTags, LEFT, RIGHT).slice(0, MAX_COMBAT_LINES);
+  const kwBlock = keywords.height ? 14 + keywords.height + 16 : 0;
+  const cbBlock = (n) => (n ? 26 + (n - 1) * 16 + 4 : 0);
   const hasGun = !!card.mainGun;
-  const slotH = hasGun
-    ? Math.max(SLOT_MIN, Math.min(SLOT_MAX, BODY_BOTTOM - BODY_TOP - GAP_AFTER_SLOT - STATS - kwBlock - cbBlock))
-    : 0;
+  const room = BODY_BOTTOM - BODY_TOP;
+  const rest = (n) => STATS_H + STATS_GAP + kwBlock + cbBlock(n) + (hasGun ? PANEL_GAP : 14);
+  while (lines.length > 1 && room - rest(lines.length) < PANEL_MIN) lines = lines.slice(0, -1);
+  const panelH = hasGun ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, room - rest(lines.length))) : 0;
 
   let y = BODY_TOP;
   if (hasGun) {
-    if (card.subGun) {
-      drawGunSlot(x, pal, '주무기', card.mainGun, A.gunImg.main, LEFT, y, 150, slotH);
-      drawGunSlot(x, pal, '보조무기', card.subGun, A.gunImg.sub, RIGHT - 150, y, 150, slotH);
-    } else {
-      drawGunSlot(x, pal, '주무기', card.mainGun, A.gunImg.main, LEFT, y, RIGHT - LEFT, slotH);
-    }
-    y += slotH + GAP_AFTER_SLOT;
+    drawWeapons(x, A, pal, card, y, panelH);
+    y += panelH + PANEL_GAP;
   } else {
     y += 14;
   }
 
-  // KDA · 평균 딜
-  let sx = LEFT + 2;
-  const stat = (name, value) => {
-    x.font = `500 11px ${FONT}`; x.fillStyle = '#a6a6ad';
-    x.fillText(name, sx, y); sx += Math.ceil(x.measureText(name).width) + 6;
-    x.font = `800 13px ${FONT}`; x.fillStyle = '#fff';
-    x.fillText(value, sx, y); sx += Math.ceil(x.measureText(value).width) + 18;
+  // KDA · 평균 딜: 큰 숫자
+  const big = (name, value, px) => {
+    x.font = `500 10px ${FONT}`; x.fillStyle = '#a6a6ad'; x.fillText(name, px, y + 8);
+    x.font = `800 28px ${FONT}`; x.fillStyle = '#fff'; x.fillText(value, px, y + 36);
   };
-  stat('KDA', card.kda);
-  stat('평균 딜', String(card.avgDamage));
-  y += STATS - 8;
+  big('KDA', card.kda, LEFT);
+  big('평균 딜', String(card.avgDamage), LEFT + 100);
+  y += STATS_H + STATS_GAP;
 
-  const row = (name, lay) => {
-    if (!lay.chips.length) return;
-    x.font = `700 10px ${FONT}`; x.fillStyle = YELLOW;
-    x.fillText(name, LEFT + 2, y + 2);
-    drawChips(x, lay, y + 8);
-    y += 8 + lay.height + ROW_GAP;
-  };
-  row('나의 키워드', keywords);
-  row('전투 성향', combat);
+  if (keywords.chips.length) {
+    label(x, '나의 키워드', LEFT, y + 8, YELLOW);
+    drawChips(x, keywords, y + 14);
+    y += 14 + keywords.height + 16;
+  }
+  if (lines.length) {
+    label(x, '전투 성향', LEFT, y + 8, YELLOW);
+    x.font = `500 11px ${FONT}`; x.fillStyle = '#d4d4d8';
+    lines.forEach((l, i) => x.fillText(l, LEFT, y + 26 + i * 16));
+  }
 
   x.font = `500 9px ${FONT}`; x.fillStyle = '#8a8a92';
   x.fillText(`최근 경쟁전 ${card.matches}경기 기준`, 34, 450);
