@@ -21,7 +21,6 @@ import java.util.Optional;
  * @param mainGun     주무기: 슬롯에 가장 오래 들고 있던 총. 기록이 없으면 null
  * @param subGun      보조무기: 두 번째로 오래 든 주무기. 없으면 null
  * @param combatTags 전투 태그 (# 없이): 외곽 운영, 대도시파밍, 헤드샷 32%, TOP10 60%, 투척 2.1개
- * @param peakHours   주 활동 시간 "21~24시" (없으면 빈 문자열). 성향 줄 맨 앞에 붙는다
  * @param matches     계산에 쓴 경쟁전 경기 수 (최대 10)
  */
 public record ShareCard(String nickname,
@@ -34,7 +33,6 @@ public record ShareCard(String nickname,
                         Gun mainGun,
                         Gun subGun,
                         List<String> combatTags,
-                        String peakHours,
                         int matches) {
 
     /**
@@ -73,7 +71,6 @@ public record ShareCard(String nickname,
         Gun mainGun = c.mainWeapons().size() > 0 ? Gun.of(c.mainWeapons().get(0)) : null;
         Gun subGun = c.mainWeapons().size() > 1 ? Gun.of(c.mainWeapons().get(1)) : null;
         Clan clan = result.clan();
-        ActivityMap activity = result.activity();
         String[] tier = tier(result.season());
 
         return Optional.of(new ShareCard(
@@ -85,7 +82,6 @@ public record ShareCard(String nickname,
                 mainGun,
                 subGun,
                 combat,
-                activity != null && activity.hasData() ? activity.peakText() : "",
                 c.matches()));
     }
 

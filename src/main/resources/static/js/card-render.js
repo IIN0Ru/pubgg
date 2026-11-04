@@ -51,11 +51,10 @@ export function choicesToParams(c) {
   return out;
 }
 
-/** 성향 줄: 마이크 → 주 활동 시간(기록) → 지향 → 구함 → 역할 */
+/** 성향 줄: 마이크 → 지향 → 구함 → 역할 */
 export function styleTags(card, c) {
   const tags = [];
   if (c.mic) tags.push(PICKS.mic[c.mic]);
-  if (card.peakHours) tags.push(card.peakHours);
   c.aim.forEach((v) => tags.push(PICKS.aim[v]));
   c.find.forEach((v) => tags.push(PICKS.find[v]));
   c.role.forEach((v) => tags.push(PICKS.role[v]));
