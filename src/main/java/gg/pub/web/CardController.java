@@ -24,7 +24,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,17 +38,6 @@ import java.util.Optional;
  */
 @Controller
 public class CardController {
-
-    /** 옷 색 [값, 이름]. 캐릭터 옷 색이라 사이트 색 변수와 따로 둔다 (player-card.js 도 이 값을 그대로 쓴다) */
-    static final List<String[]> TEE_COLORS = List.of(
-            new String[]{"f0f0e8", "흰색"},
-            new String[]{"2a2a2e", "검정"},
-            new String[]{"8c8c92", "회색"},
-            new String[]{"c8423a", "빨강"},
-            new String[]{"3a64c8", "파랑"},
-            new String[]{"3f8a4a", "초록"},
-            new String[]{"e0b43a", "노랑"},
-            new String[]{"e08aa8", "분홍"});
 
     private static final String PNG_DATA_URL = "data:image/png;base64,";
 
@@ -76,7 +64,6 @@ public class CardController {
         model.addAttribute("platforms", Platform.values());   // 상단 검색창용
         model.addAttribute("platform", selected.get());
         model.addAttribute("nickname", name);
-        model.addAttribute("teeColors", TEE_COLORS);
         try {
             PlayerLookupService.Lookup lookup = lookupService.find(selected.get(), name);
             String exact = lookup.result().nickname();

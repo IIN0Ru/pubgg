@@ -31,11 +31,11 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 2D 리플레이 (경쟁전): 재생·배속·타임라인, 경기 흐름 누르면 이동, 근처 적만, 동선 전체 + 교전 번호, 확대·이동·따라가기
   - 고해상도 지도 조각(타일)을 보이는 만큼만 불러오기, 명중선, 차량·보급 아이콘, 폭발물(터진 곳 추정)·회복 이펙트
   - 체력 바, 죽기 전 30초 받은 피해, 교전 지표(기절→킬·복수·살림), 장면 링크(?t=), 킬 글에 무기·거리·헤드샷
-- [x] 플레이어 카드 (/card): 도트 캐릭터가 주무기를 꺼내 쏘는 애니메이션, 티어 도트 테두리, 4개 맵 중 랜덤 맵·랜덤 구역 배경, 전투 태그(기록) + 성향 태그(직접 고름, 주소에 저장), GIF·PNG 저장
+- [x] 플레이어 카드 (/card): 주무기·보조무기(두 번째로 오래 든 주무기) 그림과 사용 비중, 티어 도트 테두리, 4개 맵 중 랜덤 맵·랜덤 구역 배경, 전투 태그(기록) + 성향 태그(직접 고름, 주소에 저장), PNG 저장
 - [x] 플레이어 카드 옷 고르기: 외투(후드티·자켓·셔츠) + 하의(반바지·츄리닝·슬랙스) + 전신(길리슈트), 반팔·외투·하의 색 8가지
 - [x] 플레이어 카드 사이트 저장 (서버 폴더, 처음 저장한 브라우저만 수정) → 링크 미리보기(og:image)
 - [x] 전적 화면 왼쪽 위 = 플레이어 카드 (저장한 모습, 없으면 기본 옷 + 랜덤 배경) + 갱신·즐겨찾기 한 줄
-- [ ] 리플레이 그리기·공유, 여성 캐릭터
+- [ ] 리플레이 그리기·공유
 
 ## 실행 방법 (IntelliJ)
 
@@ -113,10 +113,9 @@ src/main/resources/
 ├── static/images/maps/tiles/  리플레이 지도 조각 (아래 "리플레이 지도 조각" 참고)
 ├── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
 ├── static/js/card-render.js   플레이어 카드 그리기 (꾸미기 화면·전적 프로필 공용, 캔버스)
-├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·GIF/PNG 저장
+├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·PNG 저장
 ├── static/js/card-profile.js  전적 화면 왼쪽 위 플레이어 카드
-├── static/js/vendor/          gifenc (GIF 만들기, MIT)
-└── static/images/card/        플레이어 카드 그림 (총 17 × 옷 조합 14 애니메이션, 티어 아이콘·테두리, 글자 없는 맵)
+└── static/images/card/        플레이어 카드 그림 (무기 42종, 티어 아이콘·테두리, 글자 없는 맵)
 
 DESIGN.md                      디자인 기준 파일
 CLAUDE.md                      AI 작업용 안내 (DESIGN.md를 불러옴)
@@ -160,4 +159,4 @@ NOTES.md                       개발 기록 (무엇을 정했고 AI와 어떻�
 ## 자료 출처
 - 리플레이 맵 이미지: PUBG 공식 API 자료 [pubg/api-assets](https://github.com/pubg/api-assets) (Assets/Maps, High_Res 를 512px WebP 조각으로 잘라 static/images/maps/tiles 에). PUBG API 이용약관에 따라 사용
 - 플레이어 카드: 같은 자료의 글자 없는 맵(Maps/*_No_Text_High_Res → 2048px WebP), 티어 아이콘(Icons/Insignias, 서바이버는 Ranks [Deprecated]/Survivor)을 도트로 줄여서 사용. 크리스탈은 공식 자료에 없어서 게임 화면 캡처(크리스탈 IV)에서 바탕을 지우고 숫자만 I~V 로 바꿔 만듦
-- GIF 만들기: [gifenc](https://github.com/mattdesl/gifenc) (MIT, static/js/vendor)
+- 플레이어 카드 무기 그림: 같은 자료의 Assets/Item/Weapon/Main 그림(240px, 대각선)을 수평(총구 왼쪽)으로 돌려 여백을 잘라 static/images/card/weapons/<itemId>.png 로. 이름이 같은 변형(Duncans M416 등)은 기본 총 그림을 같이 씀. JS9 는 공식 그림이 없어 카드에 이름만 나옴
