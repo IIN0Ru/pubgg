@@ -63,11 +63,14 @@ public class PlayerService {
     }
 
     public PlayerMatches getRecentMatches(Platform platform, String nickname) {
+        long start = System.nanoTime();
         PlayerResponse.Player player = client.findPlayer(platform, nickname);
         String accountId = player.id();
+        long afterPlayer = System.nanoTime();
 
         List<String> matchIds = player.matchIds().stream().limit(MAX_MATCHES).toList();
         List<MatchRecord> matches = loadMatches(platform, matchIds, accountId);
+        long afterMatches = System.nanoTime();
 
         List<MatchRecord> competitive = matches.stream()
                 .filter(MatchRecord::isCompetitive)
@@ -75,10 +78,26 @@ public class PlayerService {
                 .toList();
 
         PlayCard card = playCardService.build(competitive, accountId).orElse(null);
+        long afterCard = System.nanoTime();
         SeasonRank season = seasonService.currentRank(platform, accountId).orElse(null);
+        long afterSeason = System.nanoTime();
         String exactName = player.attributes() != null ? player.attributes().name() : nickname;
         Clan clan = loadClan(platform, player.attributes() != null ? player.attributes().clanId() : null);
+        long end = System.nanoTime();
+
+        // 어느 단계가 오래 걸리는지 보려고 남기는 로그 (동작은 바뀌지 않는다)
+        log.info("검색 시간 [{}] 합계 {}ms = 선수조회 {}ms + 경기 {}/{}개 받기 {}ms + 카드(텔레메트리, 경쟁전 {}판) {}ms + 시즌 {}ms + 클랜 {}ms",
+                platform.getShard(), ms(start, end),
+                ms(start, afterPlayer),
+                matches.size(), matchIds.size(), ms(afterPlayer, afterMatches),
+                competitive.size(), ms(afterMatches, afterCard),
+                ms(afterCard, afterSeason),
+                ms(afterSeason, end));
         return new PlayerMatches(exactName, platform, card, season, matches, clan);
+    }
+
+    private static long ms(long fromNanos, long toNanos) {
+        return (toNanos - fromNanos) / 1_000_000;
     }
 
     /** 클랜 이름·태그. 클랜이 없거나 못 받으면 null (클랜 때문에 검색이 실패하지 않게) */

@@ -2,6 +2,8 @@ package gg.pub.service;
 
 import gg.pub.domain.TelemetryStats;
 import gg.pub.pubgapi.PubgApiClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class TelemetryService {
 
+    private static final Logger log = LoggerFactory.getLogger(TelemetryService.class);
+
     private final PubgApiClient client;
     private final TelemetryAnalyzer analyzer;
 
@@ -27,6 +31,10 @@ public class TelemetryService {
 
     @Cacheable(cacheNames = "telemetry", key = "#matchId + ':' + #accountId")
     public TelemetryStats analyze(String matchId, String telemetryUrl, String accountId) {
-        return client.readTelemetry(telemetryUrl, body -> analyzer.analyze(body, accountId));
+        // 이 줄은 캐시에 없을 때만 실행된다 = 실제로 받아서 분석한 경기. 시간을 재서 남긴다.
+        long start = System.nanoTime();
+        TelemetryStats stats = client.readTelemetry(telemetryUrl, body -> analyzer.analyze(body, accountId));
+        log.info("텔레메트리 한 판 받기+분석 {}ms", (System.nanoTime() - start) / 1_000_000);
+        return stats;
     }
 }
