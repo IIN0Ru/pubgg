@@ -87,6 +87,21 @@ public final class WeaponCatalog {
         return Map.entry(itemId, new Weapon(name, type));
     }
 
+    /** 총 이름 → 그림 파일 이름 (static/images/card/weapons/<이름>.png). 이름이 같은 변형(Duncans M416 등)은 가장 짧은 기본 ID 의 그림을 쓴다 */
+    private static final Map<String, String> IMAGE_BY_NAME = buildImageIds();
+
+    private static Map<String, String> buildImageIds() {
+        Map<String, String> byName = new java.util.HashMap<>();
+        WEAPONS.forEach((itemId, w) -> byName.merge(w.name(), itemId,
+                (a, b) -> a.length() <= b.length() ? a : b));
+        return Map.copyOf(byName);
+    }
+
+    /** 총 이름("M416")에 맞는 그림 파일 이름("Item_Weapon_HK416_C"). 모르는 이름이면 빈 문자열 */
+    public static String imageId(String weaponName) {
+        return IMAGE_BY_NAME.getOrDefault(weaponName, "");
+    }
+
     /** 주무기로 등록된 총이면 이름·분류를, 아니면 빈 값 */
     public static Optional<Weapon> find(String itemId) {
         return Optional.ofNullable(WEAPONS.get(itemId));
