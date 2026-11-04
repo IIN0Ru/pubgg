@@ -100,7 +100,7 @@ public class CardController {
         }
         try {
             // 검색된 적 있는 플레이어만 (정확한 닉네임으로 저장)
-            String exact = lookupService.find(selected.get(), req.nickname().trim()).result().nickname();
+            String exact = lookupService.findWithCard(selected.get(), req.nickname().trim()).result().nickname();
             byte[] png = Base64.getDecoder().decode(req.png().substring(PNG_DATA_URL.length()));
             String token = cardService.save(selected.get(), exact, req.choices(), req.background(), png, req.token());
             String link = UriComponentsBuilder.fromPath("/search")
