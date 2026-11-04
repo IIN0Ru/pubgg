@@ -6,6 +6,8 @@ import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
+import gg.pub.domain.ThrowableCatalog;
+import gg.pub.domain.ThrowableUsage;
 import gg.pub.domain.WeaponCatalog;
 import gg.pub.domain.WeaponUsage;
 import org.slf4j.Logger;
@@ -96,7 +98,8 @@ public class PlayCardService {
                 zoneMatchPercents(telemetry),
                 zoneLuckPercent(telemetry),
                 zoneLuckMatchPercents(telemetry),
-                farming(analyzed)
+                farming(analyzed),
+                topThrowable(telemetry)
         ));
     }
 
@@ -128,6 +131,31 @@ public class PlayCardService {
             }
         }
         return results;
+    }
+
+    /**
+     * 가장 많이 던진 투척무기와 한 판 평균 횟수. 하나도 안 던졌거나 분석한 경기가 없으면 null.
+     * 이름이 같으면(수류탄 두 종류 등) 합치고, 횟수가 같으면 이름순으로 정해서 결과가 흔들리지 않게 한다.
+     */
+    static ThrowableUsage topThrowable(List<TelemetryStats> telemetry) {
+        if (telemetry.isEmpty()) {
+            return null;
+        }
+        Map<String, Integer> countByName = new HashMap<>();
+        for (TelemetryStats t : telemetry) {
+            t.throwableCounts().forEach((itemId, count) ->
+                    countByName.merge(ThrowableCatalog.label(itemId), count, Integer::sum));
+        }
+        String best = null;
+        int bestCount = 0;
+        for (Map.Entry<String, Integer> e : countByName.entrySet()) {
+            int count = e.getValue();
+            if (count > bestCount || (count == bestCount && best != null && e.getKey().compareTo(best) < 0)) {
+                best = e.getKey();
+                bestCount = count;
+            }
+        }
+        return best == null ? null : new ThrowableUsage(best, (double) bestCount / telemetry.size());
     }
 
     /** 경기들의 주무기 보유 시간을 총 이름별로 합쳐서, 오래 쓴 순서로 limit 개 */

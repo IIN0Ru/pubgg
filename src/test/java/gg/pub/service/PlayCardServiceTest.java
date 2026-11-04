@@ -5,6 +5,7 @@ import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
 import gg.pub.domain.PlayCard;
 import gg.pub.domain.TelemetryStats;
+import gg.pub.domain.ThrowableUsage;
 import gg.pub.domain.WeaponClass;
 import gg.pub.domain.WeaponUsage;
 import gg.pub.pubgapi.PubgApiException;
@@ -195,6 +196,26 @@ class PlayCardServiceTest {
                 new TelemetryStats.Landing(List.of("pochinki"), 0, 0), bag,
                 zone == null ? null : new TelemetryStats.Landing(List.of(zone), 0, 0));
         return new PlayCardService.Analyzed(match("m", "squad-fpp", 0, 0, 0, 5), stats);
+    }
+
+    @Test
+    void 가장_많이_던진_투척무기와_판당_횟수를_구한다() {
+        // 첫 판: 수류탄 2, 연막탄 1 / 둘째 판: 수류탄(다른 종류 이름) 1, 화염병 1
+        TelemetryStats a = new TelemetryStats(Map.of(), 3, 0, 0, 0, 0, null, null, null,
+                Map.of("Item_Weapon_Grenade_C", 2, "Item_Weapon_SmokeBomb_C", 1));
+        TelemetryStats b = new TelemetryStats(Map.of(), 2, 0, 0, 0, 0, null, null, null,
+                Map.of("Item_Weapon_Grenade_Warmode_C", 1, "Item_Weapon_Molotov_C", 1));
+
+        ThrowableUsage top = PlayCardService.topThrowable(List.of(a, b));
+
+        assertThat(top.name()).isEqualTo("수류탄");           // 같은 이름은 합쳐서 3번
+        assertThat(top.perMatchText()).isEqualTo("1.5");      // 3번 ÷ 2판
+    }
+
+    @Test
+    void 투척을_하나도_안_던졌으면_주_투척은_없다() {
+        assertThat(PlayCardService.topThrowable(List.of(new TelemetryStats(Map.of(), 0)))).isNull();
+        assertThat(PlayCardService.topThrowable(List.of())).isNull();
     }
 
     /** 테스트용 경쟁전 경기 하나 만들기 (나 한 명 + 텔레메트리 주소) */

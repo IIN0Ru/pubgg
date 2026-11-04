@@ -14,6 +14,9 @@
     --primary-disabled: #3A3A1F; /* 막힌 버튼 (DESIGN.md primary-disabled) */
     --on-primary: #0A0A0A;
 
+    --rank-2: #3B82F6;           /* 전적 목록 2등 (DESIGN.md accent-blue) */
+    --rank-3: #22C55E;           /* 전적 목록 3등 (DESIGN.md accent-emerald) */
+
     --canvas: #0A0A0A;           /* 배경 */
     --surface-soft: #121212;     /* 아주 옅은 면 (자기장 지도 안쪽) */
     --surface-card: #1A1A1A;     /* 카드·입력창 */
@@ -49,6 +52,8 @@
     --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
     --primary-active: #F2BE00;
     --primary-disabled: #EDE6C6;
+    --rank-2: #1D4ED8;           /* 흰 배경용으로 더 진하게 */
+    --rank-3: #15803D;
 
     --canvas: #F5F5F2;
     --surface-soft: #ECECE8;
@@ -72,6 +77,8 @@
         --primary-text: #9A7400;     /* 흰 배경에서 노란 글자는 안 보여서 진한 금색 */
         --primary-active: #F2BE00;
         --primary-disabled: #EDE6C6;
+        --rank-2: #1D4ED8;
+        --rank-3: #15803D;
 
         --canvas: #F5F5F2;
         --surface-soft: #ECECE8;
@@ -888,6 +895,9 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* 주 투척: 주무기 목록 바로 아래, 같은 모양으로 */
+.weapons--throw { margin-top: 6px; }
+
 /* 파밍 */
 .farming__style {
     margin: 0 0 12px;
@@ -1398,6 +1408,8 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 /* 결과 띠: 줄 왼쪽 안쪽에 얇은 선. 치킨은 노랑, TOP 10 은 회색. 글자 배지도 같이 있어서 색만으로 구분하지 않음 */
 .match--win   { box-shadow: inset 3px 0 0 var(--primary); }
+.match--second { box-shadow: inset 3px 0 0 var(--rank-2); }
+.match--third  { box-shadow: inset 3px 0 0 var(--rank-3); }
 .match--top10 { box-shadow: inset 3px 0 0 var(--hairline-strong); }
 
 .match__badge {
@@ -1425,8 +1437,10 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 .recent__summary:empty { display: none; }
 
-/* 1등 판: 등수만 노랑 */
+/* 1등 판: 등수만 노랑, 2등 파랑, 3등 초록 */
 .match--win .match__rank strong { color: var(--primary-text); }
+.match--second .match__rank strong { color: var(--rank-2); }
+.match--third .match__rank strong { color: var(--rank-3); }
 
 .match__mode {
     margin: 0;
@@ -1772,6 +1786,10 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     background: var(--primary);
     color: var(--on-primary);
 }
+
+/* 라이트: 2·3등도 1등처럼 색 바탕 + 흰 글자 */
+:root[data-theme="light"] .match--second .match__rank strong { background: var(--rank-2); color: var(--surface-card); }
+:root[data-theme="light"] .match--third .match__rank strong { background: var(--rank-3); color: var(--surface-card); }
 
 /* 로고 점은 라이트에서도 원래 노랑 그대로 (테두리 없이) */
 :root[data-theme="light"] .logo__dot { color: var(--primary); }

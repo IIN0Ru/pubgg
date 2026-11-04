@@ -37,6 +37,11 @@ class TelemetryAnalyzerTest {
                 .doesNotContainKey("Item_Weapon_Pan_C")
                 .doesNotContainKey("Item_Weapon_AWM_C");
         assertThat(stats.throwables()).isEqualTo(2);
+        // 던진 종류별 횟수: 내가 던진 수류탄·연막탄만. 다른 사람이 던진 화염병은 세지 않는다
+        assertThat(stats.throwableCounts())
+                .containsEntry("Item_Weapon_Grenade_C", 1)
+                .containsEntry("Item_Weapon_SmokeBomb_C", 1)
+                .doesNotContainKey("Item_Weapon_Molotov_C");
         assertThat(stats.landing()).isNull();   // 이 예시에는 착지 기록이 없음
         assertThat(stats.geared()).isNull();    // 헬멧·가방·조끼 기록도 없음
         assertThat(stats.phase3()).isNull();    // 3페이즈 전에 죽음
