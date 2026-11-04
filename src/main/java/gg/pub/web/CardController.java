@@ -65,7 +65,7 @@ public class CardController {
         model.addAttribute("platform", selected.get());
         model.addAttribute("nickname", name);
         try {
-            PlayerLookupService.Lookup lookup = lookupService.find(selected.get(), name);
+            PlayerLookupService.Lookup lookup = lookupService.findWithCard(selected.get(), name);
             String exact = lookup.result().nickname();
             model.addAttribute("nickname", exact);
             Optional<ShareCard> card = ShareCard.from(lookup.result());

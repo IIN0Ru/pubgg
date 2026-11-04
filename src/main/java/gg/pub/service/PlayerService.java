@@ -62,38 +62,82 @@ public class PlayerService {
         this.cardMatchLimit = properties.recentMatchLimit() > 0 ? properties.recentMatchLimit() : 10;
     }
 
+    /**
+     * 카드를 뺀 1단계 결과. 화면은 이걸로 먼저 그리고, 카드(텔레메트리 분석, 제일 오래 걸림)는 따로 만든다.
+     *
+     * @param result      카드가 비어 있는 검색 결과 (경기 목록·시즌·클랜 포함)
+     * @param competitive 카드를 만들 최신 경쟁전 경기
+     * @param accountId   PUBG 계정 ID
+     */
+    public record Basics(PlayerMatches result, List<MatchRecord> competitive, String accountId) {
+        /** 카드를 만들 경쟁전 경기가 하나라도 있으면 true */
+        public boolean needsCard() {
+            return !competitive.isEmpty();
+        }
+    }
+
+    /** 카드까지 다 만든 검색 결과 (기다려서 한 번에 받고 싶을 때) */
     public PlayerMatches getRecentMatches(Platform platform, String nickname) {
+        Basics basics = getBasics(platform, nickname);
+        return basics.result().withCard(buildCard(basics));
+    }
+
+    /**
+     * 1단계: 선수 조회 → 경기 받기. 시즌·클랜은 경기 받기와 동시에 불러온다 (서로 기다릴 필요가 없어서).
+     */
+    public Basics getBasics(Platform platform, String nickname) {
         long start = System.nanoTime();
         PlayerResponse.Player player = client.findPlayer(platform, nickname);
         String accountId = player.id();
         long afterPlayer = System.nanoTime();
 
+        String clanId = player.attributes() != null ? player.attributes().clanId() : null;
         List<String> matchIds = player.matchIds().stream().limit(MAX_MATCHES).toList();
-        List<MatchRecord> matches = loadMatches(platform, matchIds, accountId);
-        long afterMatches = System.nanoTime();
 
+        List<MatchRecord> matches;
+        SeasonRank season;
+        Clan clan;
+        try (ExecutorService side = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<SeasonRank> seasonTask = side.submit(
+                    () -> seasonService.currentRank(platform, accountId).orElse(null));
+            Future<Clan> clanTask = side.submit(() -> loadClan(platform, clanId));
+            matches = loadMatches(platform, matchIds, accountId);
+            season = await(seasonTask, "시즌");
+            clan = await(clanTask, "클랜");
+        }
+        long end = System.nanoTime();
+
+        String exactName = player.attributes() != null ? player.attributes().name() : nickname;
         List<MatchRecord> competitive = matches.stream()
                 .filter(MatchRecord::isCompetitive)
                 .limit(cardMatchLimit)
                 .toList();
 
-        PlayCard card = playCardService.build(competitive, accountId).orElse(null);
-        long afterCard = System.nanoTime();
-        SeasonRank season = seasonService.currentRank(platform, accountId).orElse(null);
-        long afterSeason = System.nanoTime();
-        String exactName = player.attributes() != null ? player.attributes().name() : nickname;
-        Clan clan = loadClan(platform, player.attributes() != null ? player.attributes().clanId() : null);
-        long end = System.nanoTime();
+        log.info("검색 1단계 [{}] 합계 {}ms = 선수조회 {}ms + (경기 {}/{}개 받기 · 시즌 · 클랜 동시에) {}ms",
+                platform.getShard(), ms(start, end), ms(start, afterPlayer),
+                matches.size(), matchIds.size(), ms(afterPlayer, end));
+        return new Basics(new PlayerMatches(exactName, platform, null, season, matches, clan), competitive, accountId);
+    }
 
-        // 어느 단계가 오래 걸리는지 보려고 남기는 로그 (동작은 바뀌지 않는다)
-        log.info("검색 시간 [{}] 합계 {}ms = 선수조회 {}ms + 경기 {}/{}개 받기 {}ms + 카드(텔레메트리, 경쟁전 {}판) {}ms + 시즌 {}ms + 클랜 {}ms",
-                platform.getShard(), ms(start, end),
-                ms(start, afterPlayer),
-                matches.size(), matchIds.size(), ms(afterPlayer, afterMatches),
-                competitive.size(), ms(afterMatches, afterCard),
-                ms(afterCard, afterSeason),
-                ms(afterSeason, end));
-        return new PlayerMatches(exactName, platform, card, season, matches, clan);
+    /** 2단계: 카드 만들기 (텔레메트리 분석). 경쟁전 기록이 없으면 null */
+    public PlayCard buildCard(Basics basics) {
+        long start = System.nanoTime();
+        Runtime rt = Runtime.getRuntime();
+        PlayCard card = playCardService.build(basics.competitive(), basics.accountId()).orElse(null);
+        // 서버가 얼마나 작은지 확인하려고 같이 남긴다 (CPU 개수, 쓸 수 있는 최대 메모리)
+        log.info("카드 만들기 [{}] 경쟁전 {}판 {}ms (서버 CPU {}개, 최대 메모리 {}MB)",
+                basics.result().platform().getShard(), basics.competitive().size(), ms(start, System.nanoTime()),
+                rt.availableProcessors(), rt.maxMemory() / (1024 * 1024));
+        return card;
+    }
+
+    private static <T> T await(Future<T> task, String what) {
+        try {
+            return task.get();
+        } catch (Exception e) {
+            log.warn("{} 정보를 못 받음: {}", what, e.getMessage());
+            return null;
+        }
     }
 
     private static long ms(long fromNanos, long toNanos) {

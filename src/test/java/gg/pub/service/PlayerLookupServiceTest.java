@@ -1,6 +1,8 @@
 package gg.pub.service;
 
+import gg.pub.domain.MatchRecord;
 import gg.pub.domain.Platform;
+import gg.pub.domain.PlayCard;
 import gg.pub.domain.PlayerMatches;
 import gg.pub.service.PlayerLookupService.Lookup;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -44,8 +48,9 @@ class PlayerLookupServiceTest {
         playerService = mock(PlayerService.class);
         clock = new TestClock();
         lookupService = new PlayerLookupService(playerService, clock);
-        when(playerService.getRecentMatches(Platform.STEAM, "N0-RU"))
-                .thenReturn(new PlayerMatches("N0-RU", Platform.STEAM, null, List.of()));
+        when(playerService.getBasics(Platform.STEAM, "N0-RU"))
+                .thenReturn(new PlayerService.Basics(
+                        new PlayerMatches("N0-RU", Platform.STEAM, null, List.of()), List.of(), "account.test0001"));
     }
 
     @Test
@@ -54,7 +59,7 @@ class PlayerLookupServiceTest {
         clock.advance(Duration.ofHours(3));
         lookupService.find(Platform.STEAM, "n0-ru");   // 대소문자가 달라도 같은 사람
 
-        verify(playerService, times(1)).getRecentMatches(Platform.STEAM, "N0-RU");
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
     }
 
     @Test
@@ -67,7 +72,7 @@ class PlayerLookupServiceTest {
         clock.advance(Duration.ofMinutes(2));
         assertThat(lookupService.refresh(Platform.STEAM, "N0-RU")).isTrue();
 
-        verify(playerService, times(2)).getRecentMatches(Platform.STEAM, "N0-RU");
+        verify(playerService, times(2)).getBasics(Platform.STEAM, "N0-RU");
     }
 
     @Test
@@ -85,5 +90,30 @@ class PlayerLookupServiceTest {
 
         clock.advance(Duration.ofHours(2));
         assertThat(lookupService.updatedAgoText(lookup)).isEqualTo("2시간 전");
+    }
+
+    @Test
+    void 카드는_뒤에서_만들고_전적은_먼저_돌려준다() throws Exception {
+        PlayerMatches basic = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
+        PlayerService.Basics basics = new PlayerService.Basics(basic, List.of(mock(MatchRecord.class)), "account.test0001");
+        PlayCard card = mock(PlayCard.class);
+        CountDownLatch release = new CountDownLatch(1);
+        when(playerService.getBasics(Platform.STEAM, "N0-RU")).thenReturn(basics);
+        when(playerService.buildCard(basics)).thenAnswer(inv -> {
+            release.await(5, TimeUnit.SECONDS);   // 카드 계산이 오래 걸리는 상황
+            return card;
+        });
+
+        Lookup first = lookupService.find(Platform.STEAM, "N0-RU");
+        assertThat(first.cardPending()).isTrue();                    // 전적은 먼저 나오고
+        assertThat(first.result().card()).isNull();                  // 카드는 아직 없다
+        assertThat(lookupService.isCardPending(Platform.STEAM, "n0-ru")).isTrue();
+
+        release.countDown();
+        Lookup done = lookupService.findWithCard(Platform.STEAM, "N0-RU");   // 끝날 때까지 기다림
+        assertThat(done.cardPending()).isFalse();
+        assertThat(done.result().card()).isSameAs(card);
+        assertThat(lookupService.isCardPending(Platform.STEAM, "N0-RU")).isFalse();
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
     }
 }

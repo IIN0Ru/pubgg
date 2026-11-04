@@ -43,6 +43,11 @@ public record PlayerMatches(String nickname,
         this(nickname, platform, card, null, matches);
     }
 
+    /** 카드만 채운 새 결과 (카드는 따로 늦게 만들어서) */
+    public PlayerMatches withCard(PlayCard newCard) {
+        return new PlayerMatches(nickname, platform, newCard, season, matches, teammates, clan);
+    }
+
     public boolean hasSeason() {
         return season != null;
     }
