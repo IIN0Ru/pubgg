@@ -65,7 +65,7 @@ public class CardController {
         model.addAttribute("platform", selected.get());
         model.addAttribute("nickname", name);
         try {
-            PlayerLookupService.Lookup lookup = lookupService.find(selected.get(), name);
+            PlayerLookupService.Lookup lookup = lookupService.findWithCard(selected.get(), name);
             String exact = lookup.result().nickname();
             model.addAttribute("nickname", exact);
             Optional<ShareCard> card = ShareCard.from(lookup.result());
@@ -100,7 +100,7 @@ public class CardController {
         }
         try {
             // 검색된 적 있는 플레이어만 (정확한 닉네임으로 저장)
-            String exact = lookupService.find(selected.get(), req.nickname().trim()).result().nickname();
+            String exact = lookupService.findWithCard(selected.get(), req.nickname().trim()).result().nickname();
             byte[] png = Base64.getDecoder().decode(req.png().substring(PNG_DATA_URL.length()));
             String token = cardService.save(selected.get(), exact, req.choices(), req.background(), png, req.token());
             String link = UriComponentsBuilder.fromPath("/search")

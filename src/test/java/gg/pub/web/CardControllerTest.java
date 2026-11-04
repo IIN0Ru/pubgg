@@ -49,7 +49,7 @@ class CardControllerTest {
     @Test
     void 경쟁전_기록이_없으면_카드_없이_안내() throws Exception {
         PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.find(Platform.STEAM, "n0-ru"))
+        when(lookupService.findWithCard(Platform.STEAM, "n0-ru"))
                 .thenReturn(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z")));
 
         mvc.perform(get("/card").param("platform", "steam").param("nickname", "n0-ru"))
@@ -61,7 +61,7 @@ class CardControllerTest {
 
     @Test
     void 플레이어가_없으면_안내_문구() throws Exception {
-        when(lookupService.find(Platform.KAKAO, "nobody")).thenThrow(new PlayerNotFoundException("nobody"));
+        when(lookupService.findWithCard(Platform.KAKAO, "nobody")).thenThrow(new PlayerNotFoundException("nobody"));
 
         mvc.perform(get("/card").param("platform", "kakao").param("nickname", "nobody"))
                 .andExpect(status().isOk())
@@ -76,7 +76,7 @@ class CardControllerTest {
 
     private void found() {
         PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.find(Platform.STEAM, "n0-ru"))
+        when(lookupService.findWithCard(Platform.STEAM, "n0-ru"))
                 .thenReturn(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z")));
     }
 

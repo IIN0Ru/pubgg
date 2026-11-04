@@ -13,9 +13,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -70,6 +72,7 @@ public class HomeController {
         try {
             Lookup lookup = lookupService.find(selected.get(), name);
             model.addAttribute("result", lookup.result());
+            model.addAttribute("cardPending", lookup.cardPending());
             model.addAttribute("updatedAgo", lookupService.updatedAgoText(lookup));
             model.addAttribute("refreshWait", lookupService.secondsUntilRefresh(lookup));
             addSavedCard(selected.get(), lookup, model);
@@ -78,6 +81,16 @@ public class HomeController {
             model.addAttribute("errorMessage", e.getMessage());
         }
         return "search";
+    }
+
+    /** 카드를 아직 계산 중인지. 화면이 몇 초마다 물어보고, 끝나면 새로고침한다 (static/js/card-wait.js) */
+    @GetMapping("/search/card-status")
+    @ResponseBody
+    public Map<String, Boolean> cardStatus(@RequestParam String platform, @RequestParam String nickname) {
+        boolean pending = Platform.fromShard(platform)
+                .map(p -> lookupService.isCardPending(p, nickname.trim()))
+                .orElse(false);
+        return Map.of("pending", pending);
     }
 
     /**

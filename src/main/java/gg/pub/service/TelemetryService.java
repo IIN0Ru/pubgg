@@ -2,6 +2,10 @@ package gg.pub.service;
 
 import gg.pub.domain.TelemetryStats;
 import gg.pub.pubgapi.PubgApiClient;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,8 +37,42 @@ public class TelemetryService {
     public TelemetryStats analyze(String matchId, String telemetryUrl, String accountId) {
         // 이 줄은 캐시에 없을 때만 실행된다 = 실제로 받아서 분석한 경기. 시간을 재서 남긴다.
         long start = System.nanoTime();
-        TelemetryStats stats = client.readTelemetry(telemetryUrl, body -> analyzer.analyze(body, accountId));
-        log.info("텔레메트리 한 판 받기+분석 {}ms", (System.nanoTime() - start) / 1_000_000);
+        long[] waited = {0};   // 파일 내용이 올 때까지 기다린 시간 (나머지는 우리 쪽 계산)
+        TelemetryStats stats = client.readTelemetry(telemetryUrl,
+                body -> analyzer.analyze(new TimedInputStream(body, waited), accountId));
+        long total = (System.nanoTime() - start) / 1_000_000;
+        long wait = waited[0] / 1_000_000;
+        log.info("텔레메트리 한 판 {}ms = 받는 데 기다린 시간 {}ms + 계산 {}ms", total, wait, total - wait);
         return stats;
+    }
+
+    /** 읽는 데 걸린 시간을 합산하는 스트림 */
+    private static final class TimedInputStream extends FilterInputStream {
+        private final long[] waitedNanos;
+
+        TimedInputStream(InputStream in, long[] waitedNanos) {
+            super(in);
+            this.waitedNanos = waitedNanos;
+        }
+
+        @Override
+        public int read() throws IOException {
+            long t = System.nanoTime();
+            try {
+                return super.read();
+            } finally {
+                waitedNanos[0] += System.nanoTime() - t;
+            }
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            long t = System.nanoTime();
+            try {
+                return super.read(b, off, len);
+            } finally {
+                waitedNanos[0] += System.nanoTime() - t;
+            }
+        }
     }
 }
