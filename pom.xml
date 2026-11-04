@@ -34,6 +34,26 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!-- DB 접근 (JdbcTemplate). 운영(prod 프로필)에서 카드 저장에 쓴다 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!-- 운영 DB(PostgreSQL) 드라이버. 버전은 Spring Boot 가 맞춰준다 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 테스트용 메모리 DB. 테스트할 때만 쓰고 배포 파일에는 들어가지 않는다 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- 코드 수정 시 자동 재시작 (개발할 때만 사용) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

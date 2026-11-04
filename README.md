@@ -56,6 +56,32 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 
 코드를 새로 받았을 때(Git → 풀)는 실행 중인 서버를 멈췄다가 다시 실행해야 반영된다.
 
+## 배포 (Docker + PostgreSQL)
+
+로컬 실행은 위 방법 그대로 카드를 `./data/cards` 폴더에 저장한다. 운영은 `prod` 프로필로 켜고, 카드를 DB(PostgreSQL)에 저장한다.
+서버를 다시 켜면 폴더가 사라지는 호스팅이 많아서 폴더 저장은 운영에 쓰지 않는다.
+
+필요한 환경 변수 (호스팅의 환경 변수 설정에 넣는다. 코드·GitHub에는 쓰지 않는다):
+
+| 이름 | 값 |
+|---|---|
+| `PUBG_API_KEY` | PUBG API 키 |
+| `DB_URL` | `jdbc:postgresql://호스트:5432/DB이름` |
+| `DB_USER` | DB 사용자 |
+| `DB_PASSWORD` | DB 비밀번호 |
+
+호스팅이 `postgres://사용자:비밀번호@호스트:5432/DB이름` 형태로 주소를 주면, 그대로 `DB_URL`에 넣으면 안 된다.
+`jdbc:postgresql://호스트:5432/DB이름` 으로 바꿔 넣고 사용자·비밀번호는 `DB_USER`, `DB_PASSWORD`에 따로 넣는다.
+
+내 컴퓨터에서 이미지를 만들어 확인하려면 (Docker 필요):
+
+```
+docker build -t pubgg .
+docker run -p 8080:8080 -e PUBG_API_KEY=키 -e DB_URL=jdbc:postgresql://호스트:5432/DB이름 -e DB_USER=사용자 -e DB_PASSWORD=비밀번호 pubgg
+```
+
+서버가 켜지면 `player_card` 테이블을 자동으로 만든다 (`src/main/resources/db/schema.sql`).
+
 ## 폴더 구조
 
 ```
@@ -100,10 +126,12 @@ src/main/java/gg/pub/
     ├── CacheConfig.java       캐시 켜기
     └── ClockConfig.java       현재 시각 (테스트에서 바꿀 수 있게)
 
-src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 지금은 FileCardStore, DB 를 붙이면 구현 하나만 추가)
+src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 로컬은 FileCardStore, 운영(prod 프로필)은 JdbcCardStore)
 
 src/main/resources/
-├── application.properties     설정
+├── application.properties     설정 (로컬 기본)
+├── application-prod.properties 운영 설정 (포트, DB 연결, 프록시 헤더). prod 프로필에서만 적용
+├── db/schema.sql              운영 DB 테이블 정의 (player_card)
 ├── templates/
 │   ├── fragments/topbar.html  모든 페이지 상단 바 (로고 + 닉네임 검색)
 │   ├── index.html             첫 화면(히어로)

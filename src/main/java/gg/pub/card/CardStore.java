@@ -6,8 +6,9 @@ import java.util.Optional;
 
 /**
  * 저장한 플레이어 카드를 넣고 꺼내는 곳.
- * 지금은 서버 폴더에 파일로 저장한다 (FileCardStore).
- * 나중에 DB 를 붙이면 이 인터페이스를 DB 로 구현한 클래스 하나만 새로 만들면 된다 (CardService·컨트롤러·화면은 그대로).
+ * 구현이 둘이다. 어느 쪽을 쓸지는 실행 프로필로 정한다 (CardService·컨트롤러·화면은 그대로).
+ *  - FileCardStore: 서버 폴더에 파일로 저장. 로컬 개발용 (기본)
+ *  - JdbcCardStore: DB(PostgreSQL)에 저장. 운영용 (prod 프로필)
  */
 public interface CardStore {
 
