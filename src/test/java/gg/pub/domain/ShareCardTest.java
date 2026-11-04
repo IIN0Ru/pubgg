@@ -49,7 +49,6 @@ class ShareCardTest {
         // 헤드샷 3/10 = 30%, TOP10 2/4 = 50%
         assertThat(c.combatTags()).containsExactly("외곽 운영", "대도시파밍", "헤드샷 30%", "TOP10 50%", "투척 2.1개");
         assertThat(c.matches()).isEqualTo(4);
-        assertThat(c.peakHours()).isEqualTo("21~24시");
     }
 
     @Test

@@ -17,7 +17,7 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 
 - [x] 첫 화면(히어로): 로고, 스팀/카카오 선택, 닉네임 검색창
 - [x] 검색 요청 처리: 빈 닉네임·잘못된 플랫폼이면 첫 화면으로 돌려보냄
-- [x] PUBG API 연결: 닉네임 검색 → 최근 14일 전체 경기 목록
+- [x] PUBG API 연결: 닉네임 검색 → 최근 30경기 목록
 - [x] 플레이 카드 기본 정보: 경쟁전 최근 10경기 KDA, 평균 딜량, 평균 투척, 시점, 주무기 2개
 - [x] 자기장 운영(줄어들기 시작할 때 위치, 인게임 미니맵형) + 자기장 운(새 원이 뜬 직후 위치)
 - [x] 파밍: 대도시파밍/짤파밍, 3페이즈 시작 때 힐템·투척 보유량, 주운 총알
@@ -93,7 +93,7 @@ src/main/java/gg/pub/
 │   └── CardController.java    "/card" 플레이어 카드, "/api/card" 저장, "/card/image" 미리보기 그림
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
-│   ├── PlayerService.java     검색 결과 만들기: 14일 경기 동시에 받기 + 경쟁전 10경기로 카드
+│   ├── PlayerService.java     검색 결과 만들기: 최근 30경기 동시에 받기 + 경쟁전 10경기로 카드
 │   ├── ReplayService.java     2D 리플레이 데이터 (경쟁전만, 캐시)
 │   ├── ReplayBuilder.java     텔레메트리 → 리플레이 데이터 (위치·자기장·사건·교전·폭발물·회복)
 │   ├── SeasonService.java     이번 시즌 티어·기록 (시즌 ID 6시간 저장, 실패하면 티어 없이)
@@ -111,7 +111,6 @@ src/main/java/gg/pub/
 │   ├── MatchRecord.java       경기 하나 기록 (나 + 팀원). 목록·카드·팀원·시간대가 같이 씀
 │   ├── MatchPlayer.java       경기 하나에서 한 사람 기록
 │   ├── Teammate.java          자주 같이 한 팀원 계산
-│   ├── ActivityMap.java       활동 시간대(요일 × 시간) 계산
 │   ├── SeasonRank.java        시즌 티어 + 최근 vs 시즌 비교
 │   ├── PlayerMatches.java     검색 결과 묶음 (카드 + 경기 목록)
 │   ├── PlayCard.java          플레이 카드

@@ -10,9 +10,8 @@ import java.util.List;
  * @param platform   스팀 / 카카오
  * @param card       플레이 카드 (경쟁전 기록이 없으면 null)
  * @param season     이번 시즌 경쟁전 티어·기록 (없으면 null)
- * @param matches    최근 14일 경기 (모든 모드, 최신순)
- * @param teammates  자주 같이 한 팀원 (14일 전체 경기 기준)
- * @param activity   활동 시간대 (14일 전체 경기 기준)
+ * @param matches    최근 경기 (모든 모드, 최신순, 최대 30경기)
+ * @param teammates  자주 같이 한 팀원 (불러온 경기 기준)
  * @param clan       클랜 (없거나 못 받았으면 null)
  */
 public record PlayerMatches(String nickname,
@@ -21,18 +20,16 @@ public record PlayerMatches(String nickname,
                             SeasonRank season,
                             List<MatchRecord> matches,
                             List<Teammate> teammates,
-                            ActivityMap activity,
                             Clan clan) {
 
     /** 자주 같이 한 팀원 최대 인원 */
     public static final int TEAMMATE_LIMIT = 5;
 
-    /** 경기 목록만 주면 팀원·활동 시간대는 여기서 계산한다 */
+    /** 경기 목록만 주면 팀원은 여기서 계산한다 */
     public PlayerMatches(String nickname, Platform platform, PlayCard card, SeasonRank season,
                          List<MatchRecord> matches, Clan clan) {
         this(nickname, platform, card, season, matches,
-                Teammate.fromMatches(matches, TEAMMATE_LIMIT),
-                ActivityMap.fromMatches(matches), clan);
+                Teammate.fromMatches(matches, TEAMMATE_LIMIT), clan);
     }
 
     /** 클랜 없이 */
@@ -63,8 +60,8 @@ public record PlayerMatches(String nickname,
     }
 
     /**
-     * "KDA 3.42 · 평균 딜 412 · 센터 운영 · 대도시파밍 · 주로 21~24시"
-     * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(스타일) + 언제 하는지
+     * "KDA 3.42 · 평균 딜 412 · 센터 운영 · 대도시파밍"
+     * 듀오를 고를 때 보는 것만: 실력(KDA·딜) + 습관(스타일)
      */
     public String shareDescription() {
         List<String> parts = new ArrayList<>();
@@ -72,9 +69,6 @@ public record PlayerMatches(String nickname,
             parts.add("KDA " + card.kdaText());
             parts.add("평균 딜 " + card.avgDamage());
             parts.addAll(card.styleTags());
-        }
-        if (activity != null && activity.hasData()) {
-            parts.add("주로 " + activity.peakText());
         }
         if (parts.isEmpty()) {
             return platform.getLabel() + " " + nickname + "의 배그 플레이 스타일";

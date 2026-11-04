@@ -33,15 +33,15 @@ import java.util.concurrent.Semaphore;
  *  4. 이번 시즌 경쟁전 티어·기록을 받는다 (SeasonService, 실패하면 티어 없이)
  *  5. 클랜에 들어 있으면 클랜 이름·태그를 받는다 (실패하면 클랜 없이)
  *
- * 경기 목록, 함께한 팀원, 활동 시간대는 14일 전체 경기를 쓴다.
+ * 경기 목록과 함께한 팀원은 그중 최신 30경기만 쓴다 (전부 받으면 너무 오래 걸려서).
  */
 @Service
 public class PlayerService {
 
     private static final Logger log = LoggerFactory.getLogger(PlayerService.class);
 
-    /** 하루 종일 하는 사람도 있어서 안전 상한. 14일에 이보다 많으면 최신 경기부터 이만큼만 */
-    static final int MAX_MATCHES = 200;
+    /** 한 번에 불러오는 경기 수. 14일에 이보다 많으면 최신 경기부터 이만큼만 (속도 때문에 200 → 30) */
+    static final int MAX_MATCHES = 30;
 
     /** 동시에 받는 경기 수. PUBG 서버에 한꺼번에 너무 많이 요청하지 않도록 */
     static final int PARALLEL_REQUESTS = 8;
