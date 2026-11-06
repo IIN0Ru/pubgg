@@ -1,8 +1,8 @@
 /*
- * 플레이어 카드 그리기 (공용). 카드 꾸미기 화면(player-card.js)과 전적 화면의 작은 프로필 카드(card-profile.js)가 같이 쓴다.
+ * 플레이어 카드 그리기 (공용). 공유 카드 꾸미기 화면(player-card.js)과 전적 화면의 A카드(card-profile.js)가 같이 쓴다.
  *
- *  - 기록 값(card): 서버의 ShareCard JSON (닉네임·클랜·티어·KDA·딜·주무기/보조무기·전투 태그·주 활동 시간)
- *  - 꾸민 값(choices): 마이크·지향·구함·역할 (주소 값과 같은 이름)
+ *  - 기록 값(card): 서버의 ShareCard JSON (닉네임·클랜·티어·KDA·딜·주무기/보조무기·전투 태그)
+ *  - 꾸민 값(choices): 마이크·시간대·지향·구함·역할 (주소 값과 같은 이름). 공유할 때 만드는 B카드에만 붙는다
  *  - 배경(bg): { map, sx, sy } 글자 없는 맵(2048px) 위 구역의 왼쪽 위 좌표
  *  - 무기: static/images/card/weapons/<itemId>.png (공식 api-assets 그림을 수평으로 돌려 자른 것, 총구가 왼쪽)
  *
@@ -18,6 +18,7 @@ export const MAPS = ['erangel', 'miramar', 'taego', 'rondo'];
 // 성향 태그: 값 → 글자 (순서 = 카드에 붙는 순서)
 export const PICKS = {
   mic: { o: '마이크 O', x: '마이크 X', listen: '듣기만' },
+  time: { dawn: '새벽 접속', morning: '아침 접속', lunch: '점심 접속', evening: '저녁 접속', night: '밤 접속' },
   aim: { chicken: '치킨지향', rank: '순위지향', social: '친목지향' },
   find: { duo: '듀오 구함', squad: '스쿼드 구함', clan: '클랜원 모집' },
   role: { igl: 'IGL', front: '1선', second: '2선', turret: '포탑' },
@@ -31,11 +32,12 @@ export const loadImage = (src) => new Promise((ok, fail) => {
 });
 const loadJson = (src) => fetch(src).then((r) => r.json());
 
-/** 주소 값이나 저장한 값(아무 객체) → 검사한 꾸민 값. 예전 카드에 저장된 옷 값은 모르는 이름이라 무시된다 */
+/** 주소 값(아무 객체) → 검사한 꾸민 값. 모르는 이름이나 값은 무시된다 */
 export function normalizeChoices(get) {
   const list = (k) => (get(k) || '').split(',').filter((v) => PICKS[k][v]);
   return {
     mic: PICKS.mic[get('mic')] ? get('mic') : '',
+    time: PICKS.time[get('time')] ? get('time') : '',
     aim: list('aim'), find: list('find'), role: list('role'),
   };
 }
@@ -45,16 +47,18 @@ export function choicesToParams(c) {
   const out = {};
   const set = (k, v) => { if (v) out[k] = v; };
   set('mic', c.mic);
+  set('time', c.time);
   set('aim', c.aim.join(','));
   set('find', c.find.join(','));
   set('role', c.role.join(','));
   return out;
 }
 
-/** 성향 줄: 마이크 → 지향 → 구함 → 역할 */
+/** 성향 줄: 마이크 → 접속 시간대 → 지향 → 구함 → 역할 */
 export function styleTags(card, c) {
   const tags = [];
   if (c.mic) tags.push(PICKS.mic[c.mic]);
+  if (c.time) tags.push(PICKS.time[c.time]);
   c.aim.forEach((v) => tags.push(PICKS.aim[v]));
   c.find.forEach((v) => tags.push(PICKS.find[v]));
   c.role.forEach((v) => tags.push(PICKS.role[v]));

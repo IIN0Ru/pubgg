@@ -2,13 +2,14 @@ package gg.pub.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gg.pub.card.CardLockedException;
 import gg.pub.card.CardService;
-import gg.pub.card.SavedCard;
+import gg.pub.card.ShareRateLimiter;
+import gg.pub.card.SharedCard;
 import gg.pub.domain.Platform;
 import gg.pub.domain.ShareCard;
 import gg.pub.pubgapi.PubgApiException;
 import gg.pub.service.PlayerLookupService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,30 +17,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * 플레이어 카드.
- *  - GET  /card?platform=steam&nickname=N0-RU   카드 꾸미기 화면 (저장한 카드가 있으면 그 모습으로 시작)
- *  - POST /api/card                              사이트에 저장 (꾸민 값 + 미리보기 PNG)
- *  - GET  /card/image?platform=…&nickname=…      저장한 카드 그림 (디스코드·카톡 링크 미리보기용)
+ * 공유 카드(B카드).
+ *  - GET  /card?platform=steam&nickname=N0-RU   공유 카드 꾸미기 화면 (태그를 고르고 배경을 정한다)
+ *  - POST /api/share                             공유 카드를 만들고 공유 주소(/s/{id})를 돌려준다
+ *  - GET  /s/{id}/image                          공유한 카드 그림 (디스코드·카톡 링크 미리보기용)
  *
- * 기록 값(KDA·딜·태그)은 저장하지 않고 늘 최신 검색 결과로 채운다. 꾸민 값은 주소 뒤에도 붙어서
- * 저장하지 않은 카드도 링크로 같은 모습을 볼 수 있다.
+ * 공유 주소 /s/{id} 자체는 HomeController 가 전적 화면(A카드)으로 보여준다.
+ * 기록 값(KDA·딜·전투 태그)은 저장하지 않고 늘 최신 검색 결과로 채운다. 꾸민 값은 주소 뒤에도 붙어서
+ * 새로고침해도 같은 모습으로 이어진다.
  */
 @Controller
 public class CardController {
 
     private static final String PNG_DATA_URL = "data:image/png;base64,";
+
+    /** 같은 접속 주소가 10분에 10번까지만 공유 카드를 만든다 */
+    private final ShareRateLimiter rateLimiter = new ShareRateLimiter(Clock.systemUTC(), 10, Duration.ofMinutes(10));
 
     private final PlayerLookupService lookupService;
     private final CardService cardService;
@@ -72,7 +78,6 @@ public class CardController {
             if (card.isPresent()) {
                 model.addAttribute("card", card.get());
                 model.addAttribute("cardJson", toJson(card.get()));
-                model.addAttribute("savedJson", cardService.find(selected.get(), exact).map(this::toJson).orElse(""));
             }
         } catch (PubgApiException e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -81,55 +86,46 @@ public class CardController {
     }
 
     /**
-     * 사이트에 저장.
+     * 공유 카드 만들기.
      *
-     * @param png        미리보기 그림 "data:image/png;base64,…"
-     * @param token      이 브라우저의 수정 열쇠 (처음이면 null)
+     * @param png 미리보기 그림 "data:image/png;base64,…"
      */
-    public record SaveRequest(String platform, String nickname, Map<String, String> choices,
-                              SavedCard.Background background, String png, String token) {
+    public record ShareRequest(String platform, String nickname, Map<String, String> choices,
+                               SharedCard.Background background, String png) {
     }
 
-    @PostMapping("/api/card")
+    @PostMapping("/api/share")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> save(@RequestBody SaveRequest req) {
+    public ResponseEntity<Map<String, String>> share(@RequestBody ShareRequest req, HttpServletRequest http) {
         Optional<Platform> selected = Platform.fromShard(req.platform());
         if (selected.isEmpty() || req.nickname() == null || req.nickname().isBlank()
                 || req.png() == null || !req.png().startsWith(PNG_DATA_URL)) {
-            return error(HttpStatus.BAD_REQUEST, "저장할 값이 올바르지 않아요.");
+            return error(HttpStatus.BAD_REQUEST, "공유할 값이 올바르지 않아요.");
+        }
+        if (!rateLimiter.tryAcquire(http.getRemoteAddr())) {
+            return error(HttpStatus.TOO_MANY_REQUESTS, "공유 링크를 너무 많이 만들었어요. 잠시 뒤에 다시 해 주세요.");
         }
         try {
             // 검색된 적 있는 플레이어만 (정확한 닉네임으로 저장)
             String exact = lookupService.findWithCard(selected.get(), req.nickname().trim()).result().nickname();
             byte[] png = Base64.getDecoder().decode(req.png().substring(PNG_DATA_URL.length()));
-            String token = cardService.save(selected.get(), exact, req.choices(), req.background(), png, req.token());
-            String link = UriComponentsBuilder.fromPath("/search")
-                    .queryParam("platform", selected.get().getShard())
-                    .queryParam("nickname", exact)
-                    .encode().build().toUriString();
-            return ResponseEntity.ok(Map.of("token", token, "link", link));
-        } catch (CardLockedException e) {
-            return error(HttpStatus.FORBIDDEN, e.getMessage());
-        } catch (IllegalArgumentException e) {
+            String id = cardService.share(selected.get(), exact, req.choices(), req.background(), png);
+            return ResponseEntity.ok(Map.of("id", id, "link", "/s/" + id));
+        } catch (IllegalArgumentException e) {   // 값 검사 실패, Base64 가 아닌 그림
             return error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (PubgApiException e) {
             return error(HttpStatus.BAD_GATEWAY, e.getMessage());
         }
     }
 
-    /** 저장한 카드 그림. 링크 미리보기(og:image)가 이 주소를 가리킨다 */
-    @GetMapping("/card/image")
+    /** 공유한 카드 그림. 링크 미리보기(og:image)가 이 주소를 가리킨다 */
+    @GetMapping("/s/{id}/image")
     @ResponseBody
-    public ResponseEntity<byte[]> image(@RequestParam(required = false) String platform,
-                                        @RequestParam(required = false) String nickname) {
-        Optional<Platform> selected = Platform.fromShard(platform);
-        if (selected.isEmpty() || nickname == null || nickname.isBlank()) {
-            return ResponseEntity.notFound().build();
-        }
-        return cardService.image(selected.get(), nickname.trim())
+    public ResponseEntity<byte[]> image(@PathVariable String id) {
+        return cardService.image(id)
                 .map(png -> ResponseEntity.ok()
                         .contentType(MediaType.IMAGE_PNG)
-                        .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)))
+                        .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
                         .body(png))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -1,6 +1,7 @@
 package gg.pub.web;
 
 import gg.pub.card.CardService;
+import gg.pub.card.SharedCard;
 import gg.pub.domain.Farming;
 import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
@@ -18,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,7 +41,7 @@ class HomeControllerTest {
     PlayerLookupService lookupService;
 
     @MockitoBean
-    CardService cardService;   // 저장한 플레이어 카드 (없으면 빈 값)
+    CardService cardService;   // 공유 카드 (공유 주소 /s/{id} 를 열 때만 쓴다)
 
     @Test
     void 첫_화면이_열린다() throws Exception {
@@ -118,7 +121,51 @@ class HomeControllerTest {
         mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("cardJson"))
-                .andExpect(model().attribute("savedJson", ""))              // 저장한 적 없음 → 기본 옷 + 랜덤 배경
-                .andExpect(model().attributeDoesNotExist("cardImageUrl"));  // 미리보기 그림도 없음
+                .andExpect(model().attributeDoesNotExist("savedJson"))      // A카드는 저장한 모습이 없다 (태그 없음)
+                .andExpect(model().attributeDoesNotExist("cardImageUrl"));  // 공유 주소가 아니면 미리보기 그림도 없음
+    }
+
+    private static SharedCard share(String id, String nickname) {
+        return new SharedCard(id, "steam", nickname, Map.of("mic", "o"),
+                new SharedCard.Background("erangel", 10, 20), Instant.parse("2026-11-07T12:00:00Z"));
+    }
+
+    private void searchFound() {
+        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
+        Lookup lookup = new Lookup(result, Instant.parse("2026-11-07T12:00:00Z"));
+        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+    }
+
+    @Test
+    void 공유_주소를_열면_전적_화면과_미리보기_그림_주소를_준다() throws Exception {
+        searchFound();
+        when(cardService.find("abc123XYZ_-")).thenReturn(Optional.of(share("abc123XYZ_-", "N0-RU")));
+        when(cardService.hasImage("abc123XYZ_-")).thenReturn(true);
+
+        mvc.perform(get("/s/abc123XYZ_-"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("search"))
+                .andExpect(model().attribute("nickname", "N0-RU"))
+                .andExpect(model().attribute("cardImageUrl", "http://localhost/s/abc123XYZ_-/image"));
+    }
+
+    @Test
+    void 그림이_비워진_공유_주소도_전적_화면은_열리고_미리보기_그림만_없다() throws Exception {
+        searchFound();
+        when(cardService.find("old123456")).thenReturn(Optional.of(share("old123456", "N0-RU")));
+        when(cardService.hasImage("old123456")).thenReturn(false);
+
+        mvc.perform(get("/s/old123456"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("search"))
+                .andExpect(model().attributeDoesNotExist("cardImageUrl"));
+    }
+
+    @Test
+    void 없는_공유_주소는_첫_화면으로() throws Exception {
+        when(cardService.find("nothere123")).thenReturn(Optional.empty());
+
+        mvc.perform(get("/s/nothere123"))
+                .andExpect(redirectedUrl("/"));
     }
 }

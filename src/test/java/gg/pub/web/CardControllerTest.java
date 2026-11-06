@@ -1,6 +1,5 @@
 package gg.pub.web;
 
-import gg.pub.card.CardLockedException;
 import gg.pub.card.CardService;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayerMatches;
@@ -15,11 +14,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -69,9 +68,9 @@ class CardControllerTest {
     }
 
     private static final String BODY = """
-            {"platform":"steam","nickname":"n0-ru","choices":{"mic":"o"},
+            {"platform":"steam","nickname":"n0-ru","choices":{"mic":"o","time":"night"},
              "background":{"map":"erangel","sx":10,"sy":20},
-             "png":"data:image/png;base64,iVBORw0KGgo=","token":null}
+             "png":"data:image/png;base64,iVBORw0KGgo="}
             """;
 
     private void found() {
@@ -81,37 +80,55 @@ class CardControllerTest {
     }
 
     @Test
-    void 저장하면_열쇠와_전적_링크를_준다() throws Exception {
+    void 공유하면_ID와_공유_주소를_준다() throws Exception {
         found();
-        when(cardService.save(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any(), isNull())).thenReturn("key1");
+        when(cardService.share(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any())).thenReturn("abc123XYZ_-");
 
-        mvc.perform(post("/api/card").contentType("application/json").content(BODY))
+        mvc.perform(post("/api/share").contentType("application/json").content(BODY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("key1"))
-                .andExpect(jsonPath("$.link").value("/search?platform=steam&nickname=N0-RU"));
+                .andExpect(jsonPath("$.id").value("abc123XYZ_-"))
+                .andExpect(jsonPath("$.link").value("/s/abc123XYZ_-"));
     }
 
     @Test
-    void 다른_브라우저가_먼저_저장한_카드면_403() throws Exception {
+    void 값이_이상하면_400() throws Exception {
         found();
-        when(cardService.save(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any(), isNull()))
-                .thenThrow(new CardLockedException());
+        when(cardService.share(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any()))
+                .thenThrow(new IllegalArgumentException("카드 값이 올바르지 않아요: mic"));
 
-        mvc.perform(post("/api/card").contentType("application/json").content(BODY))
-                .andExpect(status().isForbidden())
+        mvc.perform(post("/api/share").contentType("application/json").content(BODY))
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
     void PNG_가_아니면_400() throws Exception {
-        mvc.perform(post("/api/card").contentType("application/json")
+        mvc.perform(post("/api/share").contentType("application/json")
                         .content(BODY.replace("data:image/png;base64,", "data:text/html,")))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void 저장한_그림이_없으면_404() throws Exception {
-        mvc.perform(get("/card/image").param("platform", "steam").param("nickname", "N0-RU"))
+    void 옛_저장_주소는_없어졌다() throws Exception {
+        mvc.perform(post("/api/card").contentType("application/json").content(BODY))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void 공유한_그림을_돌려준다() throws Exception {
+        when(cardService.image("abc123XYZ_-")).thenReturn(Optional.of(new byte[]{1, 2, 3}));
+
+        mvc.perform(get("/s/abc123XYZ_-/image"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"))
+                .andExpect(content().bytes(new byte[]{1, 2, 3}));
+    }
+
+    @Test
+    void 그림이_없거나_비워졌으면_404() throws Exception {
+        when(cardService.image("nothere123")).thenReturn(Optional.empty());
+
+        mvc.perform(get("/s/nothere123/image"))
                 .andExpect(status().isNotFound());
     }
 }

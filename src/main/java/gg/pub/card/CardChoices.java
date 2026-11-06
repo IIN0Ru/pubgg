@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 저장할 꾸민 값 검사. 화면(player-card.js)의 주소 값과 같은 이름·값만 받는다.
+ * 공유할 꾸민 값 검사. 화면(player-card.js)의 주소 값과 같은 이름·값만 받는다.
  * 모르는 이름은 버리고, 아는 이름에 이상한 값이 오면 IllegalArgumentException.
  */
 public final class CardChoices {
@@ -16,7 +16,8 @@ public final class CardChoices {
 
     /** 하나만 고르는 것 */
     private static final Map<String, Set<String>> ONE = Map.of(
-            "mic", Set.of("o", "x", "listen"));
+            "mic", Set.of("o", "x", "listen"),
+            "time", Set.of("dawn", "morning", "lunch", "evening", "night"));
 
     /** 여러 개 고르는 것 (쉼표로 이어 붙임) */
     private static final Map<String, Set<String>> MANY = Map.of(
@@ -52,7 +53,7 @@ public final class CardChoices {
         return out;
     }
 
-    public static SavedCard.Background background(SavedCard.Background b) {
+    public static SharedCard.Background background(SharedCard.Background b) {
         require(b != null && MAPS.contains(b.map()), "background");
         require(b.sx() >= 0 && b.sx() <= MAX_SX && b.sy() >= 0 && b.sy() <= MAX_SY, "background");
         return b;
