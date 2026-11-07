@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import gg.pub.domain.TelemetryStats;
 import gg.pub.domain.TelemetryStats.Bag;
 import gg.pub.domain.TelemetryStats.Landing;
@@ -42,6 +44,11 @@ import java.util.Set;
  *                                            → 3페이즈 시작 순간의 회복·부스트템, 투척무기 개수와 주운 총알 수
  *
  * 내가 죽은 뒤의 기록은 보지 않는다. 이벤트를 하나씩 흘려 읽어서(stream) 큰 파일도 메모리를 적게 쓴다.
+ *
+ * 속도: 한 판 파일에는 이벤트가 수십만 개 들어 있지만 위에서 쓰는 종류는 일부다. 그래서 이벤트마다
+ * 종류(_T)를 먼저 보고, 안 쓰는 종류는 안쪽 내용을 읽지 않고 건너뛴다 (객체로 만드는 비용이 제일 컸다).
+ * 안 쓰는 이벤트에서도 시각(_D)과 단계(common.isGame)는 본다. 3페이즈 시작 순간을 잡는 데 필요해서.
+ * 내가 죽으면 그 뒤는 읽지 않고 멈춘다 (결과에 영향이 없고, 받는 시간도 줄어든다).
  */
 @Component
 public class TelemetryAnalyzer {
@@ -89,6 +96,95 @@ public class TelemetryAnalyzer {
         return null;
     }
 
+    /**
+     * 사람(character·attacker·victim) 칸을 읽는다 (START_OBJECT 에 있는 상태).
+     * 내가 아니면 null — 객체를 만들지 않고 건너뛴다. 이벤트 대부분이 남의 것이라 이게 제일 많이 아낀다.
+     * 나라면 Tracker 가 쓰는 칸(accountId, location, zone)만 담아서 돌려준다.
+     */
+    private ObjectNode readActor(JsonParser parser, String me) throws IOException {
+        if (parser.currentToken() != JsonToken.START_OBJECT) {
+            parser.skipChildren();
+            return null;
+        }
+        String accountId = null;
+        double x = 0;
+        double y = 0;
+        boolean hasLocation = false;
+        List<String> zones = null;
+
+        while (parser.nextToken() == JsonToken.FIELD_NAME) {
+            String name = parser.currentName();
+            JsonToken value = parser.nextToken();
+            switch (name) {
+                case "accountId" -> accountId = parser.getValueAsString();
+                case "location" -> {
+                    if (value == JsonToken.START_OBJECT) {
+                        hasLocation = true;
+                        while (parser.nextToken() == JsonToken.FIELD_NAME) {
+                            String axis = parser.currentName();
+                            parser.nextToken();
+                            if (axis.equals("x") && parser.currentToken().isNumeric()) {
+                                x = parser.getDoubleValue();
+                            } else if (axis.equals("y") && parser.currentToken().isNumeric()) {
+                                y = parser.getDoubleValue();
+                            } else {
+                                parser.skipChildren();
+                            }
+                        }
+                    } else {
+                        parser.skipChildren();
+                    }
+                }
+                case "zone" -> {
+                    if (value == JsonToken.START_ARRAY) {
+                        zones = new ArrayList<>();
+                        while (parser.nextToken() != JsonToken.END_ARRAY) {
+                            zones.add(parser.getValueAsString());
+                        }
+                    } else {
+                        parser.skipChildren();
+                    }
+                }
+                default -> parser.skipChildren();
+            }
+        }
+
+        if (accountId == null || !accountId.equals(me)) {
+            return null;
+        }
+        ObjectNode actor = mapper.createObjectNode();
+        actor.put("accountId", accountId);
+        if (hasLocation) {
+            actor.putObject("location").put("x", x).put("y", y);
+        }
+        if (zones != null) {
+            ArrayNode array = actor.putArray("zone");
+            zones.forEach(array::add);
+        }
+        return actor;
+    }
+
+    /** 내용을 읽어서 처리하는 이벤트 종류. 아래 Tracker.handle 의 case 와 같아야 한다 */
+    static final Set<String> USED_EVENTS = Set.of(
+            "LogItemEquip", "LogItemUnequip", "LogPlayerUseThrowable", "LogPlayerPosition",
+            "LogGameStatePeriodic", "LogPlayerKillV2",
+            "LogItemPickup", "LogItemPickupFromLootbox", "LogItemPickupFromCarepackage",
+            "LogItemPickupFromCustomPackage", "LogItemPickupFromVehicleTrunk",
+            "LogItemDrop", "LogItemPutToVehicleTrunk", "LogItemUse", "LogParachuteLanding");
+
+    /**
+     * 이 종류의 이벤트에서 "누가 했는지"를 담는 칸 이름. 그 사람이 내가 아니면 Tracker 는 이 이벤트로 아무것도 안 한다.
+     * 자기장 기록(LogGameStatePeriodic)처럼 사람이 없는 이벤트는 null.
+     */
+    static String actorField(String type) {
+        return switch (type) {
+            case "LogPlayerUseThrowable" -> "attacker";
+            case "LogPlayerKillV2" -> "victim";
+            case "LogGameStatePeriodic" -> null;
+            default -> "character";
+        };
+    }
+
     private final ObjectMapper mapper;
 
     public TelemetryAnalyzer(ObjectMapper mapper) {
@@ -103,8 +199,10 @@ public class TelemetryAnalyzer {
                 throw new IOException("텔레메트리 형식이 배열이 아니에요");
             }
             while (parser.nextToken() == JsonToken.START_OBJECT) {
-                JsonNode event = mapper.readTree(parser);
-                tracker.handle(event);
+                readEvent(parser, tracker);
+                if (tracker.isDead()) {
+                    break;   // 내가 죽었으면 이 뒤는 결과에 안 쓰인다
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -112,11 +210,72 @@ public class TelemetryAnalyzer {
         return tracker.result();
     }
 
+    /**
+     * 이벤트 하나(START_OBJECT 를 막 읽은 상태)를 끝까지 읽는다.
+     * 종류(_T)가 쓰는 것이면 객체로 모아서 처리하고, 아니면 시각·단계만 보고 나머지는 건너뛴다.
+     * _T 가 다른 칸보다 뒤에 나오는 파일이어도 되도록, 종류를 알기 전에 읽은 칸은 모아 둔다.
+     */
+    private void readEvent(JsonParser parser, Tracker tracker) throws IOException {
+        String type = null;
+        String time = null;
+        JsonNode common = null;
+        double isGame = 0;
+        boolean typeKnown = false;
+        boolean used = false;
+        boolean other = false;   // 이 이벤트의 주인공이 내가 아님 → 처리할 게 없다
+        String actorField = null;
+        ObjectNode fields = mapper.createObjectNode();
+
+        while (parser.nextToken() == JsonToken.FIELD_NAME) {
+            String name = parser.currentName();
+            parser.nextToken();   // 값으로 이동
+            switch (name) {
+                case "_T" -> {
+                    type = parser.getValueAsString();
+                    typeKnown = true;
+                    used = type != null && USED_EVENTS.contains(type);
+                    actorField = used ? actorField(type) : null;
+                }
+                case "_D" -> time = parser.getValueAsString();
+                case "common" -> {
+                    common = mapper.readTree(parser);
+                    isGame = common.path("isGame").asDouble(0);
+                }
+                default -> {
+                    if (typeKnown && (!used || other)) {
+                        parser.skipChildren();   // 안 쓰는 종류, 또는 남의 이벤트: 안쪽을 읽지 않는다
+                    } else if (typeKnown && name.equals(actorField)) {
+                        ObjectNode actor = readActor(parser, tracker.me());
+                        if (actor == null) {
+                            other = true;        // 내가 아니면 나머지 칸은 건너뛴다
+                        } else {
+                            fields.set(name, actor);
+                        }
+                    } else {
+                        fields.set(name, mapper.readTree(parser));
+                    }
+                }
+            }
+        }
+
+        if (!used || other) {
+            tracker.skip(time, isGame);
+            return;
+        }
+        fields.put("_T", type);
+        if (time != null) {
+            fields.put("_D", time);
+        }
+        if (common != null) {
+            fields.set("common", common);
+        }
+        tracker.handle(fields);
+    }
+
     /** 이벤트를 하나씩 받아서 기록을 쌓아가는 내부 도우미 */
     private static final class Tracker {
 
         private final String me;
-        private Integer myTeam;
         private Instant deathTime;
         private Instant lastTime;
 
@@ -156,6 +315,28 @@ public class TelemetryAnalyzer {
             this.me = accountId;
         }
 
+        String me() {
+            return me;
+        }
+
+        boolean isDead() {
+            return deathTime != null;
+        }
+
+        /** 쓰지 않는 종류의 이벤트: handle 과 같이 시각을 기억하고 3페이즈 시작 순간만 잡는다 */
+        void skip(String timeText, double isGame) {
+            Instant time = parseTime(timeText);
+            if (time != null) {
+                lastTime = time;
+            }
+            if (deathTime != null || time == null) {
+                return;
+            }
+            if (phase3 == null && isGame >= ZONE_FROM_PHASE) {
+                phase3 = new Bag(Math.max(0, heldHeals), Math.max(0, heldThrowables), ammoPicked);
+            }
+        }
+
         void handle(JsonNode e) {
             Instant time = parseTime(e.path("_D").asText(null));
             if (time != null) {
@@ -164,7 +345,6 @@ public class TelemetryAnalyzer {
             if (deathTime != null || time == null) {
                 return;   // 죽은 뒤 기록은 보지 않는다
             }
-            learnMyTeam(e);
 
             // 3페이즈가 처음 시작된 순간의 가방 상태 기록 (이 이벤트를 처리하기 전 상태)
             if (phase3 == null && e.path("common").path("isGame").asDouble(0) >= ZONE_FROM_PHASE) {
@@ -372,20 +552,6 @@ public class TelemetryAnalyzer {
             return new Landing(List.copyOf(zones),
                     c.path("location").path("x").asDouble(),
                     c.path("location").path("y").asDouble());
-        }
-
-        /** 이벤트에 나온 사람 중 나를 찾으면 내 팀 번호를 기억 */
-        private void learnMyTeam(JsonNode e) {
-            if (myTeam != null) {
-                return;
-            }
-            for (String field : new String[]{"character", "attacker", "victim"}) {
-                JsonNode c = e.path(field);
-                if (isMe(c) && c.has("teamId")) {
-                    myTeam = c.path("teamId").asInt();
-                    return;
-                }
-            }
         }
 
         private void addWeaponTime(String itemId, Instant from, Instant to) {
