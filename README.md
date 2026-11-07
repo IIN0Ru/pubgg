@@ -31,7 +31,7 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 2D 리플레이 (경쟁전): 재생·배속·타임라인, 경기 흐름 누르면 이동, 근처 적만, 동선 전체 + 교전 번호, 확대·이동·따라가기
   - 고해상도 지도 조각(타일)을 보이는 만큼만 불러오기, 명중선, 차량·보급 아이콘, 폭발물(터진 곳 추정)·회복 이펙트
   - 체력 바, 죽기 전 30초 받은 피해, 교전 지표(기절→킬·복수·살림), 장면 링크(?t=), 킬 글에 무기·거리·헤드샷
-- [x] 플레이어 카드 (/card): 주무기·보조무기(두 번째로 오래 든 주무기) 그림과 사용 비중, 티어 도트 테두리, 4개 맵 중 랜덤 맵·랜덤 구역 배경, 전투 태그(기록) + 성향 태그(직접 고름, 주소에 저장), PNG 저장
+- [x] 플레이어 카드: A카드(전적 화면, 기록만·수정 불가)와 B카드(/card, 공유할 때만 쓰는 카드). 주무기·보조무기(두 번째로 오래 든 주무기) 그림과 사용 비중, 티어 도트 테두리, 4개 맵 중 랜덤 맵·랜덤 구역 배경, 전투 태그(기록) + 성향 태그(마이크·접속 시간대·지향·구함·역할, B카드에서 직접 고름), PNG 저장, 공유 링크(/s/{id})
 - [x] 플레이어 카드 옷 고르기: 외투(후드티·자켓·셔츠) + 하의(반바지·츄리닝·슬랙스) + 전신(길리슈트), 반팔·외투·하의 색 8가지
 - [x] 플레이어 카드 사이트 저장 (서버 폴더, 처음 저장한 브라우저만 수정) → 링크 미리보기(og:image)
 - [x] 전적 화면 왼쪽 위 = 플레이어 카드 (저장한 모습, 없으면 기본 옷 + 랜덤 배경) + 갱신·즐겨찾기 한 줄
@@ -58,7 +58,7 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 
 ## 배포 (Docker + PostgreSQL)
 
-로컬 실행은 위 방법 그대로 카드를 `./data/cards` 폴더에 저장한다. 운영은 `prod` 프로필로 켜고, 카드를 DB(PostgreSQL)에 저장한다.
+로컬 실행은 위 방법 그대로 공유 카드를 `./data/cards` 폴더에 저장한다. 운영은 `prod` 프로필로 켜고, 공유 카드를 DB(PostgreSQL)에 저장한다.
 서버를 다시 켜면 폴더가 사라지는 호스팅이 많아서 폴더 저장은 운영에 쓰지 않는다.
 
 필요한 환경 변수 (호스팅의 환경 변수 설정에 넣는다. 코드·GitHub에는 쓰지 않는다):
@@ -80,7 +80,7 @@ docker build -t pubgg .
 docker run -p 8080:8080 -e PUBG_API_KEY=키 -e DB_URL=jdbc:postgresql://호스트:5432/DB이름 -e DB_USER=사용자 -e DB_PASSWORD=비밀번호 pubgg
 ```
 
-서버가 켜지면 `player_card` 테이블을 자동으로 만든다 (`src/main/resources/db/schema.sql`).
+서버가 켜지면 `share_card` 테이블을 자동으로 만든다 (`src/main/resources/db/schema.sql`). 예전 `player_card` 테이블은 더 이상 쓰지 않는다 (자동으로 지우지 않으니 필요하면 직접 `DROP TABLE player_card`).
 
 ## 폴더 구조
 
@@ -90,7 +90,7 @@ src/main/java/gg/pub/
 ├── web/
 │   ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 │   ├── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
-│   └── CardController.java    "/card" 플레이어 카드, "/api/card" 저장, "/card/image" 미리보기 그림
+│   └── CardController.java    "/card" 공유 카드(B카드) 꾸미기, "/api/share" 공유 링크 만들기, "/s/{id}/image" 미리보기 그림
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 최근 30경기 동시에 받기 + 경쟁전 10경기로 카드
@@ -125,12 +125,12 @@ src/main/java/gg/pub/
     ├── CacheConfig.java       캐시 켜기
     └── ClockConfig.java       현재 시각 (테스트에서 바꿀 수 있게)
 
-src/main/java/gg/pub/card/      플레이어 카드 저장 (CardStore 인터페이스 → 로컬은 FileCardStore, 운영(prod 프로필)은 JdbcCardStore)
+src/main/java/gg/pub/card/      공유 카드(B카드) 저장 (CardStore 인터페이스 → 로컬은 FileCardStore, 운영(prod 프로필)은 JdbcCardStore)
 
 src/main/resources/
 ├── application.properties     설정 (로컬 기본)
 ├── application-prod.properties 운영 설정 (포트, DB 연결, 프록시 헤더). prod 프로필에서만 적용
-├── db/schema.sql              운영 DB 테이블 정의 (player_card)
+├── db/schema.sql              운영 DB 테이블 정의 (share_card)
 ├── templates/
 │   ├── fragments/topbar.html  모든 페이지 상단 바 (로고 + 닉네임 검색)
 │   ├── index.html             첫 화면(히어로)
@@ -139,9 +139,9 @@ src/main/resources/
 ├── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 ├── static/images/maps/tiles/  리플레이 지도 조각 (아래 "리플레이 지도 조각" 참고)
 ├── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
-├── static/js/card-render.js   플레이어 카드 그리기 (꾸미기 화면·전적 프로필 공용, 캔버스)
+├── static/js/card-render.js   플레이어 카드 그리기 (공유 카드 꾸미기 화면·전적 A카드 공용, 캔버스)
 ├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·PNG 저장
-├── static/js/card-profile.js  전적 화면 왼쪽 위 플레이어 카드
+├── static/js/card-profile.js  전적 화면 왼쪽 위 플레이어 카드 (A카드)
 └── static/images/card/        플레이어 카드 그림 (무기 42종, 티어 아이콘·테두리, 글자 없는 맵)
 
 DESIGN.md                      디자인 기준 파일
