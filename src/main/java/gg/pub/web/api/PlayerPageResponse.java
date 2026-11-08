@@ -128,10 +128,10 @@ public record PlayerPageResponse(String nickname,
     public record Dot(double x, double y) {
     }
 
-    /** 자기장 운. percent: 100 = 중심, 0 = 경계·밖. bars 는 판마다 막대 높이(%) */
-    public record ZoneLuckDto(int percent, String verdict, List<Integer> bars) {
+    /** 자기장 운. percent: 100 = 중심, 0 = 경계·밖. matchPercents 는 판마다 값, bars 는 판마다 막대 높이(%) */
+    public record ZoneLuckDto(int percent, String verdict, List<Integer> matchPercents, List<Integer> bars) {
         static ZoneLuckDto from(PlayCard c) {
-            return new ZoneLuckDto(c.zoneLuckPercent(), c.zoneLuckVerdict(), c.zoneLuckBars());
+            return new ZoneLuckDto(c.zoneLuckPercent(), c.zoneLuckVerdict(), c.zoneLuckMatchPercents(), c.zoneLuckBars());
         }
     }
 

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/client';
 import { usePlayer, useRefreshPlayer } from '../api/queries';
 import type { SearchTarget } from '../lib/location';
+import { DetailsPanel } from './DetailsPanel';
 import { IdCard } from './IdCard';
 import { useMatchFilters } from '../store/matchFilters';
 import { usePlayerLists } from '../store/players';
 import { MatchList } from './MatchList';
+import { CompareBox, TeammatesBox } from './SideBoxes';
 
 export function errorText(error: ApiError): string {
   if (error.code === 'RATE_LIMITED' && error.retryAfterSec) {
@@ -73,9 +75,15 @@ export function PlayerScreen({ target }: { target: SearchTarget }) {
         />
       </aside>
       <div className="feed">
+        {data.card && <DetailsPanel card={data.card} />}
         <MatchList matches={data.matches} shard={data.platform.shard} nickname={data.nickname} />
       </div>
-      <aside className="side side--extra" />
+      <aside className="side side--extra">
+        {data.card && data.season && data.seasonComparison.length > 0 && (
+          <CompareBox rows={data.seasonComparison} card={data.card} season={data.season} />
+        )}
+        {data.matches.length > 0 && <TeammatesBox teammates={data.teammates} shard={data.platform.shard} />}
+      </aside>
     </>
   );
 }

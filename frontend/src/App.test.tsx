@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
-import { match, page } from './test/fixtures';
+import { card, match, page, season, shareCard } from './test/fixtures';
 import { RECENT_KEY, usePlayerLists } from './store/players';
 
 vi.mock('./lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
@@ -44,6 +44,39 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
     expect(screen.getByText(/플레이 카드를 분석하는 중이에요/)).toBeInTheDocument();
     expect(screen.getByText('최근 1경기')).toBeInTheDocument();
+  });
+
+  it('카드가 있으면 상세 패널과 시즌 비교·팀원 상자까지 그린다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        json(
+          200,
+          page({
+            cardStatus: 'ready',
+            card: card(),
+            shareCard,
+            season,
+            seasonComparison: [{ label: 'KDA', recent: '3.25', season: '2.76', trend: 1 }],
+            teammates: [{ name: 'Buddy', games: 5, wins: 1, avgRank: 4.1 }],
+            matches: [match()],
+          }),
+        ),
+      ),
+    );
+    renderApp();
+    expect(await screen.findByText('주무기')).toBeInTheDocument();
+    expect(screen.getByText('자기장 운 · 보통')).toBeInTheDocument();
+    expect(screen.getByText(/최근 vs 이번 시즌/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Buddy' })).toBeInTheDocument();
+  });
+
+  it('카드가 없으면 상세 패널과 시즌 비교는 그리지 않는다', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ cardStatus: 'pending', matches: [match()] }))));
+    renderApp();
+    await screen.findByRole('heading', { name: 'N0-RU' });
+    expect(screen.queryByText('주무기')).not.toBeInTheDocument();
+    expect(screen.queryByText(/최근 vs 이번 시즌/)).not.toBeInTheDocument();
   });
 
   it('전적을 받으면 최근 검색에 서버가 알려준 이름으로 기록한다', async () => {
