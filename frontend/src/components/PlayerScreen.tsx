@@ -39,8 +39,9 @@ export function PlayerScreen({ target }: { target: SearchTarget }) {
 
   if (player.isPending) {
     return (
-      <div className="feed">
-        <p className="recent__empty" role="status">
+      <div className="statescreen">
+        <p className="loading" role="status">
+          <span className="loading__spinner" aria-hidden="true" />
           전적을 불러오는 중이에요…
         </p>
       </div>

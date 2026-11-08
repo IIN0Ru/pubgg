@@ -2640,8 +2640,35 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .idcard__actions .idcard__make { margin-top: 0; }
 
 /* 검색 실패 화면 (React 화면의 오류 3종: 없는 플레이어 / 요청 한도 / 서버·연결 오류). 가운데 정렬 */
-/* 오류일 때는 카드·목록 칸이 없으니 격자 전체 폭을 써서 화면 가운데에 놓는다 */
-.errorscreen { grid-area: 1 / 1 / -1 / -1; min-width: 0; }
+/* 불러오는 중·오류일 때는 카드·목록 칸이 없으니 격자 전체 폭을 써서 화면 가운데에 놓는다 */
+.statescreen { grid-area: 1 / 1 / -1 / -1; min-width: 0; }
+
+/* 전적을 불러오는 중 */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    padding: 96px 0;
+    font-size: 16px;
+    color: var(--body);
+}
+
+.loading__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--hairline-strong);
+    border-top-color: var(--primary-text);
+    border-radius: 50%;
+    animation: loading-spin 0.9s linear infinite;
+}
+
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .loading__spinner { animation: none; border-top-color: var(--hairline-strong); }
+}
 
 .errorbox {
     max-width: 560px;
@@ -2651,9 +2678,11 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .errorbox__title {
-    margin: 0 0 8px;
-    font-size: 20px;
+    margin: 0 0 12px;
+    font-size: 24px;
     font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
     color: var(--ink);
 }
 
@@ -2673,9 +2702,13 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 
 .errorbox__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: 40px;
     padding: 0 20px;
     border: 0;
+    text-decoration: none;
     border-radius: var(--radius);
     background: var(--primary);
     color: var(--on-primary);
@@ -2689,7 +2722,10 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .errorbox__button:disabled { opacity: 0.5; cursor: not-allowed; background: var(--primary); }
 .errorbox__button:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
 
-.errorbox__link {
-    font-size: 14px;
-    color: var(--body);
+.errorbox__button--ghost {
+    background: var(--surface-elevated);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
 }
+
+.errorbox__button--ghost:hover { background: var(--hairline); }
