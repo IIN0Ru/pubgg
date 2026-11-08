@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { FAVORITES_KEY, usePlayerLists } from '../store/players';
 import { IdCard } from './IdCard';
 import { page, shareCard } from '../test/fixtures';
 import { drawProfileCard } from '../lib/cardRenderer';
@@ -24,6 +25,11 @@ const season = {
 };
 
 describe('IdCard', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    usePlayerLists.getState().reload();
+  });
+
   it('카드가 있으면 캔버스를 그리고, 카드 아래에 플랫폼과 RP 를 보여준다', () => {
     render(<IdCard player={page({ cardStatus: 'ready', shareCard, season })} refreshing={false} refreshMessage={null} onRefresh={noop} />);
     expect(screen.getByRole('img', { name: 'N0-RU 플레이어 카드' })).toBeInTheDocument();
@@ -69,5 +75,23 @@ describe('IdCard', () => {
     expect(screen.getByText('· 갱신 중…')).toBeInTheDocument();
     expect(screen.getByText('방금 갱신했어요.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '전적 갱신' })).toBeDisabled();
+  });
+
+  it('☆ 를 누르면 즐겨찾기에 저장되고 ★ 로 바뀐다 (카드 있는 화면과 없는 화면 모두)', () => {
+    const { unmount } = render(
+      <IdCard player={page({ cardStatus: 'ready', shareCard, season })} refreshing={false} refreshMessage={null} onRefresh={noop} />,
+    );
+    const star = screen.getByRole('button', { name: '즐겨찾기에 추가' });
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(star);
+    expect(screen.getByRole('button', { name: '즐겨찾기에서 빼기' })).toHaveAttribute('aria-pressed', 'true');
+    expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([
+      { platform: 'steam', nickname: 'N0-RU', label: '스팀' },
+    ]);
+    unmount();
+
+    // 카드가 없는 화면에서도 같은 상태를 보여준다
+    render(<IdCard player={page({ cardStatus: 'pending' })} refreshing={false} refreshMessage={null} onRefresh={noop} />);
+    expect(screen.getByRole('button', { name: '즐겨찾기에서 빼기' })).toBeInTheDocument();
   });
 });

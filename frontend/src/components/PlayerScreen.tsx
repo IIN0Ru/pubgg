@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/client';
 import { usePlayer, useRefreshPlayer } from '../api/queries';
 import type { SearchTarget } from '../lib/location';
 import { IdCard } from './IdCard';
+import { useMatchFilters } from '../store/matchFilters';
+import { usePlayerLists } from '../store/players';
 import { MatchList } from './MatchList';
 
 export function errorText(error: ApiError): string {
@@ -18,6 +20,19 @@ export function PlayerScreen({ target }: { target: SearchTarget }) {
   const player = usePlayer(shard, nickname);
   const refresh = useRefreshPlayer(shard, nickname);
   const [notice, setNotice] = useState<string | null>(null);
+  const remember = usePlayerLists((s) => s.remember);
+  const resetFilters = useMatchFilters((s) => s.reset);
+
+  // 다른 플레이어를 열면 필터와 "더 보기"를 처음 상태로 되돌린다
+  useEffect(() => {
+    resetFilters();
+  }, [shard, nickname, resetFilters]);
+
+  // 전적을 받아오면 최근 검색에 기록한다 (서버가 알려준 정확한 닉네임·플랫폼 이름으로)
+  const loaded = player.data;
+  useEffect(() => {
+    if (loaded) remember({ platform: loaded.platform.shard, nickname: loaded.nickname, label: loaded.platform.label });
+  }, [loaded?.nickname, loaded?.platform.shard, loaded?.platform.label, remember]);
 
   if (player.isPending) {
     return (

@@ -1,7 +1,10 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { useMatchFilters } from '../store/matchFilters';
 import { MatchList } from './MatchList';
 import { match, player } from '../test/fixtures';
+
+beforeEach(() => useMatchFilters.getState().reset());
 
 function renderList(matches = [match()]) {
   render(<MatchList matches={matches} shard="steam" nickname="N0-RU" />);
@@ -70,5 +73,53 @@ describe('MatchList', () => {
     renderList([match({ me: player({ headshotKills: 4, longestKill: 212 }) })]);
     expect(screen.getByText('212m')).toBeInTheDocument();
     expect(screen.getByText('끝까지 생존', { selector: 'strong' })).toBeInTheDocument();
+  });
+
+  describe('필터·요약·더 보기', () => {
+    const mixed = [
+      match({ matchId: 'a', type: 'competitive', perspective: 'fpp', rank: 1 }),
+      match({ matchId: 'b', type: 'competitive', perspective: 'tpp', rank: 5 }),
+      match({ matchId: 'c', type: 'official', perspective: 'fpp', rank: 20 }),
+    ];
+    const rows = () => screen.getAllByRole('listitem').filter((li) => li.classList.contains('match'));
+
+    it('처음엔 전체 경기와 요약을 보여준다', () => {
+      renderList(mixed);
+      expect(screen.getByText('최근 3경기')).toBeInTheDocument();
+      expect(screen.getByText('3판 · 평균 #8.7 · 치킨 1 · TOP 10 67%')).toBeInTheDocument();
+    });
+
+    it('경기 종류 필터를 누르면 목록과 요약이 바뀐다', () => {
+      renderList(mixed);
+      fireEvent.click(within(screen.getByRole('group', { name: '경기 종류' })).getByRole('button', { name: '일반' }));
+      expect(rows()).toHaveLength(1);
+      expect(screen.getByText('최근 1경기')).toBeInTheDocument();
+      expect(screen.getByText('1판 · 평균 #20.0 · 치킨 0 · TOP 10 0%')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('group', { name: '경기 종류' })).getByRole('button', { name: '일반' }),
+      ).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('종류와 시점 필터를 같이 걸 수 있다', () => {
+      renderList(mixed);
+      fireEvent.click(within(screen.getByRole('group', { name: '경기 종류' })).getByRole('button', { name: '경쟁' }));
+      fireEvent.click(within(screen.getByRole('group', { name: '시점' })).getByRole('button', { name: 'TPP' }));
+      expect(rows()).toHaveLength(1);
+    });
+
+    it('조건에 맞는 경기가 없으면 안내한다', () => {
+      renderList([match({ type: 'competitive', perspective: 'fpp' })]);
+      fireEvent.click(within(screen.getByRole('group', { name: '시점' })).getByRole('button', { name: 'TPP' }));
+      expect(screen.getByText('이 조건에 맞는 경기가 없어요.')).toBeInTheDocument();
+      expect(screen.queryByText(/평균 #/)).not.toBeInTheDocument();
+    });
+
+    it('20경기씩 보여주고 더 보기로 이어서 보여준다', () => {
+      renderList(Array.from({ length: 30 }, (_, i) => match({ matchId: `m${i}`, rank: i + 1 })));
+      expect(rows()).toHaveLength(20);
+      fireEvent.click(screen.getByRole('button', { name: '더 보기 (10경기 남음)' }));
+      expect(rows()).toHaveLength(30);
+      expect(screen.queryByRole('button', { name: /더 보기/ })).not.toBeInTheDocument();
+    });
   });
 });

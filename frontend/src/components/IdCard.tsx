@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PlayerPage } from '../api/types';
 import { formatCountdown, formatRankPoint, formatRelativeTime } from '../lib/format';
+import { FavoriteButton } from './FavoriteButton';
 import { PlayerCanvas } from './PlayerCanvas';
 
 interface Props {
@@ -15,6 +16,7 @@ export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props)
   const cardHref = `/card?${new URLSearchParams({ platform: player.platform.shard, nickname: player.nickname }).toString()}`;
   const wait = useCountdown(player.refreshAvailableInSec, player.updatedAt);
   const season = player.season;
+  const saved = { platform: player.platform.shard, nickname: player.nickname, label: player.platform.label };
 
   const bar = (
     <>
@@ -52,6 +54,7 @@ export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props)
           <span className="idcard__platform">{player.platform.label}</span>
           {season?.placed && <span className="idcard__rp">{formatRankPoint(season.rankPoint)}</span>}
           <div className="refresh">{bar}</div>
+          <FavoriteButton player={saved} />
         </div>
         {refreshMessage !== null && (
           <p className="refresh__message" role="status">
@@ -77,6 +80,7 @@ export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props)
       </div>
       <div className="idcard__head">
         <h1 className="idcard__name">{player.nickname}</h1>
+        <FavoriteButton player={saved} />
       </div>
       {season !== null && (
         <p className="rank">
