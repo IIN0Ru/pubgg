@@ -19,7 +19,7 @@ export function errorKind(error: ApiError): ErrorKind {
 
 const TITLES: Record<ErrorKind, string> = {
   'not-found': '플레이어를 찾지 못했어요',
-  'rate-limited': '요청이 너무 많아요',
+  'rate-limited': '잠시만 기다려 주세요',
   upstream: '전적을 불러오지 못했어요',
   'bad-request': '검색 값을 확인해 주세요',
 };
@@ -56,7 +56,7 @@ export function ErrorScreen({ error, onRetry, retrying }: Props) {
   const waiting = kind === 'rate-limited' && left > 0;
 
   return (
-    <div className="errorscreen">
+    <div className="statescreen">
       <section className="notice errorbox" role="alert" data-error-kind={kind}>
         <h1 className="errorbox__title">{TITLES[kind]}</h1>
         {/* 없는 플레이어는 서버 문구가 제목과 같은 말("…찾지 못했어요")이라 확인 방법만 보여준다 */}
@@ -76,7 +76,8 @@ export function ErrorScreen({ error, onRetry, retrying }: Props) {
               {retrying ? '불러오는 중…' : '다시 시도'}
             </button>
           )}
-          <a className="errorbox__link" href="/">
+          {/* 다시 시도가 없는 오류(없는 플레이어)는 첫 화면이 눈에 띄는 버튼, 있으면 보조 버튼 */}
+          <a className={canRetry ? 'errorbox__button errorbox__button--ghost' : 'errorbox__button'} href="/">
             첫 화면으로
           </a>
         </div>
