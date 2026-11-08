@@ -160,6 +160,7 @@ src/main/resources/
 
 frontend/                      React + TypeScript 화면 (Vite). M1: 검색 결과 화면을 Spring JSON API 위로 옮기는 중
 ├── src/api/                   서버 호출(client.ts), 응답 타입(types.ts), React Query 훅(queries.ts)
+├── src/components/            PlayerScreen(화면 연결), IdCard, PlayerCanvas(A카드), MatchList, MatchItem
 ├── src/store/                 화면 설정 상태 (Zustand): 경기 필터
 └── src/lib/                   표시 글자 만들기(format.ts), 주소 읽기(location.ts)
 

@@ -146,15 +146,16 @@ public record PlayerPageResponse(String nickname,
     /**
      * 경기 하나. type: competitive / official / other, perspective: fpp / tpp.
      * replayAvailable 은 2D 리플레이를 볼 수 있는 경기(경쟁전)인지.
+     * rank 는 내 팀 등수, teams 는 참가 팀 수("#3 / 25").
      * rank 가 1 이면 치킨, 10 이하면 TOP 10 — 표시 글자는 프론트가 정한다.
      */
     public record MatchDto(String matchId, Instant playedAt, String type, String typeLabel, String perspective,
                            String gameMode, String modeLabel, String mapName, String mapLabel,
-                           int rank, boolean replayAvailable, MatchPlayerDto me, List<MatchPlayerDto> teammates) {
+                           int rank, int teams, boolean replayAvailable, MatchPlayerDto me, List<MatchPlayerDto> teammates) {
         static MatchDto from(MatchRecord m) {
             return new MatchDto(m.matchId(), m.playedAt(), m.typeKey(), m.matchTypeLabel(), m.perspectiveKey(),
                     m.gameMode(), m.mode(), m.mapName(), m.map(),
-                    m.rank(), m.isCompetitive(),
+                    m.rank(), m.teams(), m.isCompetitive(),
                     MatchPlayerDto.from(m.me()),
                     m.teammates().stream().map(MatchPlayerDto::from).toList());
         }

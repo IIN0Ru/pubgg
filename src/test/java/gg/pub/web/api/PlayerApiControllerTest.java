@@ -105,6 +105,7 @@ class PlayerApiControllerTest {
                 .andExpect(jsonPath("$.matches[0].perspective").value("fpp"))
                 .andExpect(jsonPath("$.matches[0].modeLabel").value("스쿼드 FPP"))
                 .andExpect(jsonPath("$.matches[0].rank").value(1))
+                .andExpect(jsonPath("$.matches[0].teams").value(16))
                 .andExpect(jsonPath("$.matches[0].replayAvailable").value(true))
                 .andExpect(jsonPath("$.matches[0].me.accountId").value("account.me"))
                 .andExpect(jsonPath("$.matches[0].me.damage").value(412))

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { formatCountdown, formatKda, formatRankPoint, formatRelativeTime, formatSurvived, resultBadge } from './format';
+import {
+  formatCountdown,
+  formatKda,
+  formatPlayedAt,
+  formatRankPoint,
+  formatRelativeTime,
+  formatSurvived,
+  matchRankClass,
+  resultBadge,
+} from './format';
 
 describe('formatRelativeTime', () => {
   const now = Date.parse('2026-11-08T12:00:00Z');
@@ -30,5 +39,25 @@ describe('resultBadge', () => {
     expect(resultBadge(10)).toBe('TOP 10');
     expect(resultBadge(11)).toBe('');
     expect(resultBadge(0)).toBe('');
+  });
+});
+
+describe('formatPlayedAt', () => {
+  it('한국 시간으로 보여준다', () => {
+    // 2026-10-19 12:34 UTC = 21:34 KST
+    expect(formatPlayedAt('2026-10-19T12:34:00Z')).toBe('10월 19일 21:34');
+  });
+});
+
+describe('matchRankClass', () => {
+  it('등수별 띠 클래스', () => {
+    expect([1, 2, 3, 4, 10, 11].map(matchRankClass)).toEqual([
+      'match--win',
+      'match--second',
+      'match--third',
+      'match--top10',
+      'match--top10',
+      '',
+    ]);
   });
 });

@@ -5,13 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>펍지지 (새 화면 미리보기)</title>
     <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#FFD02F">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <script th:replace="~{fragments/theme :: init}"></script>
     <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
 </head>
 <body>
-<!-- React(frontend/)가 여기를 그린다. 빌드 결과는 Docker 빌드가 static/app/assets/ 에 넣는다 -->
+
+<header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
+
+<!-- React(frontend/)가 이 안을 그린다 (왼쪽 카드 / 경기 목록 / 보조 정보 세 칸). 빌드 결과는 Docker 빌드가 static/app/assets/ 에 넣는다 -->
 <main class="page" id="root"></main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<!-- 상단 검색창의 즐겨찾기·최근 검색, 검색 중 표시, 다크/라이트 전환은 기존 스크립트를 그대로 쓴다 -->
+<script src="/js/players.js" th:src="@{/js/players.js}"></script>
+<script src="/js/loading.js" th:src="@{/js/loading.js}"></script>
+<script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
 <script type="module" src="/app/assets/app.js" th:src="@{/app/assets/app.js}"></script>
 </body>
 </html>
