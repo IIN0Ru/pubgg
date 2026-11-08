@@ -88,6 +88,11 @@ class PlayerApiControllerTest {
                 .andExpect(jsonPath("$.card.styleTags[0]").value("센터 운영"))
                 .andExpect(jsonPath("$.card.zone.edgePercent").value(40))
                 .andExpect(jsonPath("$.card.farming.farmStyle").value("대도시파밍"))
+                .andExpect(jsonPath("$.card.zoneLuck.percent").value(70))
+                .andExpect(jsonPath("$.card.zoneLuck.matchPercents[0]").value(70))
+                .andExpect(jsonPath("$.card.zoneLuck.bars").isArray())
+                .andExpect(jsonPath("$.seasonComparison").isArray())
+                .andExpect(jsonPath("$.teammates").isArray())
                 .andExpect(jsonPath("$.shareCard.nickname").value("N0-RU"))
                 .andExpect(jsonPath("$.clan.label").value("[HLMT] 헬멧연구소"))
                 .andExpect(jsonPath("$.matches.length()").value(2));

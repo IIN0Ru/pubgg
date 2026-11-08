@@ -65,6 +65,9 @@ export interface ZoneLuck {
   /** 100 = 중심, 0 = 경계·밖 */
   percent: number;
   verdict: string;
+  /** 판마다 자기장 운 (%) */
+  matchPercents: number[];
+  /** 판마다 막대 높이 (%) */
   bars: number[];
 }
 
