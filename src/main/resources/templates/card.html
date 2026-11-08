@@ -21,7 +21,7 @@
 
     <p class="pcard__notice" th:if="${errorMessage != null}" th:text="${errorMessage}">플레이어를 찾지 못했어요.</p>
     <p class="pcard__notice" th:if="${errorMessage == null and card == null}">
-        최근 30경기 안에 경쟁전 기록이 없어서 플레이어 카드를 만들지 못했어요.
+        최근 30경기 안에 경쟁전·일반 경기 기록이 없어서 플레이어 카드를 만들지 못했어요.
     </p>
 
     <div class="pcard__layout" th:if="${card != null}">
@@ -39,7 +39,7 @@
 
         <form class="pcard__edit" data-card-form aria-label="카드 꾸미기">
             <h1 class="pcard__title">공유 카드</h1>
-            <p class="pcard__lead">전투 태그는 최근 경쟁전 기록으로 자동으로 붙어요. 성향은 직접 골라 주세요. 공유할 때만 보이고, 전적 화면에는 나오지 않아요.</p>
+            <p class="pcard__lead">전투 태그는 최근 <span th:text="${card != null and card.scope() == 'normal'} ? '일반 경기' : '경쟁전'">경쟁전</span> 기록으로 자동으로 붙어요. 성향은 직접 골라 주세요. 공유할 때만 보이고, 전적 화면에는 나오지 않아요.</p>
 
             <fieldset class="pick">
                 <legend>마이크</legend>

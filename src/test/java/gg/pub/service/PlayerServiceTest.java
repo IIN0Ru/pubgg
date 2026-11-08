@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.config.PubgApiProperties;
 import gg.pub.domain.MatchPlayer;
 import gg.pub.domain.MatchRecord;
+import gg.pub.domain.PlayCard;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayerMatches;
 import gg.pub.domain.SeasonRank;
@@ -119,6 +120,54 @@ class PlayerServiceTest {
         service.getRecentMatches(Platform.STEAM, "N0-RU");
 
         verify(playCardService).build(argThat(list -> list.size() == 2), eq("account.test0001"));
+    }
+
+    /** 예시 경기를 일반 경기(official)로 바꾼 것 */
+    private MatchResponse normalMatch() throws IOException {
+        try (InputStream in = getClass().getResourceAsStream("/pubg/match.json")) {
+            String json = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
+                    .replace("\"competitive\"", "\"official\"");
+            return mapper.readValue(json, MatchResponse.class);
+        }
+    }
+
+    private static PlayCard sampleCard() {
+        return new PlayCard(2, 5, 1, 1, 300, "FPP", java.util.List.of(), 1.0, 2, null, java.util.List.of(), null,
+                java.util.List.of(), null);
+    }
+
+    @Test
+    void 경쟁전이_한_판도_없으면_일반_경기로_카드를_만든다() throws IOException {
+        PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
+        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.getMatch(any(), anyString())).thenReturn(normalMatch());
+        when(playCardService.build(any(), anyString())).thenReturn(Optional.of(sampleCard()));
+
+        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "N0-RU");
+        PlayCard card = service.buildCard(basics);
+
+        assertThat(basics.needsCard()).isTrue();
+        assertThat(basics.normalScope()).isTrue();
+        verify(playCardService).build(argThat(list -> list.size() == 2), eq("account.test0001"));
+        assertThat(card.isNormal()).isTrue();
+        assertThat(card.scope()).isEqualTo("normal");
+    }
+
+    @Test
+    void 경쟁전이_있으면_일반_경기는_섞지_않는다() throws IOException {
+        PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
+        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.getMatch(any(), eq("match-0001"))).thenReturn(read("/pubg/match.json", MatchResponse.class));
+        when(client.getMatch(any(), eq("match-0002"))).thenReturn(normalMatch());
+        when(playCardService.build(any(), anyString())).thenReturn(Optional.of(sampleCard()));
+
+        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "N0-RU");
+        PlayCard card = service.buildCard(basics);
+
+        assertThat(basics.normalScope()).isFalse();
+        verify(playCardService).build(argThat(list -> list.size() == 1 && list.get(0).isCompetitive()),
+                eq("account.test0001"));
+        assertThat(card.isNormal()).isFalse();
     }
 
     @Test

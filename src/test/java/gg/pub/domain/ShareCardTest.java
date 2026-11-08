@@ -110,4 +110,37 @@ class ShareCardTest {
         assertThat(new Clan("헬멧연구소", "").label()).isEqualTo("헬멧연구소");
         assertThat(new Clan("헬멧연구소", "HLMT").label()).isEqualTo("[HLMT] 헬멧연구소");
     }
+
+    /** 일반 경기(official) 한 판 */
+    private static MatchRecord normalGame(int kills, int heads, int rank) {
+        MatchPlayer me = new MatchPlayer("N0-RU", "me", kills, 0, 0, 0, rank, 0, heads, 0, 0, "alive");
+        return new MatchRecord("x", Instant.parse("2026-10-19T13:10:00Z"), "squad-fpp", "Baltic_Main", "official",
+                16, null, me, List.of());
+    }
+
+    @Test
+    void 일반_경기로_만든_카드는_일반_경기로_세고_시즌_비교는_하지_않는다() {
+        // 경쟁전 1판(오래된 기록)이 섞여 있어도, 일반 카드는 일반 경기만 센다
+        List<MatchRecord> games = List.of(normalGame(4, 2, 3), normalGame(2, 0, 15), game("Desert_Main", 9, 9, 1));
+        SeasonRank season = new SeasonRank("squad-fpp", "Diamond", "2", 3100, 80, 3.0, 400, 6.0, 60);
+        PlayCard normal = card(2).withScope(PlayCard.NORMAL);
+        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, normal, season, games, null);
+
+        ShareCard c = ShareCard.from(result).orElseThrow();
+
+        assertThat(c.scope()).isEqualTo("normal");
+        // 일반 2판: 헤드샷 2/6 = 33%, TOP10 1/2 = 50%
+        assertThat(c.combatTags()).contains("헤드샷 33%", "TOP10 50%");
+        assertThat(result.seasonComparison()).isEmpty();
+    }
+
+    @Test
+    void 경쟁전_카드는_경쟁전으로_표시되고_시즌_비교가_있다() {
+        List<MatchRecord> games = List.of(game("Desert_Main", 4, 2, 3), game("Desert_Main", 2, 0, 15));
+        SeasonRank season = new SeasonRank("squad-fpp", "Diamond", "2", 3100, 80, 3.0, 400, 6.0, 60);
+        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card(2), season, games, null);
+
+        assertThat(ShareCard.from(result).orElseThrow().scope()).isEqualTo("competitive");
+        assertThat(result.seasonComparison()).isNotEmpty();
+    }
 }

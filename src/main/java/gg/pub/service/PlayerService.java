@@ -66,13 +66,18 @@ public class PlayerService {
      * 카드를 뺀 1단계 결과. 화면은 이걸로 먼저 그리고, 카드(텔레메트리 분석, 제일 오래 걸림)는 따로 만든다.
      *
      * @param result      카드가 비어 있는 검색 결과 (경기 목록·시즌·클랜 포함)
-     * @param competitive 카드를 만들 최신 경쟁전 경기
+     * @param cardMatches 카드를 만들 최신 경기들: 경쟁전이 있으면 경쟁전, 한 판도 없으면 일반 경기
      * @param accountId   PUBG 계정 ID
      */
-    public record Basics(PlayerMatches result, List<MatchRecord> competitive, String accountId) {
-        /** 카드를 만들 경쟁전 경기가 하나라도 있으면 true */
+    public record Basics(PlayerMatches result, List<MatchRecord> cardMatches, String accountId) {
+        /** 카드를 만들 경기가 하나라도 있으면 true */
         public boolean needsCard() {
-            return !competitive.isEmpty();
+            return !cardMatches.isEmpty();
+        }
+
+        /** 카드가 일반 경기로 만들어지는지 (경쟁전이 없을 때) */
+        public boolean normalScope() {
+            return !cardMatches.isEmpty() && !cardMatches.get(0).isCompetitive();
         }
     }
 
@@ -108,25 +113,36 @@ public class PlayerService {
         long end = System.nanoTime();
 
         String exactName = player.attributes() != null ? player.attributes().name() : nickname;
-        List<MatchRecord> competitive = matches.stream()
+        // 카드는 경쟁전이 기준. 최근 경기에 경쟁전이 한 판도 없을 때만 일반 경기로 대신 만든다 (둘을 섞지는 않는다)
+        List<MatchRecord> cardMatches = matches.stream()
                 .filter(MatchRecord::isCompetitive)
                 .limit(cardMatchLimit)
                 .toList();
+        if (cardMatches.isEmpty()) {
+            cardMatches = matches.stream()
+                    .filter(MatchRecord::isNormal)
+                    .limit(cardMatchLimit)
+                    .toList();
+        }
 
         log.info("검색 1단계 [{}] 합계 {}ms = 선수조회 {}ms + (경기 {}/{}개 받기 · 시즌 · 클랜 동시에) {}ms",
                 platform.getShard(), ms(start, end), ms(start, afterPlayer),
                 matches.size(), matchIds.size(), ms(afterPlayer, end));
-        return new Basics(new PlayerMatches(exactName, platform, null, season, matches, clan), competitive, accountId);
+        return new Basics(new PlayerMatches(exactName, platform, null, season, matches, clan), cardMatches, accountId);
     }
 
-    /** 2단계: 카드 만들기 (텔레메트리 분석). 경쟁전 기록이 없으면 null */
+    /** 2단계: 카드 만들기 (텔레메트리 분석). 경쟁전도 일반 경기도 없으면 null */
     public PlayCard buildCard(Basics basics) {
         long start = System.nanoTime();
         Runtime rt = Runtime.getRuntime();
-        PlayCard card = playCardService.build(basics.competitive(), basics.accountId()).orElse(null);
+        PlayCard card = playCardService.build(basics.cardMatches(), basics.accountId()).orElse(null);
+        if (card != null && basics.normalScope()) {
+            card = card.withScope(PlayCard.NORMAL);
+        }
         // 서버가 얼마나 작은지 확인하려고 같이 남긴다 (CPU 개수, 쓸 수 있는 최대 메모리)
-        log.info("카드 만들기 [{}] 경쟁전 {}판 {}ms (서버 CPU {}개, 최대 메모리 {}MB)",
-                basics.result().platform().getShard(), basics.competitive().size(), ms(start, System.nanoTime()),
+        log.info("카드 만들기 [{}] {} {}판 {}ms (서버 CPU {}개, 최대 메모리 {}MB)",
+                basics.result().platform().getShard(), basics.normalScope() ? "일반" : "경쟁전",
+                basics.cardMatches().size(), ms(start, System.nanoTime()),
                 rt.availableProcessors(), rt.maxMemory() / (1024 * 1024));
         return card;
     }

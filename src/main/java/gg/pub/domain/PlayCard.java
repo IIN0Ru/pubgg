@@ -22,6 +22,7 @@ import java.util.Locale;
  * @param zoneLuckMatchPercents 위 값을 경기마다
  * @param farming           착지 성향, 3페이즈 시작 가방 상태
  * @param mainThrowable     가장 많이 던진 투척무기와 판당 횟수 (하나도 안 던졌거나 기록이 없으면 null)
+ * @param scope             계산에 쓴 경기 종류: "competitive"(경쟁전, 기본) 또는 "normal"(일반 — 경쟁전이 한 판도 없을 때만)
  */
 public record PlayCard(int matches,
                        int kills,
@@ -37,7 +38,40 @@ public record PlayCard(int matches,
                        Integer zoneLuckPercent,
                        List<Integer> zoneLuckMatchPercents,
                        Farming farming,
-                       ThrowableUsage mainThrowable) {
+                       ThrowableUsage mainThrowable,
+                       String scope) {
+
+    public static final String COMPETITIVE = "competitive";
+    public static final String NORMAL = "normal";
+
+    public PlayCard {
+        if (!NORMAL.equals(scope)) {
+            scope = COMPETITIVE;
+        }
+    }
+
+    /** 경기 종류 없이 (경쟁전으로 본다) */
+    public PlayCard(int matches, int kills, int assists, int deaths, int avgDamage, String perspective,
+                    List<WeaponUsage> mainWeapons, double avgThrowables, int analyzedMatches,
+                    Integer zoneEdgePercent, List<Integer> zoneMatchPercents,
+                    Integer zoneLuckPercent, List<Integer> zoneLuckMatchPercents, Farming farming,
+                    ThrowableUsage mainThrowable) {
+        this(matches, kills, assists, deaths, avgDamage, perspective, mainWeapons, avgThrowables, analyzedMatches,
+                zoneEdgePercent, zoneMatchPercents, zoneLuckPercent, zoneLuckMatchPercents, farming,
+                mainThrowable, COMPETITIVE);
+    }
+
+    /** 일반 경기로 만든 카드인지 */
+    public boolean isNormal() {
+        return NORMAL.equals(scope);
+    }
+
+    /** 경기 종류만 바꾼 카드 */
+    public PlayCard withScope(String newScope) {
+        return new PlayCard(matches, kills, assists, deaths, avgDamage, perspective, mainWeapons, avgThrowables,
+                analyzedMatches, zoneEdgePercent, zoneMatchPercents, zoneLuckPercent, zoneLuckMatchPercents,
+                farming, mainThrowable, newScope);
+    }
 
     /** 주 투척무기 없이 (기존 호출·테스트용) */
     public PlayCard(int matches, int kills, int assists, int deaths, int avgDamage, String perspective,
@@ -45,7 +79,8 @@ public record PlayCard(int matches,
                     Integer zoneEdgePercent, List<Integer> zoneMatchPercents,
                     Integer zoneLuckPercent, List<Integer> zoneLuckMatchPercents, Farming farming) {
         this(matches, kills, assists, deaths, avgDamage, perspective, mainWeapons, avgThrowables, analyzedMatches,
-                zoneEdgePercent, zoneMatchPercents, zoneLuckPercent, zoneLuckMatchPercents, farming, null);
+                zoneEdgePercent, zoneMatchPercents, zoneLuckPercent, zoneLuckMatchPercents, farming, null,
+                COMPETITIVE);
     }
 
     /** KDA = (킬 + 어시스트) ÷ 죽은 판 수. 한 번도 안 죽었으면 (킬 + 어시스트) 그대로 */
