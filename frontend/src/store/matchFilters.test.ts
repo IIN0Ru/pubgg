@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Match } from '../api/types';
-import { filterMatches, useMatchFilters } from './matchFilters';
+import { filterMatches, PAGE_SIZE, useMatchFilters } from './matchFilters';
 
 function match(id: string, type: Match['type'], perspective: Match['perspective']): Match {
   return { matchId: id, type, perspective } as Match;
@@ -25,11 +25,23 @@ describe('filterMatches', () => {
 
 describe('useMatchFilters', () => {
   beforeEach(() => useMatchFilters.getState().reset());
+
   it('값을 바꾸고 되돌린다', () => {
     useMatchFilters.getState().setType('competitive');
     useMatchFilters.getState().setPerspective('tpp');
     expect(useMatchFilters.getState()).toMatchObject({ type: 'competitive', perspective: 'tpp' });
     useMatchFilters.getState().reset();
-    expect(useMatchFilters.getState()).toMatchObject({ type: 'all', perspective: 'all' });
+    expect(useMatchFilters.getState()).toMatchObject({ type: 'all', perspective: 'all', shown: PAGE_SIZE });
+  });
+
+  it('더 보기는 20경기씩 늘리고, 필터를 바꾸면 처음으로 돌아간다', () => {
+    useMatchFilters.getState().showMore();
+    useMatchFilters.getState().showMore();
+    expect(useMatchFilters.getState().shown).toBe(PAGE_SIZE * 3);
+    useMatchFilters.getState().setType('official');
+    expect(useMatchFilters.getState().shown).toBe(PAGE_SIZE);
+    useMatchFilters.getState().showMore();
+    useMatchFilters.getState().setPerspective('fpp');
+    expect(useMatchFilters.getState().shown).toBe(PAGE_SIZE);
   });
 });

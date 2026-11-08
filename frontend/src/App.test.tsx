@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { match, page } from './test/fixtures';
+import { RECENT_KEY, usePlayerLists } from './store/players';
 
 vi.mock('./lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
 
@@ -21,6 +22,11 @@ function renderApp() {
 
 afterEach(() => vi.unstubAllGlobals());
 
+beforeEach(() => {
+  localStorage.clear();
+  usePlayerLists.getState().reload();
+});
+
 describe('App', () => {
   it('잘못된 주소면 안내한다', () => {
     render(
@@ -38,6 +44,15 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
     expect(screen.getByText(/플레이 카드를 분석하는 중이에요/)).toBeInTheDocument();
     expect(screen.getByText('최근 1경기')).toBeInTheDocument();
+  });
+
+  it('전적을 받으면 최근 검색에 서버가 알려준 이름으로 기록한다', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ nickname: 'N0-RU' }))));
+    renderApp();
+    await screen.findByRole('heading', { name: 'N0-RU' });
+    expect(JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')).toEqual([
+      { platform: 'steam', nickname: 'N0-RU', label: '스팀' },
+    ]);
   });
 
   it('없는 플레이어(404)는 서버 문구를 그대로 보여준다', async () => {
