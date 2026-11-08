@@ -2639,7 +2639,17 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .idcard__actions .idcard__share,
 .idcard__actions .idcard__make { margin-top: 0; }
 
-/* 검색 실패 화면 (React 화면의 오류 3종: 없는 플레이어 / 요청 한도 / 서버·연결 오류) */
+/* 검색 실패 화면 (React 화면의 오류 3종: 없는 플레이어 / 요청 한도 / 서버·연결 오류). 가운데 정렬 */
+/* 오류일 때는 카드·목록 칸이 없으니 격자 전체 폭을 써서 화면 가운데에 놓는다 */
+.errorscreen { grid-area: 1 / 1 / -1 / -1; min-width: 0; }
+
+.errorbox {
+    max-width: 560px;
+    margin: 64px auto;
+    padding: 40px 24px;
+    text-align: center;
+}
+
 .errorbox__title {
     margin: 0 0 8px;
     font-size: 20px;
@@ -2657,8 +2667,9 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 16px;
-    margin-top: 16px;
+    margin-top: 24px;
 }
 
 .errorbox__button {

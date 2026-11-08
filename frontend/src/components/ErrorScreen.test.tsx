@@ -20,6 +20,7 @@ describe('ErrorScreen', () => {
     render(<ErrorScreen error={new ApiError('PLAYER_NOT_FOUND', "'x' 플레이어를 찾지 못했어요.", 404)} onRetry={vi.fn()} retrying={false} />);
     expect(screen.getByRole('heading', { name: '플레이어를 찾지 못했어요' })).toBeInTheDocument();
     expect(screen.getByText(/대소문자와 플랫폼/)).toBeInTheDocument();
+    expect(screen.queryByText("'x' 플레이어를 찾지 못했어요.")).not.toBeInTheDocument(); // 제목과 같은 말은 반복하지 않는다
     expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '첫 화면으로' })).toHaveAttribute('href', '/');
   });

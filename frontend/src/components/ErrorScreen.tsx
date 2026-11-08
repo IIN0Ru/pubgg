@@ -56,12 +56,14 @@ export function ErrorScreen({ error, onRetry, retrying }: Props) {
   const waiting = kind === 'rate-limited' && left > 0;
 
   return (
-    <div className="feed">
+    <div className="errorscreen">
       <section className="notice errorbox" role="alert" data-error-kind={kind}>
         <h1 className="errorbox__title">{TITLES[kind]}</h1>
-        <p className="notice__text">{error.message}</p>
-        {kind === 'not-found' && (
-          <p className="notice__text errorbox__hint">닉네임의 대소문자와 플랫폼(스팀/카카오)을 확인해 주세요.</p>
+        {/* 없는 플레이어는 서버 문구가 제목과 같은 말("…찾지 못했어요")이라 확인 방법만 보여준다 */}
+        {kind === 'not-found' ? (
+          <p className="notice__text">닉네임의 대소문자와 플랫폼(스팀/카카오)을 확인해 주세요.</p>
+        ) : (
+          <p className="notice__text">{error.message}</p>
         )}
         {kind === 'rate-limited' && (
           <p className="notice__text errorbox__hint" role="status">
