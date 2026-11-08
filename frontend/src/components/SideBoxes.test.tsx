@@ -40,7 +40,7 @@ describe('TeammatesBox', () => {
         ]}
       />,
     );
-    expect(screen.getByRole('link', { name: 'Duo' })).toHaveAttribute('href', '/next/search?platform=steam&nickname=Duo');
+    expect(screen.getByRole('link', { name: 'Duo' })).toHaveAttribute('href', '/search?platform=steam&nickname=Duo');
     expect(screen.getByText('12경기')).toBeInTheDocument();
     expect(screen.getByText('평균 #4.3')).toBeInTheDocument();
     expect(screen.getByText('치킨 2')).toBeInTheDocument();

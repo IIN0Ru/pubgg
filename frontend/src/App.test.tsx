@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
@@ -104,6 +104,19 @@ describe('App', () => {
     );
     renderApp();
     expect(await screen.findByRole('alert')).toHaveTextContent('60초 뒤');
+  });
+
+  it('서버 오류 뒤 "다시 시도"를 누르면 같은 주소를 다시 불러와 전적을 보여준다', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(() => json(502, { code: 'UPSTREAM_ERROR', message: 'PUBG 서버가 응답하지 않아요.' }))
+      .mockImplementation(() => json(200, page({ matches: [match()] })));
+    vi.stubGlobal('fetch', fetchMock);
+    renderApp();
+    const retry = await screen.findByRole('button', { name: '다시 시도' });
+    fireEvent.click(retry);
+    expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('네트워크가 끊기면 연결 안내를 보여준다', async () => {

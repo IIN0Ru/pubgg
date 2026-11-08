@@ -804,3 +804,21 @@
 ### 확인
 - vitest 70개, 타입체크, 빌드 통과. 가짜 API 로 PC(1280)·폰(375) 화면 확인, 콘솔 오류 없음.
 - 팀원 링크는 아직 `/next/search` 로 간다(4주차에 `/search` 교체하면서 정리).
+
+## 2026-11-08 · M1 4주차: 오류 화면 3종, 기존 /search 를 React 로 교체
+
+### 한 것
+- 오류 화면 `ErrorScreen`: 서버가 준 `code` 로 나눴다. 없는 플레이어(다시 시도 없음, 대소문자·플랫폼 확인 안내) / 요청 한도(남은 초를 세고 0 이 되면 "다시 시도" 활성화) / 서버·연결 오류(바로 다시 시도). 다시 시도는 같은 GET 을 다시 부른다(`refetch`).
+- `/search` 와 `/s/{id}` 가 React 껍데기(`app.html`)를 연다. 옛 `search.html` 과 그것만 쓰던 `matches.js`·`card-profile.js`·`card-wait.js`, `POST /refresh`, `GET /search/card-status`, `/next/search` 는 지웠다(React 가 API 로 대신함). 상단 검색창 드롭다운·팀원 링크가 이제 새 화면으로 간다.
+- 링크 미리보기: 크롤러는 JS 를 안 돌리므로 `app.html` 의 `<head>`(제목·설명·og:image·twitter:card)는 서버가 채운다.
+  - `/s/{id}`: 예전처럼 전적을 불러와(없으면 새로) 제목·설명을 채운다. 전적을 못 불러와도 껍데기와 og:image 는 열린다.
+  - `/search`: 저장된 결과가 있을 때만 제목·설명을 채운다(`findSaved`). 없으면 닉네임만 — 대신 껍데기가 PUBG 응답을 기다리지 않고 바로 뜬다. **바뀐 점**: 저장본이 없을 때 `/search` 링크를 붙이면 미리보기 문구가 예전보다 단순하다. 공유는 `/s/{id}` 가 주 경로라서 감수.
+- React 가 읽는 검색 대상은 껍데기의 `data-platform`/`data-nickname`(`/s/{id}` 는 주소에 닉네임이 없어서). 없으면 `?platform=&nickname=` 로 되돌아간다.
+
+### 알려진 한계
+- 없는 플레이어·요청 한도처럼 PUBG 가 오류를 주는 검색은, `/s/{id}` 에서만 서버와 React 가 각각 한 번씩 PUBG 를 부른다(오류는 저장되지 않아서).
+- 서버가 껍데기를 주기 전에는 React 화면이 없어서, 서버가 완전히 죽었을 때는 브라우저 기본 오류 화면이 나온다(Render 콜드 스타트 화면 포함).
+
+### 확인
+- 프론트: vitest 77개(오류 3종·카운트다운·다시 시도, 껍데기 값 읽기), 타입체크, 빌드. 가짜 API 로 404/429/502 화면 확인.
+- Java: 이 환경에서는 Maven 의존성을 받을 수 없어 로컬 실행을 못 했다. `HomeControllerTest`(껍데기·og·실패해도 열림)·`PlayerLookupServiceTest`(findSaved)는 CI 로 확인한다.

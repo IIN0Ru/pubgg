@@ -63,6 +63,16 @@ class PlayerLookupServiceTest {
     }
 
     @Test
+    void 저장된_결과만_보는_조회는_PUBG_API를_부르지_않는다() {
+        assertThat(lookupService.findSaved(Platform.STEAM, "N0-RU")).isEmpty();
+        verify(playerService, org.mockito.Mockito.never()).getBasics(Platform.STEAM, "N0-RU");
+
+        lookupService.find(Platform.STEAM, "N0-RU");
+        assertThat(lookupService.findSaved(Platform.STEAM, "n0-ru")).isPresent();   // 대소문자가 달라도 찾는다
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
+    }
+
+    @Test
     void 갱신은_2분이_지나야_다시_불러온다() {
         lookupService.find(Platform.STEAM, "N0-RU");
 

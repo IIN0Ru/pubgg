@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>펍지지 (새 화면 미리보기)</title>
-    <meta name="robots" content="noindex">
+    <title th:text="${result != null} ? ${result.shareTitle()} + ' | 펍지지' : ${nickname} + ' | 펍지지'">닉네임 | 펍지지</title>
+    <!-- 링크 미리보기 (디스코드·카톡 등). 크롤러는 JS 를 실행하지 않아서 이 <head> 는 서버가 채운다. 문구는 PlayerMatches.shareTitle / shareDescription -->
+    <meta name="description" th:content="${result != null} ? ${result.shareDescription()} : '배그 플레이 스타일 분석'">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="펍지지 PUB.GG">
+    <meta property="og:title" th:content="${result != null} ? ${result.shareTitle()} : ${nickname}">
+    <meta property="og:description" th:content="${result != null} ? ${result.shareDescription()} : '배그 플레이 스타일 분석'">
+    <!-- 공유 주소(/s/{id})로 들어왔고 공유한 카드 그림이 남아 있으면 그 그림을 크게 (CardController /s/{id}/image) -->
+    <meta property="og:image" th:if="${cardImageUrl != null}" th:content="${cardImageUrl}">
+    <meta property="og:image:width" th:if="${cardImageUrl != null}" content="720">
+    <meta property="og:image:height" th:if="${cardImageUrl != null}" content="960">
+    <meta name="twitter:card" th:content="${cardImageUrl != null} ? 'summary_large_image' : 'summary'" content="summary">
+    <!-- 디스코드는 이 색을 미리보기 카드 왼쪽 띠 색으로 쓴다 -->
     <meta name="theme-color" content="#FFD02F">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +29,8 @@
 <header th:replace="~{fragments/topbar :: topbar(${platforms}, ${platform}, ${nickname})}"></header>
 
 <!-- React(frontend/)가 이 안을 그린다 (왼쪽 카드 / 경기 목록 / 보조 정보 세 칸). 빌드 결과는 Docker 빌드가 static/app/assets/ 에 넣는다 -->
-<main class="page" id="root"></main>
+<!-- data-platform/data-nickname: React 가 읽는 검색 대상. /search 는 주소의 ?platform=&nickname= 과 같고, /s/{id} 는 공유한 플레이어다 -->
+<main class="page" id="root" th:attr="data-platform=${platform.shard},data-nickname=${nickname}"></main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 

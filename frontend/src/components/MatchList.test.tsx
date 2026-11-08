@@ -51,7 +51,7 @@ describe('MatchList', () => {
     renderList();
     const table = screen.getByRole('table', { name: '이 경기 팀원 기록', hidden: true });
     const link = within(table).getByRole('link', { name: 'Duo', hidden: true });
-    expect(link).toHaveAttribute('href', '/next/search?platform=steam&nickname=Duo');
+    expect(link).toHaveAttribute('href', '/search?platform=steam&nickname=Duo');
   });
 
   it('혼자 한 경기는 안내 문구', () => {

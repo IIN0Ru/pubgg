@@ -3,6 +3,7 @@ import type { ApiError } from '../api/client';
 import { usePlayer, useRefreshPlayer } from '../api/queries';
 import type { SearchTarget } from '../lib/location';
 import { DetailsPanel } from './DetailsPanel';
+import { ErrorScreen } from './ErrorScreen';
 import { IdCard } from './IdCard';
 import { useMatchFilters } from '../store/matchFilters';
 import { usePlayerLists } from '../store/players';
@@ -46,13 +47,7 @@ export function PlayerScreen({ target }: { target: SearchTarget }) {
     );
   }
   if (player.isError) {
-    return (
-      <div className="feed">
-        <p className="idcard__notice" role="alert">
-          {errorText(player.error)}
-        </p>
-      </div>
-    );
+    return <ErrorScreen error={player.error} onRetry={() => void player.refetch()} retrying={player.isFetching} />;
   }
 
   const data = player.data;

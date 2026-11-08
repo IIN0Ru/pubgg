@@ -105,7 +105,7 @@ export function MatchItem({ match: m, shard, nickname }: Props) {
                     key={t.accountId}
                     player={t}
                     name={
-                      <a href={`/next/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}>
+                      <a href={`/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}>
                         {t.name}
                       </a>
                     }
