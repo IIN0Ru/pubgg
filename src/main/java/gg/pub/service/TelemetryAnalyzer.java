@@ -164,6 +164,12 @@ public class TelemetryAnalyzer {
         return actor;
     }
 
+    /**
+     * 분석 결과의 버전. 계산 방식을 바꿔서 이미 저장된 결과(TelemetryStatsStore)를 못 믿게 되면 올린다.
+     * 속도만 고친 것처럼 결과가 같은 변경은 올리지 않는다.
+     */
+    public static final int VERSION = 1;
+
     /** 내용을 읽어서 처리하는 이벤트 종류. 아래 Tracker.handle 의 case 와 같아야 한다 */
     static final Set<String> USED_EVENTS = Set.of(
             "LogItemEquip", "LogItemUnequip", "LogPlayerUseThrowable", "LogPlayerPosition",

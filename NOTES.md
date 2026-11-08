@@ -709,3 +709,23 @@
 ### 확인
 - 이 작업 환경은 Maven 저장소(repo.maven.apache.org)가 막혀 있어서 `mvn test` 를 못 돌림. 대신: JS 순수 함수(주소 값 읽기·태그 순서·화면 값이 서버 검사표에 다 있는지)를 Node 로 확인, 자바 순수 클래스(`CardService`·`CardChoices`·`SharedCard`·`ShareRateLimiter`)는 따로 컴파일해서 확인 — 모두 통과
 - DB·파일 저장소, 컨트롤러 테스트는 **GitHub Actions(mvn test)와 내 컴퓨터에서 확인 필요**
+
+## 2026-11-08 · 카드가 오래 걸림 → 텔레메트리 분석 속도 + 분석 결과 DB 저장
+
+### 원인 (Render 로그)
+- 카드(경쟁전 10판 분석)가 49~71초. 판당 `받는 데 기다린 시간`은 0.4~2초인데 `계산`이 22~70초 → 병목은 네트워크가 아니라 서버 CPU(무료 플랜, CPU 1개)
+- 전적 목록(1단계)은 약 7~9초: 선수 조회 3.5~4초(PUBG 서버 응답) + 경기 받기 3~5초
+
+### 바뀐 것
+- PR #9: `TelemetryAnalyzer` 가 이벤트마다 JsonNode 를 만들던 것을, 종류(`_T`)와 주인공(character/attacker/victim)을 먼저 보고 필요한 것만 읽도록 변경. 내가 죽으면 그 뒤는 읽지 않음. 결과는 기존과 같음(예시 파일·합성 15만 이벤트로 비교). 5판 카드 31.4초 → 14.4초
+- 이 PR: 경기별 분석 결과를 DB(`match_telemetry`)에 저장. `TelemetryStatsStore`(prod 는 `JdbcTelemetryStatsStore`, 그 밖은 `NoopTelemetryStatsStore`). 메모리 캐시 → DB → 새로 분석 순서. DB 가 고장나도 검색은 되게 읽기·쓰기 오류는 로그만 남김
+- 분석 **결과**가 달라지는 변경을 하면 `TelemetryAnalyzer.VERSION` 을 올릴 것 (이전 저장본을 버림). 속도만 고친 변경은 올리지 않음
+- 보관 60일 (저장할 때 1시간에 한 번 정리)
+
+### 한계
+- 처음 검색하는 닉네임의 첫 카드는 여전히 오래 걸림 (10판 기준 약 30초 예상). 저장은 두 번째 검색부터 효과
+- 같은 경기라도 플레이어마다 결과가 달라서 (경기, 계정) 단위로 저장함
+- Render 무료 PostgreSQL 은 기간 제한이 있음 — DB 가 사라져도 저장본이 비워질 뿐 동작은 그대로
+
+### 확인
+- Maven 이 막혀 있어 `mvn test` 를 못 돌림. `TelemetryStats` JSON 왕복은 로컬에서 확인. DB·서비스 테스트(`JdbcTelemetryStatsStoreTest`, `TelemetryServiceTest`)는 GitHub Actions 에서 확인
