@@ -21,7 +21,8 @@ import java.util.Optional;
  * @param mainGun     주무기: 슬롯에 가장 오래 들고 있던 총. 기록이 없으면 null
  * @param subGun      보조무기: 두 번째로 오래 든 주무기. 없으면 null
  * @param combatTags 전투 태그 (# 없이): 외곽 운영, 대도시파밍, 헤드샷 32%, TOP10 60%, 투척 2.1개
- * @param matches     계산에 쓴 경쟁전 경기 수 (최대 10)
+ * @param matches     계산에 쓴 경기 수 (최대 10)
+ * @param scope       계산에 쓴 경기 종류: "competitive"(경쟁전) / "normal"(일반 — 경쟁전이 한 판도 없을 때만)
  */
 public record ShareCard(String nickname,
                         String clan,
@@ -33,7 +34,15 @@ public record ShareCard(String nickname,
                         Gun mainGun,
                         Gun subGun,
                         List<String> combatTags,
-                        int matches) {
+                        int matches,
+                        String scope) {
+
+    /** 경기 종류 없이 (경쟁전으로 본다) */
+    public ShareCard(String nickname, String clan, String tierFamily, String tierIcon, String tierText,
+                     String kda, int avgDamage, Gun mainGun, Gun subGun, List<String> combatTags, int matches) {
+        this(nickname, clan, tierFamily, tierIcon, tierText, kda, avgDamage, mainGun, subGun, combatTags, matches,
+                PlayCard.COMPETITIVE);
+    }
 
     /**
      * 카드에 그릴 총 하나.
@@ -51,15 +60,15 @@ public record ShareCard(String nickname,
 
     private static final String[] ROMAN = {"I", "II", "III", "IV", "V"};
 
-    /** 경쟁전 카드가 없으면 빈 값 */
+    /** 카드가 없으면 빈 값 (경쟁전이 있으면 경쟁전, 없으면 일반 경기로 만든 카드) */
     public static Optional<ShareCard> from(PlayerMatches result) {
         PlayCard c = result.card();
         if (c == null) {
             return Optional.empty();
         }
-        // 플레이 카드와 같은 경기들: 최신 경쟁전 c.matches() 판
+        // 플레이 카드와 같은 경기들: 최신 c.matches() 판 (카드와 같은 종류)
         List<MatchRecord> games = result.matches().stream()
-                .filter(MatchRecord::isCompetitive)
+                .filter(c.isNormal() ? MatchRecord::isNormal : MatchRecord::isCompetitive)
                 .limit(c.matches())
                 .toList();
 
@@ -82,7 +91,8 @@ public record ShareCard(String nickname,
                 mainGun,
                 subGun,
                 combat,
-                c.matches()));
+                c.matches(),
+                c.scope()));
     }
 
     /** 헤드샷 킬 ÷ 킬 (%). 킬이 없으면 0 */

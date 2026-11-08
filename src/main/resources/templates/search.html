@@ -34,7 +34,7 @@
   <aside class="side side--card">
 
     <!--
-        플레이어 카드 = A카드 (경쟁전 기록이 있으면). 랜덤 배경 위에 기록만 그린다.
+        플레이어 카드 = A카드 (경쟁전 기록이 있으면, 없으면 일반 경기로). 랜덤 배경 위에 기록만 그린다.
         숫자는 늘 최신 검색 결과 (A카드, 성향 태그 없음). 그리기는 static/js/card-profile.js (공유 카드 꾸미기 화면과 같은 그림)
     -->
     <section class="idcard idcard--player" th:if="${cardJson != null}">
@@ -86,7 +86,7 @@
         <div class="idcard__meta">
             <span class="idcard__platform" th:text="${platform.label}">스팀</span>
             <span class="idcard__scope" th:if="${c != null}"
-                  th:text="'경쟁전 ' + ${c.matches()} + '경기 · ' + ${c.perspective()}">경쟁전 10경기 · FPP</span>
+                  th:text="(${c.isNormal()} ? '일반 ' : '경쟁전 ') + ${c.matches()} + '경기 · ' + ${c.perspective()}">경쟁전 10경기 · FPP</span>
         </div>
 
         <div class="idcard__head">
@@ -172,7 +172,7 @@
             플레이 카드를 분석하는 중이에요. 전적은 먼저 볼 수 있고, 끝나면 이 화면이 알아서 바뀌어요.
         </p>
         <p class="idcard__notice" th:if="${result != null and c == null and !cardPending}">
-            최근 30경기 안에 경쟁전 기록이 없어서 플레이 카드를 만들지 못했어요.
+            최근 30경기 안에 경쟁전·일반 경기 기록이 없어서 플레이 카드를 만들지 못했어요.
         </p>
 
         <button class="idcard__share" type="button" data-copy-link th:if="${result != null}">공유 링크 복사</button>

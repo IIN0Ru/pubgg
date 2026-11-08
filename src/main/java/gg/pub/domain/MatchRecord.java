@@ -41,6 +41,11 @@ public record MatchRecord(String matchId,
         return "competitive".equals(matchType);
     }
 
+    /** 일반 경기 (PUBG 의 official). 경쟁전도 커스텀·이벤트도 아니다 */
+    public boolean isNormal() {
+        return "official".equals(matchType);
+    }
+
     public boolean isFpp() {
         return gameMode != null && gameMode.endsWith("-fpp");
     }

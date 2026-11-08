@@ -52,9 +52,12 @@ public record PlayerMatches(String nickname,
         return season != null;
     }
 
-    /** 최근 경쟁전 vs 이번 시즌 (둘 다 있을 때만) */
+    /**
+     * 최근 경쟁전 vs 이번 시즌 (둘 다 있을 때만).
+     * 일반 경기로 만든 카드는 비교하지 않는다 (시즌 기록은 경쟁전이라 종류가 달라서 비교가 안 된다)
+     */
     public List<SeasonRank.Comparison> seasonComparison() {
-        return season == null ? List.of() : season.compareWith(card);
+        return season == null || (card != null && card.isNormal()) ? List.of() : season.compareWith(card);
     }
 
     // ---------- 링크 미리보기 (디스코드·카톡·커뮤니티에 링크를 붙였을 때) ----------

@@ -315,7 +315,7 @@ export function draw(x, A, card, look, ms, scale) {
   row('전투 성향', combat);
 
   x.font = `500 9px ${FONT}`; x.fillStyle = '#8a8a92';
-  x.fillText(`최근 경쟁전 ${card.matches}경기 기준`, 34, 450);
+  x.fillText(`최근 ${card.scope === 'normal' ? '일반' : '경쟁전'} ${card.matches}경기 기준`, 34, 450);
   x.textAlign = 'right'; x.fillText('pub.gg', W - 34, 450); x.textAlign = 'left';
 
   // 도트 테두리 + 귀퉁이 반짝임
