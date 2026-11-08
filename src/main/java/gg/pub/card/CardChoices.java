@@ -21,8 +21,8 @@ public final class CardChoices {
 
     /** 여러 개 고르는 것 (쉼표로 이어 붙임) */
     private static final Map<String, Set<String>> MANY = Map.of(
-            "aim", Set.of("chicken", "rank", "social"),
-            "find", Set.of("duo", "squad", "clan"),
+            "aim", Set.of("chicken", "rank", "social", "normal", "ranked"),
+            "find", Set.of("duo", "squad", "clan", "joinclan"),
             "role", Set.of("igl", "front", "second", "turret"));
 
     public static final Set<String> MAPS = Set.of("erangel", "miramar", "taego", "rondo");

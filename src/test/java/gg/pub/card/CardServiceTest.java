@@ -84,6 +84,16 @@ class CardServiceTest {
     }
 
     @Test
+    void 일반게임_랭크게임_지향과_클랜_구함_태그를_받는다() {
+        Map<String, String> raw = new HashMap<>();
+        raw.put("aim", "normal,ranked");
+        raw.put("find", "joinclan,clan");
+
+        assertThat(CardChoices.clean(raw))
+                .containsExactlyInAnyOrderEntriesOf(Map.of("aim", "normal,ranked", "find", "joinclan,clan"));
+    }
+
+    @Test
     void 꾸민_값은_아는_이름만_남기고_이상한_값은_거절() {
         Map<String, String> raw = new HashMap<>();
         raw.put("aim", "chicken,rank");

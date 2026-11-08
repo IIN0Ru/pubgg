@@ -19,8 +19,8 @@ export const MAPS = ['erangel', 'miramar', 'taego', 'rondo'];
 export const PICKS = {
   mic: { o: '마이크 O', x: '마이크 X', listen: '듣기만' },
   time: { dawn: '새벽 접속', morning: '아침 접속', lunch: '점심 접속', evening: '저녁 접속', night: '밤 접속' },
-  aim: { chicken: '치킨지향', rank: '순위지향', social: '친목지향' },
-  find: { duo: '듀오 구함', squad: '스쿼드 구함', clan: '클랜원 모집' },
+  aim: { chicken: '치킨지향', rank: '순위지향', social: '친목지향', normal: '일반게임지향', ranked: '랭크게임지향' },
+  find: { duo: '듀오 구함', squad: '스쿼드 구함', clan: '클랜원 모집', joinclan: '클랜 구함' },
   role: { igl: 'IGL', front: '1선', second: '2선', turret: '포탑' },
 };
 
