@@ -9,6 +9,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:8080',
+      // 기존 화면과 같이 쓰는 파일(스타일, 카드 그리기 스크립트, 그림)은 Spring 에서 받는다
+      '/css': 'http://localhost:8080',
+      '/js': 'http://localhost:8080',
+      '/images': 'http://localhost:8080',
     },
   },
   build: {

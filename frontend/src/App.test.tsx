@@ -2,25 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
-import type { PlayerPage } from './api/types';
+import { match, page } from './test/fixtures';
 
-function page(overrides: Partial<PlayerPage> = {}): PlayerPage {
-  return {
-    nickname: 'N0-RU',
-    platform: { shard: 'steam', label: '스팀' },
-    updatedAt: new Date().toISOString(),
-    refreshAvailableInSec: 0,
-    cardStatus: 'none',
-    season: null,
-    card: null,
-    shareCard: null,
-    seasonComparison: [],
-    matches: [],
-    teammates: [],
-    clan: null,
-    ...overrides,
-  };
-}
+vi.mock('./lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
 
 function json(status: number, body: unknown) {
   return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
@@ -47,12 +31,13 @@ describe('App', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('닉네임과 플랫폼을 확인해 주세요.');
   });
 
-  it('전적을 받아 보여준다', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ cardStatus: 'pending' }))));
+  it('전적을 받아 카드 자리와 경기 목록을 보여준다', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ cardStatus: 'pending', matches: [match()] }))));
     renderApp();
     expect(screen.getByRole('status')).toHaveTextContent('불러오는 중');
     expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
-    expect(screen.getByText('플레이 카드를 계산하는 중이에요…')).toBeInTheDocument();
+    expect(screen.getByText(/플레이 카드를 분석하는 중이에요/)).toBeInTheDocument();
+    expect(screen.getByText('최근 1경기')).toBeInTheDocument();
   });
 
   it('없는 플레이어(404)는 서버 문구를 그대로 보여준다', async () => {

@@ -151,7 +151,10 @@ export interface Match {
   modeLabel: string;
   mapName: string;
   mapLabel: string;
+  /** 내 팀 등수 */
   rank: number;
+  /** 참가 팀 수 */
+  teams: number;
   /** 2D 리플레이를 볼 수 있는 경기 (경쟁전) */
   replayAvailable: boolean;
   me: MatchPlayer;
