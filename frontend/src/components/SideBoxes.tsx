@@ -58,7 +58,7 @@ export function TeammatesBox({ teammates, shard }: { teammates: Teammate[]; shar
             <li className="mate" key={t.name}>
               <a
                 className="mate__name"
-                href={`/next/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}
+                href={`/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}
               >
                 {t.name}
               </a>

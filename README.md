@@ -10,7 +10,7 @@
 
 AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없는 비공식 사이트다.
 
-- 기술: Java 21, Spring Boot 3.5, Thymeleaf, Maven
+- 기술: Java 21, Spring Boot 3.5, Maven / 검색 결과 화면은 React 19 + TypeScript (Vite) — Spring 은 JSON API(`/api/players/...`)만 준다
 - 데이터: PUBG 공식 API
 
 ## 현재 상태
@@ -37,17 +37,32 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 전적 화면 왼쪽 위 = 플레이어 카드 (저장한 모습, 없으면 기본 옷 + 랜덤 배경) + 갱신·즐겨찾기 한 줄
 - [ ] 리플레이 그리기·공유
 
+## 구조 한눈에 보기
+
+```
+브라우저 ──GET /search?platform=steam&nickname=…──▶ Spring: 화면 껍데기(app.html)만 바로 응답 (링크 미리보기용 <head> 포함)
+   │                                                   │
+   └─ React(frontend/) 가 껍데기 안에서 실행 ──GET /api/players/steam/닉네임──▶ Spring: JSON (저장된 결과 / PUBG API)
+                                                       └─ 오류는 { code, message, retryAfterSec? } + HTTP 상태
+```
+
+- 검색 결과 화면(카드·경기 목록·상세 패널·시즌 비교·팀원)은 React 가 그리고, 첫 화면·카드 꾸미기(`/card`)·2D 리플레이(`/replay`)는 Thymeleaf 가 그린다.
+- 서버 데이터(전적)는 React Query, 브라우저에만 있는 설정(필터·즐겨찾기·최근 검색)은 Zustand 로 나눠 관리한다.
+- 오류는 서버가 알려준 `code` 로 화면을 나눈다: 없는 플레이어(`PLAYER_NOT_FOUND`) / 요청 한도(`RATE_LIMITED`, 남은 초 표시 후 다시 시도) / 서버·연결 오류(`UPSTREAM_ERROR`, 바로 다시 시도).
+- 링크 미리보기(디스코드·카톡)는 JS 를 실행하지 않고 `<head>` 만 읽는다. 그래서 `/s/{id}` 의 제목·설명·`og:image` 는 React 가 아니라 서버(`app.html`)가 채운다.
+- 오류·갱신·미리보기 동작은 `PlayerApiControllerTest`, `HomeControllerTest`(Java)와 `frontend/src/**/*.test.tsx`(vitest)가 확인한다. CI(`.github/workflows/test.yml`)가 Java 테스트와 프론트(타입 검사·테스트·빌드)를 둘 다 돌린다.
+
 ## 프론트엔드(React) 개발 방법
 
 ```
 cd frontend
 npm install
-npm run dev        # http://localhost:5173/?platform=steam&nickname=닉네임  (Spring 을 8080 에서 같이 띄워 둘 것)
+npm run dev        # http://localhost:5173/?platform=steam&nickname=닉네임  (Spring 을 8080 에서 같이 띄워 둘 것. 5173 은 /api 등을 8080 으로 넘겨 준다)
 npm test           # 테스트
 npm run build      # 타입 검사 + 빌드 → dist/
 ```
 
-운영에서는 Docker 빌드가 `npm run build` 결과를 Spring 의 `static/app/assets/` 에 넣고, Spring 이 `/next/search` 에서 불러온다. 같은 주소라서 CORS 설정이 필요 없다.
+운영에서는 Docker 빌드가 `npm run build` 결과를 Spring 의 `static/app/assets/` 에 넣고, `/search`, `/s/{id}` 의 껍데기(`templates/app.html`)가 이를 불러온다. 같은 주소라서 CORS 설정이 필요 없다.
 
 ## 실행 방법 (IntelliJ)
 
@@ -100,13 +115,12 @@ docker run -p 8080:8080 -e PUBG_API_KEY=키 -e DB_URL=jdbc:postgresql://호스�
 src/main/java/gg/pub/
 ├── PubggApplication.java      앱 시작점
 ├── web/
-│   ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
+│   ├── HomeController.java    "/" 첫 화면, "/search"·"/s/{id}" React 화면 껍데기 + 링크 미리보기 <head>
 │   ├── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
 │   ├── CardController.java    "/card" 공유 카드(B카드) 꾸미기, "/api/share" 공유 링크 만들기, "/s/{id}/image" 미리보기 그림
-│   ├── AppShellController.java "/next/search" React 화면 껍데기 (M1 진행 중. 완성되면 "/search" 를 대체)
 │   └── api/                   React 가 부르는 JSON API: PlayerApiController(GET·POST /api/players/...), PlayerPageResponse(응답 모양), ApiError
 ├── service/
-│   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
+│   ├── PlayerLookupService.java 검색 결과 저장(findSaved 는 PUBG 를 부르지 않고 저장본만 봄), 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 최근 30경기 동시에 받기 + 경쟁전 10경기로 카드
 │   ├── ReplayService.java     2D 리플레이 데이터 (경쟁전만, 캐시)
 │   ├── ReplayBuilder.java     텔레메트리 → 리플레이 데이터 (위치·자기장·사건·교전·폭발물·회복)
@@ -148,21 +162,20 @@ src/main/resources/
 ├── templates/
 │   ├── fragments/topbar.html  모든 페이지 상단 바 (로고 + 닉네임 검색)
 │   ├── index.html             첫 화면(히어로)
-│   ├── search.html            검색 결과: 플레이 카드 + 최근 경기 목록
+│   ├── app.html               검색 결과 화면 껍데기 (React 가 안을 그림) + 링크 미리보기 <head>
 │   └── card.html              공유용 플레이어 카드 + 꾸미기
 ├── static/css/main.css        스타일 (색은 맨 위 변수에서 관리)
 ├── static/images/maps/tiles/  리플레이 지도 조각 (아래 "리플레이 지도 조각" 참고)
 ├── static/js/players.js       즐겨찾기·최근 검색 (브라우저 저장)
 ├── static/js/card-render.js   플레이어 카드 그리기 (공유 카드 꾸미기 화면·전적 A카드 공용, 캔버스)
 ├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·PNG 저장
-├── static/js/card-profile.js  전적 화면 왼쪽 위 플레이어 카드 (A카드)
 └── static/images/card/        플레이어 카드 그림 (무기 42종, 티어 아이콘·테두리, 글자 없는 맵)
 
-frontend/                      React + TypeScript 화면 (Vite). M1: 검색 결과 화면을 Spring JSON API 위로 옮기는 중
+frontend/                      React + TypeScript 검색 결과 화면 (Vite). Spring JSON API 위에서 동작
 ├── src/api/                   서버 호출(client.ts), 응답 타입(types.ts), React Query 훅(queries.ts)
-├── src/components/            PlayerScreen(화면 연결), IdCard, PlayerCanvas(A카드), MatchList(필터·요약·더 보기), MatchItem, FavoriteButton
+├── src/components/            PlayerScreen(화면 연결), ErrorScreen(오류 3종), IdCard, PlayerCanvas(A카드), DetailsPanel·ZonePanel(상세), SideBoxes(시즌 비교·팀원), MatchList·MatchItem, FavoriteButton
 ├── src/store/                 화면 설정 상태 (Zustand): 경기 필터·더 보기(matchFilters), 즐겨찾기·최근 검색(players)
-└── src/lib/                   표시 글자 만들기(format.ts), 주소 읽기(location.ts)
+└── src/lib/                   표시 글자 만들기(format.ts), 주소·껍데기에서 검색 대상 읽기(location.ts)
 
 DESIGN.md                      디자인 기준 파일
 CLAUDE.md                      AI 작업용 안내 (DESIGN.md를 불러옴)

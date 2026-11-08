@@ -1,5 +1,5 @@
 /*
- * 플레이어 카드 그리기 (공용). 공유 카드 꾸미기 화면(player-card.js)과 전적 화면의 A카드(card-profile.js)가 같이 쓴다.
+ * 플레이어 카드 그리기 (공용). 공유 카드 꾸미기 화면(player-card.js)과 전적 화면의 A카드(React, frontend/src/lib/cardRenderer.ts)가 같이 쓴다.
  *
  *  - 기록 값(card): 서버의 ShareCard JSON (닉네임·클랜·티어·KDA·딜·주무기/보조무기·전투 태그)
  *  - 꾸민 값(choices): 마이크·시간대·지향·구함·역할 (주소 값과 같은 이름). 공유할 때 만드는 B카드에만 붙는다

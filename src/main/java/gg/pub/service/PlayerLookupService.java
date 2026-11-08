@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -70,6 +71,11 @@ public class PlayerLookupService {
     public Lookup find(Platform platform, String nickname) {
         Lookup saved = store.get(key(platform, nickname));
         return saved != null ? saved : fetch(platform, nickname);
+    }
+
+    /** 저장된 결과만 본다. 없어도 PUBG API 를 부르지 않는다 (화면 껍데기를 바로 띄울 때 쓴다) */
+    public Optional<Lookup> findSaved(Platform platform, String nickname) {
+        return Optional.ofNullable(store.get(key(platform, nickname)));
     }
 
     /** find 와 같지만 카드 계산이 끝날 때까지 기다린다 (카드 꾸미기 화면용) */

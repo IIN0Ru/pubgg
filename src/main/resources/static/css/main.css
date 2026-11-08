@@ -2597,7 +2597,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .pick:disabled label { cursor: not-allowed; }
 .pick label small { margin-left: 4px; color: inherit; opacity: 0.7; font-size: 11px; }
 
-/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (card-profile.js 가 그림) */
+/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (React IdCard 가 card-render.js 로 그림) */
 .idcard--player {
     padding: 0;
     background: transparent;
@@ -2638,3 +2638,47 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 }
 .idcard__actions .idcard__share,
 .idcard__actions .idcard__make { margin-top: 0; }
+
+/* 검색 실패 화면 (React 화면의 오류 3종: 없는 플레이어 / 요청 한도 / 서버·연결 오류) */
+.errorbox__title {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.errorbox__hint {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.errorbox__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.errorbox__button {
+    height: 40px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--on-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.errorbox__button:hover { background: var(--primary-active); }
+.errorbox__button:disabled { opacity: 0.5; cursor: not-allowed; background: var(--primary); }
+.errorbox__button:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+
+.errorbox__link {
+    font-size: 14px;
+    color: var(--body);
+}
