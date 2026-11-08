@@ -106,5 +106,48 @@ class TelemetryAnalyzerTest {
         assertThat(stats.phase3()).isEqualTo(new TelemetryStats.Bag(6, 2, 90));
         assertThat(stats.throwables()).isEqualTo(1);
     }
+
+    @Test
+    void 안_쓰는_이벤트도_3페이즈_시작은_잡고_종류가_뒤에_나와도_읽는다() throws IOException {
+        // 안 쓰는 종류(LogPlayerTakeDamage)가 3페이즈의 첫 이벤트. 칸 순서를 뒤집어서 _T 가 맨 뒤에 있는 이벤트도 섞는다
+        String json = """
+                [
+                  {"_D":"2026-10-19T14:12:00.000Z","_T":"LogMatchStart","common":{"isGame":0}},
+                  {"_D":"2026-10-19T14:13:00.000Z","_T":"LogItemPickup","common":{"isGame":1},
+                   "character":{"name":"me","teamId":3,"accountId":"account.me","location":{"x":1,"y":2,"z":3},"zone":["a"]},
+                   "item":{"itemId":"Item_Heal_Bandage_C","stackCount":4,"category":"Use"}},
+                  {"common":{"isGame":3.0},"damage":5.5,"attacker":{"accountId":"account.other","location":{"x":9,"y":9}},
+                   "_D":"2026-10-19T14:14:00.000Z","_T":"LogPlayerTakeDamage"},
+                  {"item":{"itemId":"Item_Heal_Bandage_C","stackCount":2},
+                   "character":{"accountId":"account.me","location":{"x":1,"y":2}},
+                   "common":{"isGame":3.0},"_D":"2026-10-19T14:14:30.000Z","_T":"LogItemPickup"}
+                ]
+                """;
+
+        TelemetryStats stats = analyzer.analyze(
+                new java.io.ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8)), "account.me");
+
+        // 3페이즈 시작(14:14:00) 때 붕대는 4개. 그 뒤에 주운 2개는 들어가지 않는다
+        assertThat(stats.phase3()).isNotNull();
+        assertThat(stats.phase3().heals()).isEqualTo(4);
+    }
+
+    @Test
+    void 내가_죽은_뒤의_기록은_읽지_않는다() throws IOException {
+        // 죽은 뒤에 깨진 내용이 와도 (읽지 않으므로) 오류 없이 죽을 때까지의 기록만 나온다
+        String json = """
+                [
+                  {"_D":"2026-10-19T14:13:00.000Z","_T":"LogItemEquip","common":{"isGame":1},
+                   "character":{"accountId":"account.me"},"item":{"itemId":"Item_Weapon_HK416_C","subCategory":"Main"}},
+                  {"_D":"2026-10-19T14:13:50.000Z","_T":"LogPlayerKillV2","common":{"isGame":1},
+                   "victim":{"accountId":"account.me"}},
+                  {"_D":"2026-10-19T14:14:00.000Z","_T":"LogItemEquip", BROKEN
+                """;
+
+        TelemetryStats stats = analyzer.analyze(
+                new java.io.ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8)), "account.me");
+
+        assertThat(stats.weaponSeconds()).containsEntry("Item_Weapon_HK416_C", 50L);
+    }
 }
 
