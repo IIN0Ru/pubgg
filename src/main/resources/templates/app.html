@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>펍지지 (새 화면 미리보기)</title>
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <script th:replace="~{fragments/theme :: init}"></script>
+    <link rel="stylesheet" href="/css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+<!-- React(frontend/)가 여기를 그린다. 빌드 결과는 Docker 빌드가 static/app/assets/ 에 넣는다 -->
+<main class="page" id="root"></main>
+<script type="module" src="/app/assets/app.js" th:src="@{/app/assets/app.js}"></script>
+</body>
+</html>
