@@ -1,6 +1,15 @@
 # 펍지지 배포용 이미지. 두 단계로 만든다.
-#   1단계(build): Maven 으로 실행 파일(jar)을 만든다. 이 단계의 도구들은 최종 이미지에 들어가지 않는다.
+#   0~1단계(build): React 를 만들고, Maven 으로 실행 파일(jar)을 만든다. 이 단계의 도구들은 최종 이미지에 들어가지 않는다.
 #   2단계(run)  : 만든 jar 와 Java 실행기(JRE)만 담아서 이미지를 가볍게 한다.
+
+# ---------- 0단계: 프론트엔드(React) 빌드 ----------
+# 결과물(dist/assets/app.js, app.css)만 다음 단계로 넘어간다. Node 와 node_modules 는 최종 이미지에 들어가지 않는다.
+FROM node:22-alpine AS frontend
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend ./
+RUN npm run build
 
 # ---------- 1단계: 빌드 ----------
 FROM maven:3.9-eclipse-temurin-21 AS build
@@ -12,6 +21,8 @@ COPY pom.xml .
 RUN mvn -B -ntp dependency:go-offline
 
 COPY src ./src
+# React 빌드 결과를 Spring 이 내보내는 정적 파일 자리(/app/assets/...)에 넣는다
+COPY --from=frontend /frontend/dist/assets ./src/main/resources/static/app/assets
 # 테스트는 GitHub Actions(test.yml)에서 돌리므로 이미지를 만들 때는 건너뛴다
 RUN mvn -B -ntp -DskipTests package
 

@@ -37,6 +37,18 @@ AI를 활용해 만든 개인 프로젝트이며, KRAFTON·PUBG와 관련이 없
 - [x] 전적 화면 왼쪽 위 = 플레이어 카드 (저장한 모습, 없으면 기본 옷 + 랜덤 배경) + 갱신·즐겨찾기 한 줄
 - [ ] 리플레이 그리기·공유
 
+## 프론트엔드(React) 개발 방법
+
+```
+cd frontend
+npm install
+npm run dev        # http://localhost:5173/?platform=steam&nickname=닉네임  (Spring 을 8080 에서 같이 띄워 둘 것)
+npm test           # 테스트
+npm run build      # 타입 검사 + 빌드 → dist/
+```
+
+운영에서는 Docker 빌드가 `npm run build` 결과를 Spring 의 `static/app/assets/` 에 넣고, Spring 이 `/next/search` 에서 불러온다. 같은 주소라서 CORS 설정이 필요 없다.
+
 ## 실행 방법 (IntelliJ)
 
 1. IntelliJ에서 **File → Open** → 이 `pubgg` 폴더 선택
@@ -90,7 +102,9 @@ src/main/java/gg/pub/
 ├── web/
 │   ├── HomeController.java    "/" 첫 화면, "/search" 검색 처리 (Controller)
 │   ├── ReplayController.java  "/replay" 리플레이 화면, "/api/replay" 리플레이 데이터(JSON)
-│   └── CardController.java    "/card" 공유 카드(B카드) 꾸미기, "/api/share" 공유 링크 만들기, "/s/{id}/image" 미리보기 그림
+│   ├── CardController.java    "/card" 공유 카드(B카드) 꾸미기, "/api/share" 공유 링크 만들기, "/s/{id}/image" 미리보기 그림
+│   ├── AppShellController.java "/next/search" React 화면 껍데기 (M1 진행 중. 완성되면 "/search" 를 대체)
+│   └── api/                   React 가 부르는 JSON API: PlayerApiController(GET·POST /api/players/...), PlayerPageResponse(응답 모양), ApiError
 ├── service/
 │   ├── PlayerLookupService.java 검색 결과 저장, 전적 갱신 (2분 대기)
 │   ├── PlayerService.java     검색 결과 만들기: 최근 30경기 동시에 받기 + 경쟁전 10경기로 카드
@@ -143,6 +157,11 @@ src/main/resources/
 ├── static/js/player-card.js   플레이어 카드 꾸미기·사이트 저장·공유·PNG 저장
 ├── static/js/card-profile.js  전적 화면 왼쪽 위 플레이어 카드 (A카드)
 └── static/images/card/        플레이어 카드 그림 (무기 42종, 티어 아이콘·테두리, 글자 없는 맵)
+
+frontend/                      React + TypeScript 화면 (Vite). M1: 검색 결과 화면을 Spring JSON API 위로 옮기는 중
+├── src/api/                   서버 호출(client.ts), 응답 타입(types.ts), React Query 훅(queries.ts)
+├── src/store/                 화면 설정 상태 (Zustand): 경기 필터
+└── src/lib/                   표시 글자 만들기(format.ts), 주소 읽기(location.ts)
 
 DESIGN.md                      디자인 기준 파일
 CLAUDE.md                      AI 작업용 안내 (DESIGN.md를 불러옴)

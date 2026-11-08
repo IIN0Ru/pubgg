@@ -738,3 +738,28 @@
 - 티어는 그대로 이번 시즌 경쟁전 티어(없으면 UNRANKED)
 - 일반 경기는 KDA·평균 딜이 경쟁전보다 높게 나올 수 있음 (알고 감수). 경쟁전이 1~2판만 있어도 경쟁전 카드가 되는 점은 나중에 최소 판 수를 둘지 검토
 - 경쟁전도 일반도 없으면 예전처럼 카드 없음 + 안내 문구
+
+---
+
+## 2026-11-08 · M1 시작: 검색 결과 화면을 React + TypeScript 로 분리 (1주차)
+
+### 정한 것
+- 직무 방향(11/4 확정): 프론트 중심 풀스택. 펍지지는 "Spring JSON API + React/TS 프론트 분리" 대표작으로 만든다. M1 = 검색 결과 화면.
+- 범위: `/search`, `/s/{id}`. 첫 화면·`/card`·`/replay` 는 Thymeleaf 그대로.
+- 배포: Spring 한 서비스에 같이 담는다. Docker 빌드에 Node 단계를 넣고 결과를 `static/app/assets/` 로 복사. (Render 무료 1개 유지, 같은 주소라 CORS 불필요)
+- 카드 캔버스(card-profile.js)는 React 컴포넌트로 감싸서 재사용, 스타일은 기존 main.css 재사용, 상태는 React Query(서버 데이터) + Zustand(필터 등 화면 설정)로 나눈다.
+- 한 번에 갈아엎지 않고 `/next/search` 에서 새 화면을 키운 뒤, 기존 화면을 따라잡으면 `/search` 를 바꾼다. (그 사이 운영 화면이 안 깨진다)
+- 링크 미리보기(og 태그)는 JS 를 실행하지 않는 크롤러가 읽는다. 그래서 `/s/{id}` 는 Thymeleaf 가 `<head>` 를 서버에서 채우고 React 는 `#root` 안만 그린다. (3~4주차)
+
+### API 계약
+- `GET /api/players/{platform}/{nickname}`, `POST .../refresh` (→ `{refreshed, player}`)
+- 서버는 원시값(숫자, ISO 시각)만 준다. "3분 전", "2,450 RP", "치킨" 같은 표시 글자는 프론트가 만든다.
+- 카드는 뒤에서 계산하므로 `cardStatus: pending` 이면 프론트가 같은 GET 을 3초마다 다시 부른다. (기존 `/search/card-status` 는 새 화면이 `/search` 를 대체할 때 없앤다)
+- 오류는 `{code, message, retryAfterSec?}`: 400 BAD_REQUEST / 404 PLAYER_NOT_FOUND / 429 RATE_LIMITED / 502 UPSTREAM_ERROR. 429 를 구분하려고 `PubgRateLimitException` 을 새로 만들었다.
+- 도메인 record 를 그대로 내보내지 않고 `PlayerPageResponse` 를 따로 정의했다. 내부 모양이 바뀌어도 화면 계약이 안 바뀌게 하려고. 프론트 타입(`frontend/src/api/types.ts`)과 같은 모양을 유지한다.
+
+### 해 본 것
+- 서버: `PlayerApiController` + 테스트 10개(정상, pending, none, 400, 404, 429, 502, 갱신 2종, 경기 원시값). 로컬에서는 Maven 이 막혀 있어서 CI 로 확인.
+- 프론트: Vite + React 19 + TypeScript(strict), 타입체크·vitest 21개·빌드 통과. CI 에 frontend 작업을 추가.
+- 아직: 화면 컴포넌트(2주차), 필터·즐겨찾기·최근 검색(3주차), 오류 3종 화면·README·`/search` 교체(4주차).
+

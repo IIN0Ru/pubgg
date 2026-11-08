@@ -6,3 +6,5 @@ target/
 *.iml
 out/
 data/
+frontend/node_modules/
+frontend/dist/

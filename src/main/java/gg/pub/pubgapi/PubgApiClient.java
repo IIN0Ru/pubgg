@@ -165,7 +165,7 @@ public class PubgApiClient {
     private PubgApiException errorFor(int status) {
         return switch (status) {
             case 401 -> new PubgApiException("API 키가 올바르지 않아요. 환경 변수 PUBG_API_KEY 값을 확인해 주세요.");
-            case 429 -> new PubgApiException("검색이 너무 많아요. 1분 뒤에 다시 시도해 주세요.");
+            case 429 -> new PubgRateLimitException();
             default -> new PubgApiException("PUBG 서버에서 오류가 났어요. (상태 코드 " + status + ")");
         };
     }
