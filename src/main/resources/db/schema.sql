@@ -15,3 +15,16 @@ CREATE TABLE IF NOT EXISTS share_card (
 );
 
 CREATE INDEX IF NOT EXISTS share_card_owner ON share_card (shard, nickname_key);
+
+-- 텔레메트리 분석 결과 (한 경기 × 한 플레이어). 끝난 경기는 바뀌지 않아서 한 번 분석하면 다시 계산하지 않는다.
+-- version 은 TelemetryAnalyzer.VERSION. 분석 방식이 바뀌면 올려서 이전 결과를 버린다.
+CREATE TABLE IF NOT EXISTS match_telemetry (
+    match_id   VARCHAR(64)  NOT NULL,
+    account_id VARCHAR(64)  NOT NULL,
+    version    INT          NOT NULL,
+    stats_json TEXT         NOT NULL,      -- TelemetryStats 를 JSON 으로 (수백 바이트)
+    created_at TIMESTAMP    NOT NULL,      -- 저장한 시각 (60일이 지나면 지운다)
+    PRIMARY KEY (match_id, account_id)
+);
+
+CREATE INDEX IF NOT EXISTS match_telemetry_created ON match_telemetry (created_at);
