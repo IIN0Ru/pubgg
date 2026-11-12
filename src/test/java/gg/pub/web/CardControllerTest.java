@@ -47,14 +47,14 @@ class CardControllerTest {
 
     @Test
     void 경쟁전_기록이_없으면_카드_없이_안내() throws Exception {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.findWithCard(Platform.STEAM, "n0-ru"))
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
+        when(lookupService.findWithCard(Platform.STEAM, "sample-01"))
                 .thenReturn(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z")));
 
-        mvc.perform(get("/card").param("platform", "steam").param("nickname", "n0-ru"))
+        mvc.perform(get("/card").param("platform", "steam").param("nickname", "sample-01"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("card"))
-                .andExpect(model().attribute("nickname", "N0-RU"))   // 정확한 닉네임으로
+                .andExpect(model().attribute("nickname", "Sample-01"))   // 정확한 닉네임으로
                 .andExpect(model().attributeDoesNotExist("card"));
     }
 
@@ -68,21 +68,21 @@ class CardControllerTest {
     }
 
     private static final String BODY = """
-            {"platform":"steam","nickname":"n0-ru","choices":{"mic":"o","time":"night"},
+            {"platform":"steam","nickname":"sample-01","choices":{"mic":"o","time":"night"},
              "background":{"map":"erangel","sx":10,"sy":20},
              "png":"data:image/png;base64,iVBORw0KGgo="}
             """;
 
     private void found() {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.findWithCard(Platform.STEAM, "n0-ru"))
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
+        when(lookupService.findWithCard(Platform.STEAM, "sample-01"))
                 .thenReturn(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z")));
     }
 
     @Test
     void 공유하면_ID와_공유_주소를_준다() throws Exception {
         found();
-        when(cardService.share(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any())).thenReturn("abc123XYZ_-");
+        when(cardService.share(eq(Platform.STEAM), eq("Sample-01"), anyMap(), any(), any())).thenReturn("abc123XYZ_-");
 
         mvc.perform(post("/api/share").contentType("application/json").content(BODY))
                 .andExpect(status().isOk())
@@ -93,7 +93,7 @@ class CardControllerTest {
     @Test
     void 값이_이상하면_400() throws Exception {
         found();
-        when(cardService.share(eq(Platform.STEAM), eq("N0-RU"), anyMap(), any(), any()))
+        when(cardService.share(eq(Platform.STEAM), eq("Sample-01"), anyMap(), any(), any()))
                 .thenThrow(new IllegalArgumentException("카드 값이 올바르지 않아요: mic"));
 
         mvc.perform(post("/api/share").contentType("application/json").content(BODY))

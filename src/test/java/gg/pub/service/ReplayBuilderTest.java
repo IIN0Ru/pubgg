@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 리플레이 데이터 추리기 확인 (src/test/resources/pubg/telemetry-replay.json).
  *
- * 예시 경기: 14:10:00 시작. 나(N0-RU)와 DuoFriend 가 1팀.
+ * 예시 경기: 14:10:00 시작. 나(Sample-01)와 DuoFriend 가 1팀.
  *  - 130초 착지, 140~160초 이동 (160초에는 위치가 두 번 와서 마지막 값)
  *  - 교전 1 (170~195초): 내가 Enemy_07 수류탄으로 기절 → 킬, Enemy_12 가 DuoFriend 기절, 215초에 내가 살림
  *  - 교전 2 (320~330초): 내가 Enemy_12 에게 기절 → 화염병으로 사망
@@ -51,7 +51,7 @@ class ReplayBuilderTest {
         assertThat(replay.myTeam()).isEqualTo(1);
         assertThat(replay.duration()).isEqualTo(600);
 
-        Replay.Track me = track("N0-RU");
+        Replay.Track me = track("Sample-01");
         assertThat(me.t()).startsWith(140, 150, 160);   // 시작 전 위치는 빠짐 (그 뒤는 피해·기절 순간 위치)
         assertThat(me.x()).startsWith(3100, 3150, 3210); // 160초는 두 번 와서 마지막 값
         assertThat(me.diedAt()).isEqualTo(330);
@@ -63,7 +63,7 @@ class ReplayBuilderTest {
     void 차량_보트를_탄_순간을_기록한다() {
         assertThat(track("DuoFriend").v()).startsWith(0, 1, 0);
         assertThat(track("Enemy_07").v()).startsWith(0, 2, 0);
-        assertThat(track("N0-RU").v()).containsOnly(0);   // 비행기는 차량 아이콘으로 그리지 않음
+        assertThat(track("Sample-01").v()).containsOnly(0);   // 비행기는 차량 아이콘으로 그리지 않음
     }
 
     @Test
@@ -74,7 +74,7 @@ class ReplayBuilderTest {
         Replay.Event molotovKill = replay.events().get(9);
         assertThat(molotovKill.type()).isEqualTo("kill");
         assertThat(molotovKill.cause()).isEqualTo("molotov");
-        assertThat(molotovKill.text()).isEqualTo("Enemy_12 → N0-RU 킬 (화염병)");
+        assertThat(molotovKill.text()).isEqualTo("Enemy_12 → Sample-01 킬 (화염병)");
     }
 
     @Test
@@ -108,18 +108,18 @@ class ReplayBuilderTest {
     @Test
     void 우리_팀_회복템만() {
         assertThat(replay.heals()).containsExactly(
-                new Replay.Heal(178, "N0-RU", 3200, 3150, "에너지 드링크"),
+                new Replay.Heal(178, "Sample-01", 3200, 3150, "에너지 드링크"),
                 new Replay.Heal(220, "DuoFriend", 3220, 3150, "구급상자"));
     }
 
     @Test
     void 킬_글에_총_이름_거리_헤드샷() {
-        assertThat(replay.events().get(2).text()).isEqualTo("N0-RU → Enemy_07 킬 (M416 · 15m · 헤드샷)");
+        assertThat(replay.events().get(2).text()).isEqualTo("Sample-01 → Enemy_07 킬 (M416 · 15m · 헤드샷)");
     }
 
     @Test
     void 체력은_위치_기록에서_피해를_뺀다() {
-        Replay.Track me = track("N0-RU");
+        Replay.Track me = track("Sample-01");
         int at169 = indexOf(me.t(), 169);   // 내 수류탄에 5 맞음
         assertThat(me.hp()[at169]).isEqualTo(95);
         int at192 = indexOf(me.t(), 192);   // 자기장 2 + 적 수류탄 40
@@ -141,7 +141,7 @@ class ReplayBuilderTest {
     void 총을_맞힌_방향을_기록한다() {
         // 168초 내가 Enemy_07 을 맞힘: (3200,3150) → (3300,3200) = 오른쪽 아래 약 27도
         // 194초 내가 DuoFriend 를 맞힘(오사): (3200,3150) → (3220,3150) = 오른쪽 0도. 수류탄은 안 셈
-        Replay.Track me = track("N0-RU");
+        Replay.Track me = track("Sample-01");
         assertThat(me.at()).containsExactly(168, 194);
         assertThat(me.aa()).containsExactly(27, 0);
         assertThat(track("DuoFriend").at()).isEmpty();
@@ -192,7 +192,7 @@ class ReplayBuilderTest {
         assertThat(replay.events()).extracting(Replay.Event::type)
                 .containsExactly("landing", "knock", "kill", "knock", "revive", "ride", "knock", "package", "knock", "kill",
                         "kill", "knock");
-        assertThat(replay.events().get(1).text()).isEqualTo("N0-RU → Enemy_07 기절 (수류탄 · 12m)");
+        assertThat(replay.events().get(1).text()).isEqualTo("Sample-01 → Enemy_07 기절 (수류탄 · 12m)");
         assertThat(replay.events().get(5).text()).isEqualTo("DuoFriend 차량 탑승 (Mirado)");
         // 남의 팀끼리 킬, 보급상자는 우리 팀 사건이 아님
         assertThat(replay.events().get(10).ours()).isFalse();
@@ -225,7 +225,7 @@ class ReplayBuilderTest {
         Replay.Hit mine = replay.hits().get(0);
         assertThat(mine.t()).isEqualTo(168);
         assertThat(mine.ours()).isTrue();
-        assertThat(mine.attacker()).isEqualTo("N0-RU");
+        assertThat(mine.attacker()).isEqualTo("Sample-01");
         assertThat(mine.victim()).isEqualTo("Enemy_07");
         assertThat(mine.ax()).isEqualTo(3200);
         assertThat(mine.vx()).isEqualTo(3300);

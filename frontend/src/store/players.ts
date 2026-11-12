@@ -5,7 +5,7 @@ import type { Shard } from '../api/types';
  * 즐겨찾기와 최근 검색. 로그인이 없어서 브라우저(localStorage)에 저장한다.
  *
  * 상단 검색창의 목록은 기존 static/js/players.js 가 같은 키·같은 형식으로 읽고 쓴다.
- * 그래서 형식을 바꾸지 않는다: [{ platform: "steam", nickname: "N0-RU", label: "스팀" }, ...]
+ * 그래서 형식을 바꾸지 않는다: [{ platform: "steam", nickname: "Sample-01", label: "스팀" }, ...]
  * (zustand 의 persist 를 쓰면 { state, version } 으로 감싸져서 기존 목록과 어긋난다)
  */
 export interface SavedPlayer {

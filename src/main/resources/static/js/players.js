@@ -2,7 +2,7 @@
  * 즐겨찾기 + 최근 검색 기록
  *
  * 로그인이 없어서 브라우저(localStorage)에 저장한다. 다른 기기·다른 브라우저에서는 보이지 않는다.
- * 저장 형식: [{ platform: "steam", nickname: "N0-RU", label: "스팀" }, ...]
+ * 저장 형식: [{ platform: "steam", nickname: "Sample-01", label: "스팀" }, ...]
  *
  * 화면에서 쓰는 표시(data 속성):
  *   data-favorite-toggle  data-platform data-nickname data-label  → ☆ 버튼 (누르면 추가/삭제)

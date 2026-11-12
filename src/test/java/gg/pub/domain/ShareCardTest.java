@@ -12,7 +12,7 @@ class ShareCardTest {
 
     /** kills·헤드샷·등수·맵만 다른 경쟁전 한 판 */
     private static MatchRecord game(String map, int kills, int heads, int rank) {
-        MatchPlayer me = new MatchPlayer("N0-RU", "me", kills, 0, 0, 0, rank, 0, heads, 0, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "me", kills, 0, 0, 0, rank, 0, heads, 0, 0, "alive");
         return new MatchRecord("x", Instant.parse("2026-10-19T13:10:00Z"), "squad-fpp", map, "competitive",
                 16, null, me, List.of());
     }
@@ -33,7 +33,7 @@ class ShareCardTest {
                 game("Baltic_Main", 4, 1, 1),
                 game("Tiger_Main", 0, 0, 30));
         SeasonRank season = new SeasonRank("squad-fpp", "Diamond", "2", 3100, 80, 3.0, 400, 6.0, 60);
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card(4), season, games,
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, card(4), season, games,
                 new Clan("헬멧연구소", "HLMT"));
 
         ShareCard c = ShareCard.from(result).orElseThrow();
@@ -60,8 +60,8 @@ class ShareCardTest {
         PlayCard none = new PlayCard(1, 5, 1, 1, 300, "FPP", List.of(), 1.0, 1,
                 50, List.of(50), 50, List.of(50), farming);
 
-        ShareCard a = ShareCard.from(new PlayerMatches("N0-RU", Platform.STEAM, one, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
-        ShareCard b = ShareCard.from(new PlayerMatches("N0-RU", Platform.STEAM, none, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
+        ShareCard a = ShareCard.from(new PlayerMatches("Sample-01", Platform.STEAM, one, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
+        ShareCard b = ShareCard.from(new PlayerMatches("Sample-01", Platform.STEAM, none, null, List.of(game("Desert_Main", 1, 0, 5)))).orElseThrow();
 
         assertThat(a.mainGun().image()).isEqualTo("Item_Weapon_AK47_C");
         assertThat(a.subGun()).isNull();
@@ -77,17 +77,17 @@ class ShareCardTest {
 
     @Test
     void 경쟁전_카드가_없으면_빈_값() {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
         assertThat(ShareCard.from(result)).isEmpty();
     }
 
     @Test
     void 일반전은_빼고_카드와_같은_경쟁전만_센다() {
-        MatchPlayer me = new MatchPlayer("N0-RU", "me", 10, 0, 0, 0, 1, 0, 10, 0, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "me", 10, 0, 0, 0, 1, 0, 10, 0, 0, "alive");
         MatchRecord normal = new MatchRecord("n", Instant.parse("2026-10-19T14:00:00Z"), "squad-fpp", "Baltic_Main",
                 "official", 16, null, me, List.of());
         List<MatchRecord> games = List.of(normal, game("Neon_Main", 2, 1, 20));
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card(1), null, games);
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, card(1), null, games);
 
         ShareCard c = ShareCard.from(result).orElseThrow();
 
@@ -113,7 +113,7 @@ class ShareCardTest {
 
     /** 일반 경기(official) 한 판 */
     private static MatchRecord normalGame(int kills, int heads, int rank) {
-        MatchPlayer me = new MatchPlayer("N0-RU", "me", kills, 0, 0, 0, rank, 0, heads, 0, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "me", kills, 0, 0, 0, rank, 0, heads, 0, 0, "alive");
         return new MatchRecord("x", Instant.parse("2026-10-19T13:10:00Z"), "squad-fpp", "Baltic_Main", "official",
                 16, null, me, List.of());
     }
@@ -124,7 +124,7 @@ class ShareCardTest {
         List<MatchRecord> games = List.of(normalGame(4, 2, 3), normalGame(2, 0, 15), game("Desert_Main", 9, 9, 1));
         SeasonRank season = new SeasonRank("squad-fpp", "Diamond", "2", 3100, 80, 3.0, 400, 6.0, 60);
         PlayCard normal = card(2).withScope(PlayCard.NORMAL);
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, normal, season, games, null);
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, normal, season, games, null);
 
         ShareCard c = ShareCard.from(result).orElseThrow();
 
@@ -138,7 +138,7 @@ class ShareCardTest {
     void 경쟁전_카드는_경쟁전으로_표시되고_시즌_비교가_있다() {
         List<MatchRecord> games = List.of(game("Desert_Main", 4, 2, 3), game("Desert_Main", 2, 0, 15));
         SeasonRank season = new SeasonRank("squad-fpp", "Diamond", "2", 3100, 80, 3.0, 400, 6.0, 60);
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card(2), season, games, null);
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, card(2), season, games, null);
 
         assertThat(ShareCard.from(result).orElseThrow().scope()).isEqualTo("competitive");
         assertThat(result.seasonComparison()).isNotEmpty();

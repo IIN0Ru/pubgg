@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlayerMatchesShareTest {
 
     private static MatchRecord match(String utc) {
-        MatchPlayer me = new MatchPlayer("N0-RU", "me", 0, 0, 0, 0, 5, 0, 0, 0, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "me", 0, 0, 0, 0, 5, 0, 0, 0, 0, "alive");
         return new MatchRecord("x", Instant.parse(utc), "squad-fpp", "Baltic_Main", "competitive", 16, null, me, List.of());
     }
 
@@ -24,18 +24,18 @@ class PlayerMatchesShareTest {
         List<MatchRecord> matches = List.of(match("2026-10-19T13:10:00Z"), match("2026-10-18T13:30:00Z"),
                 match("2026-10-17T13:50:00Z"));
 
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card, season, matches);
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, card, season, matches);
 
-        assertThat(result.shareTitle()).isEqualTo("N0-RU · 플래티넘 3");
+        assertThat(result.shareTitle()).isEqualTo("Sample-01 · 플래티넘 3");
         assertThat(result.shareDescription())
                 .isEqualTo("KDA 3.25 · 평균 딜 412 · 센터 운영 · 대도시파밍");
     }
 
     @Test
     void 기록이_없으면_기본_문구() {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
 
-        assertThat(result.shareTitle()).isEqualTo("N0-RU");
-        assertThat(result.shareDescription()).isEqualTo("스팀 N0-RU의 배그 플레이 스타일");
+        assertThat(result.shareTitle()).isEqualTo("Sample-01");
+        assertThat(result.shareDescription()).isEqualTo("스팀 Sample-01의 배그 플레이 스타일");
     }
 }

@@ -83,8 +83,8 @@ class JdbcCardStoreTest {
 
     @Test
     void 대소문자가_달라도_같은_플레이어로_본다() {
-        store.create(card("id-old00001", "steam", "N0-RU", "o", NOW), new byte[]{1});
-        store.create(card("id-new00002", "steam", "n0-ru", "x", NOW.plusSeconds(60)), new byte[]{2});
+        store.create(card("id-old00001", "steam", "Sample-01", "o", NOW), new byte[]{1});
+        store.create(card("id-new00002", "steam", "sample-01", "x", NOW.plusSeconds(60)), new byte[]{2});
 
         assertThat(store.hasImage("id-old00001")).isFalse();
         assertThat(store.hasImage("id-new00002")).isTrue();

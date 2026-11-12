@@ -11,7 +11,7 @@ import java.util.List;
  * {
  *   "data": [{
  *     "id": "account.abc123",
- *     "attributes": { "name": "N0-RU", "shardId": "steam", "clanId": "clan.abc" },
+ *     "attributes": { "name": "Sample-01", "shardId": "steam", "clanId": "clan.abc" },
  *     "relationships": {
  *       "matches": { "data": [ { "type": "match", "id": "경기ID" }, ... ] }
  *     }

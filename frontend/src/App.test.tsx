@@ -15,7 +15,7 @@ function renderApp() {
   const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0 } } });
   render(
     <QueryClientProvider client={client}>
-      <App target={{ shard: 'steam', nickname: 'N0-RU' }} />
+      <App target={{ shard: 'steam', nickname: 'Sample-01' }} />
     </QueryClientProvider>,
   );
 }
@@ -41,7 +41,7 @@ describe('App', () => {
     vi.stubGlobal('fetch', vi.fn(() => json(200, page({ cardStatus: 'pending', matches: [match()] }))));
     renderApp();
     expect(screen.getByRole('status')).toHaveTextContent('불러오는 중');
-    expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sample-01' })).toBeInTheDocument();
     expect(screen.getByText(/플레이 카드를 분석하는 중이에요/)).toBeInTheDocument();
     expect(screen.getByText('최근 1경기')).toBeInTheDocument();
   });
@@ -74,24 +74,24 @@ describe('App', () => {
   it('카드가 없으면 상세 패널과 시즌 비교는 그리지 않는다', async () => {
     vi.stubGlobal('fetch', vi.fn(() => json(200, page({ cardStatus: 'pending', matches: [match()] }))));
     renderApp();
-    await screen.findByRole('heading', { name: 'N0-RU' });
+    await screen.findByRole('heading', { name: 'Sample-01' });
     expect(screen.queryByText('주무기')).not.toBeInTheDocument();
     expect(screen.queryByText(/최근 vs 이번 시즌/)).not.toBeInTheDocument();
   });
 
   it('전적을 받으면 최근 검색에 서버가 알려준 이름으로 기록한다', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ nickname: 'N0-RU' }))));
+    vi.stubGlobal('fetch', vi.fn(() => json(200, page({ nickname: 'Sample-01' }))));
     renderApp();
-    await screen.findByRole('heading', { name: 'N0-RU' });
+    await screen.findByRole('heading', { name: 'Sample-01' });
     expect(JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')).toEqual([
-      { platform: 'steam', nickname: 'N0-RU', label: '스팀' },
+      { platform: 'steam', nickname: 'Sample-01', label: '스팀' },
     ]);
   });
 
   it('없는 플레이어(404)는 서버 문구를 그대로 보여준다', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => json(404, { code: 'PLAYER_NOT_FOUND', message: "'N0-RU' 플레이어를 찾지 못했어요." })),
+      vi.fn(() => json(404, { code: 'PLAYER_NOT_FOUND', message: "'Sample-01' 플레이어를 찾지 못했어요." })),
     );
     renderApp();
     expect(await screen.findByRole('alert')).toHaveTextContent('플레이어를 찾지 못했어요');
@@ -115,7 +115,7 @@ describe('App', () => {
     renderApp();
     const retry = await screen.findByRole('button', { name: '다시 시도' });
     fireEvent.click(retry);
-    expect(await screen.findByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sample-01' })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FAVORITES_KEY, MAX_RECENT, RECENT_KEY, usePlayerLists, type SavedPlayer } from './players';
 
-const me: SavedPlayer = { platform: 'steam', nickname: 'N0-RU', label: '스팀' };
+const me: SavedPlayer = { platform: 'steam', nickname: 'Sample-01', label: '스팀' };
 const duo: SavedPlayer = { platform: 'kakao', nickname: 'Duo', label: '카카오' };
 
 beforeEach(() => {
@@ -25,7 +25,7 @@ describe('즐겨찾기', () => {
 
   it('닉네임 대소문자는 같은 사람으로 본다', () => {
     usePlayerLists.getState().toggleFavorite(me);
-    usePlayerLists.getState().toggleFavorite({ ...me, nickname: 'n0-ru' });
+    usePlayerLists.getState().toggleFavorite({ ...me, nickname: 'sample-01' });
     expect(usePlayerLists.getState().favorites).toEqual([]);
   });
 

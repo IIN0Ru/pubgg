@@ -26,7 +26,7 @@ class TeammateTest {
     }
 
     private static MatchRecord m(String utc, int rank, MatchPlayer... mates) {
-        MatchPlayer me = new MatchPlayer("N0-RU", "me", 0, 0, 0, 0, rank, 0, 0, 0, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "me", 0, 0, 0, 0, rank, 0, 0, 0, 0, "alive");
         return new MatchRecord("x", Instant.parse(utc), "squad-fpp", "Baltic_Main", "official", 16, null,
                 me, List.of(mates));
     }

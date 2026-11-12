@@ -31,7 +31,7 @@ import java.util.Optional;
 
 /**
  * 공유 카드(B카드).
- *  - GET  /card?platform=steam&nickname=N0-RU   공유 카드 꾸미기 화면 (태그를 고르고 배경을 정한다)
+ *  - GET  /card?platform=steam&nickname=Sample-01   공유 카드 꾸미기 화면 (태그를 고르고 배경을 정한다)
  *  - POST /api/share                             공유 카드를 만들고 공유 주소(/s/{id})를 돌려준다
  *  - GET  /s/{id}/image                          공유한 카드 그림 (디스코드·카톡 링크 미리보기용)
  *

@@ -7,7 +7,7 @@ import { match, player } from '../test/fixtures';
 beforeEach(() => useMatchFilters.getState().reset());
 
 function renderList(matches = [match()]) {
-  render(<MatchList matches={matches} shard="steam" nickname="N0-RU" />);
+  render(<MatchList matches={matches} shard="steam" nickname="Sample-01" />);
 }
 
 describe('MatchList', () => {

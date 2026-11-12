@@ -32,19 +32,19 @@ describe('IdCard', () => {
 
   it('카드가 있으면 캔버스를 그리고, 카드 아래에 플랫폼과 RP 를 보여준다', () => {
     render(<IdCard player={page({ cardStatus: 'ready', shareCard, season })} refreshing={false} refreshMessage={null} onRefresh={noop} />);
-    expect(screen.getByRole('img', { name: 'N0-RU 플레이어 카드' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Sample-01 플레이어 카드' })).toBeInTheDocument();
     expect(drawProfileCard).toHaveBeenCalled();
     expect(screen.getByText('스팀')).toBeInTheDocument();
     expect(screen.getByText('2,450 RP')).toBeInTheDocument();
     // 카드 그림과 아래 버튼, 두 곳 모두 공유 카드 꾸미기 화면으로 간다
     const links = screen.getAllByRole('link', { name: '공유 카드 만들기' });
     expect(links).toHaveLength(2);
-    links.forEach((l) => expect(l).toHaveAttribute('href', '/card?platform=steam&nickname=N0-RU'));
+    links.forEach((l) => expect(l).toHaveAttribute('href', '/card?platform=steam&nickname=Sample-01'));
   });
 
   it('카드 계산 중이면 닉네임·티어와 안내를 보여준다', () => {
     render(<IdCard player={page({ cardStatus: 'pending', season })} refreshing={false} refreshMessage={null} onRefresh={noop} />);
-    expect(screen.getByRole('heading', { name: 'N0-RU' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sample-01' })).toBeInTheDocument();
     expect(screen.getByText('플래티넘 3')).toBeInTheDocument();
     expect(screen.getByText('이번 시즌 스쿼드 FPP 120판')).toBeInTheDocument();
     expect(screen.getByText(/플레이 카드를 분석하는 중이에요/)).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('IdCard', () => {
     fireEvent.click(star);
     expect(screen.getByRole('button', { name: '즐겨찾기에서 빼기' })).toHaveAttribute('aria-pressed', 'true');
     expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([
-      { platform: 'steam', nickname: 'N0-RU', label: '스팀' },
+      { platform: 'steam', nickname: 'Sample-01', label: '스팀' },
     ]);
     unmount();
 

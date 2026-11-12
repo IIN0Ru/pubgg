@@ -27,7 +27,7 @@
     <div class="replay__head">
         <a class="replay__back" th:if="${!nickname.isEmpty()}"
            th:href="@{/search(platform=${platform.shard},nickname=${nickname})}">
-            ← <span th:text="${nickname}">N0-RU</span> 전적
+            ← <span th:text="${nickname}">Sample-01</span> 전적
         </a>
         <th:block th:if="${record != null}">
             <h1 class="replay__title">
@@ -147,7 +147,7 @@
             <section class="sidebox replay__death" data-death data-panel-id="death" hidden>
                 <h2 class="sidebox__title">죽기 전 30초</h2>
                 <div class="replay__death-head">
-                    <b data-death-title>N0-RU 기절 <span>21:05</span></b>
+                    <b data-death-title>Sample-01 기절 <span>21:05</span></b>
                     <button type="button" class="tab" data-death-go>그 장면 보기</button>
                 </div>
                 <p class="replay__death-sum" data-death-sum></p>

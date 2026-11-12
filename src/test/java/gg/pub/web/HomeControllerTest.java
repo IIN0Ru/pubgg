@@ -64,25 +64,25 @@ class HomeControllerTest {
 
     @Test
     void 검색하면_전적을_기다리지_않고_화면_껍데기를_바로_연다() throws Exception {
-        mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))
+        mvc.perform(get("/search").param("platform", "steam").param("nickname", "Sample-01"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("app"))
                 .andExpect(content().string(containsString("/app/assets/app.js")))
                 // React 가 읽는 검색 대상
                 .andExpect(content().string(containsString("data-platform=\"steam\"")))
-                .andExpect(content().string(containsString("data-nickname=\"N0-RU\"")))
+                .andExpect(content().string(containsString("data-nickname=\"Sample-01\"")))
                 // 저장된 결과가 없으면 미리보기 제목은 닉네임만
-                .andExpect(content().string(containsString("<title>N0-RU | 펍지지</title>")));
+                .andExpect(content().string(containsString("<title>Sample-01 | 펍지지</title>")));
         verify(lookupService, never()).find(any(), any());   // PUBG API 는 React 가 /api 로 부른다
     }
 
     @Test
     void 이미_저장된_전적이_있으면_미리보기_제목과_설명을_채운다() throws Exception {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.findSaved(Platform.STEAM, "N0-RU"))
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
+        when(lookupService.findSaved(Platform.STEAM, "Sample-01"))
                 .thenReturn(Optional.of(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z"))));
 
-        mvc.perform(get("/search").param("platform", "steam").param("nickname", "N0-RU"))
+        mvc.perform(get("/search").param("platform", "steam").param("nickname", "Sample-01"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("og:description\" content=\"" + result.shareDescription())));
     }
@@ -100,8 +100,8 @@ class HomeControllerTest {
     }
 
     private PlayerMatches searchFound() {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
-        when(lookupService.find(Platform.STEAM, "N0-RU"))
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
+        when(lookupService.find(Platform.STEAM, "Sample-01"))
                 .thenReturn(new Lookup(result, Instant.parse("2026-11-07T12:00:00Z")));
         return result;
     }
@@ -109,25 +109,25 @@ class HomeControllerTest {
     @Test
     void 공유_주소를_열면_전적_화면과_미리보기_그림_주소를_준다() throws Exception {
         PlayerMatches result = searchFound();
-        when(cardService.find("abc123XYZ_-")).thenReturn(Optional.of(share("abc123XYZ_-", "N0-RU")));
+        when(cardService.find("abc123XYZ_-")).thenReturn(Optional.of(share("abc123XYZ_-", "Sample-01")));
         when(cardService.hasImage("abc123XYZ_-")).thenReturn(true);
 
         mvc.perform(get("/s/abc123XYZ_-"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("app"))
-                .andExpect(model().attribute("nickname", "N0-RU"))
+                .andExpect(model().attribute("nickname", "Sample-01"))
                 .andExpect(model().attribute("cardImageUrl", "http://localhost/s/abc123XYZ_-/image"))
                 // 링크 미리보기 크롤러는 JS 를 안 돌리므로 서버가 그린 <head> 에 있어야 한다
                 .andExpect(content().string(containsString("og:image\" content=\"http://localhost/s/abc123XYZ_-/image\"")))
                 .andExpect(content().string(containsString("summary_large_image")))
                 .andExpect(content().string(containsString("og:title\" content=\"" + result.shareTitle())))
-                .andExpect(content().string(containsString("data-nickname=\"N0-RU\"")));
+                .andExpect(content().string(containsString("data-nickname=\"Sample-01\"")));
     }
 
     @Test
     void 그림이_비워진_공유_주소도_전적_화면은_열리고_미리보기_그림만_없다() throws Exception {
         searchFound();
-        when(cardService.find("old123456")).thenReturn(Optional.of(share("old123456", "N0-RU")));
+        when(cardService.find("old123456")).thenReturn(Optional.of(share("old123456", "Sample-01")));
         when(cardService.hasImage("old123456")).thenReturn(false);
 
         mvc.perform(get("/s/old123456"))
@@ -139,14 +139,14 @@ class HomeControllerTest {
 
     @Test
     void 전적을_못_불러와도_공유_주소_껍데기는_열린다() throws Exception {
-        when(cardService.find("down123456")).thenReturn(Optional.of(share("down123456", "N0-RU")));
+        when(cardService.find("down123456")).thenReturn(Optional.of(share("down123456", "Sample-01")));
         when(cardService.hasImage("down123456")).thenReturn(true);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenThrow(new PlayerNotFoundException("N0-RU"));
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenThrow(new PlayerNotFoundException("Sample-01"));
 
         mvc.perform(get("/s/down123456"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("app"))
-                .andExpect(content().string(containsString("<title>N0-RU | 펍지지</title>")))
+                .andExpect(content().string(containsString("<title>Sample-01 | 펍지지</title>")))
                 .andExpect(content().string(containsString("og:image\"")));   // 그림은 전적과 상관없이 보여준다
     }
 

@@ -1,6 +1,6 @@
 [
   { "_D": "2026-10-19T14:01:00Z", "_T": "LogParachuteLanding", "common": { "isGame": 0.5 },
-    "character": { "name": "N0-RU", "teamId": 1, "accountId": "account.me", "zone": ["pochinki"],
+    "character": { "name": "Sample-01", "teamId": 1, "accountId": "account.me", "zone": ["pochinki"],
                    "location": { "x": 300000, "y": 400000, "z": 1200 } }, "distance": 0 },
 
   { "_D": "2026-10-19T14:02:00Z", "_T": "LogItemPickup", "common": { "isGame": 1.0 },
