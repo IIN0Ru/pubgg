@@ -8,7 +8,7 @@
   "_D": "2026-10-19T14:09:30Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -46,7 +46,7 @@
   "_D": "2026-10-19T14:11:30Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -100,7 +100,7 @@
   "_D": "2026-10-19T14:12:10Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -130,7 +130,7 @@
   "_D": "2026-10-19T14:12:20Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -179,7 +179,7 @@
   "_D": "2026-10-19T14:12:30Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -232,7 +232,7 @@
   "_D": "2026-10-19T14:12:40Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -277,7 +277,7 @@
   "_D": "2026-10-19T14:12:40Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -293,7 +293,7 @@
   "attackId": 501,
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -312,7 +312,7 @@
   "_D": "2026-10-19T14:12:48Z",
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -341,7 +341,7 @@
   "attackId": 501,
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -371,7 +371,7 @@
   "attackId": 501,
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -401,7 +401,7 @@
   "attackId": 501,
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -412,7 +412,7 @@
   },
   "victim": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -430,7 +430,7 @@
   "_D": "2026-10-19T14:12:50Z",
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -470,7 +470,7 @@
   },
   "killer": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -481,7 +481,7 @@
   },
   "finisher": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -492,7 +492,7 @@
   },
   "dBNOMaker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -513,7 +513,7 @@
   "_D": "2026-10-19T14:12:58Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -531,7 +531,7 @@
   "_D": "2026-10-19T14:13:00Z",
   "character": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -580,7 +580,7 @@
   "attacker": {},
   "victim": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -608,7 +608,7 @@
   },
   "victim": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -653,7 +653,7 @@
   "_D": "2026-10-19T14:13:14Z",
   "attacker": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -739,7 +739,7 @@
   "_D": "2026-10-19T14:13:35Z",
   "reviver": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -931,7 +931,7 @@
   },
   "victim": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {
@@ -946,7 +946,7 @@
   "_D": "2026-10-19T14:15:30Z",
   "victim": {
    "accountId": "account.me",
-   "name": "N0-RU",
+   "name": "Sample-01",
    "teamId": 1,
    "health": 100,
    "location": {

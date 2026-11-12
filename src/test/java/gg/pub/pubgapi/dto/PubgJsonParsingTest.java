@@ -28,7 +28,7 @@ class PubgJsonParsingTest {
 
         PlayerResponse.Player player = response.data().get(0);
         assertThat(player.id()).isEqualTo("account.test0001");
-        assertThat(player.attributes().name()).isEqualTo("N0-RU");
+        assertThat(player.attributes().name()).isEqualTo("Sample-01");
         assertThat(player.attributes().clanId()).isEqualTo("clan.test0001");
         assertThat(player.matchIds()).containsExactly("match-0001", "match-0002");
     }

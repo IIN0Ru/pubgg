@@ -15,7 +15,7 @@ export function readRootTarget(data: { platform?: string; nickname?: string }): 
   return { shard: data.platform, nickname };
 }
 
-/** /search?platform=steam&nickname=N0-RU 에서 검색 대상을 읽는다. 값이 이상하면 null */
+/** /search?platform=steam&nickname=Sample-01 에서 검색 대상을 읽는다. 값이 이상하면 null */
 export function readSearchTarget(search: string): SearchTarget | null {
   const params = new URLSearchParams(search);
   const platform = params.get('platform');

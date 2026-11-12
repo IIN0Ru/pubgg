@@ -56,9 +56,9 @@ class FileCardStoreTest {
 
     @Test
     void 같은_플레이어가_새로_공유하면_이전_그림만_지워지고_카드는_남는다() {
-        store.create(card("id-old00001", "steam", "N0-RU", NOW), new byte[]{1});
+        store.create(card("id-old00001", "steam", "Sample-01", NOW), new byte[]{1});
         store.create(card("id-other001", "steam", "다른사람", NOW), new byte[]{2});
-        store.create(card("id-new00002", "steam", "n0-ru", NOW.plusSeconds(60)), new byte[]{3});
+        store.create(card("id-new00002", "steam", "sample-01", NOW.plusSeconds(60)), new byte[]{3});
 
         assertThat(store.find("id-old00001")).isPresent();
         assertThat(store.hasImage("id-old00001")).isFalse();

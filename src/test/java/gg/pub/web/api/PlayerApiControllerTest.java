@@ -47,7 +47,7 @@ class PlayerApiControllerTest {
     PlayerLookupService lookupService;
 
     private static MatchRecord game(String type) {
-        MatchPlayer me = new MatchPlayer("N0-RU", "account.me", 3, 2, 1, 412, 1, 1500, 1, 87, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", "account.me", 3, 2, 1, 412, 1, 1500, 1, 87, 0, "alive");
         MatchPlayer mate = new MatchPlayer("Duo", "account.duo", 1, 1, 0, 150, 1, 1400, 0, 0, 0, "alive");
         return new MatchRecord("match-1", Instant.parse("2026-11-07T12:34:00Z"), "squad-fpp", "Baltic_Main",
                 type, 16, null, me, List.of(mate));
@@ -63,7 +63,7 @@ class PlayerApiControllerTest {
     }
 
     private Lookup lookup(PlayCard card, boolean pending) {
-        PlayerMatches result = new PlayerMatches("N0-RU", Platform.STEAM, card, season(),
+        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, card, season(),
                 List.of(game("competitive"), game("official")), new Clan("헬멧연구소", "HLMT"));
         return new Lookup(result, UPDATED, pending);
     }
@@ -71,12 +71,12 @@ class PlayerApiControllerTest {
     @Test
     void 전적을_JSON_으로_돌려준다() throws Exception {
         Lookup lookup = lookup(card(), false);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
         when(lookupService.secondsUntilRefresh(lookup)).thenReturn(95L);
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nickname").value("N0-RU"))
+                .andExpect(jsonPath("$.nickname").value("Sample-01"))
                 .andExpect(jsonPath("$.platform.shard").value("steam"))
                 .andExpect(jsonPath("$.platform.label").value("스팀"))
                 .andExpect(jsonPath("$.updatedAt").value("2026-11-08T01:00:00Z"))
@@ -93,7 +93,7 @@ class PlayerApiControllerTest {
                 .andExpect(jsonPath("$.card.zoneLuck.bars").isArray())
                 .andExpect(jsonPath("$.seasonComparison").isArray())
                 .andExpect(jsonPath("$.teammates").isArray())
-                .andExpect(jsonPath("$.shareCard.nickname").value("N0-RU"))
+                .andExpect(jsonPath("$.shareCard.nickname").value("Sample-01"))
                 .andExpect(jsonPath("$.clan.label").value("[HLMT] 헬멧연구소"))
                 .andExpect(jsonPath("$.matches.length()").value(2));
     }
@@ -101,9 +101,9 @@ class PlayerApiControllerTest {
     @Test
     void 경기는_원시값으로_내려가고_리플레이는_경쟁전만_볼_수_있다() throws Exception {
         Lookup lookup = lookup(card(), false);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(jsonPath("$.matches[0].matchId").value("match-1"))
                 .andExpect(jsonPath("$.matches[0].playedAt").value("2026-11-07T12:34:00Z"))
                 .andExpect(jsonPath("$.matches[0].type").value("competitive"))
@@ -122,9 +122,9 @@ class PlayerApiControllerTest {
     @Test
     void 카드를_계산_중이면_pending_이고_카드_값은_비어_있다() throws Exception {
         Lookup lookup = lookup(null, true);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cardStatus").value("pending"))
                 .andExpect(jsonPath("$.card").doesNotExist())
@@ -135,15 +135,15 @@ class PlayerApiControllerTest {
     @Test
     void 카드를_만들_기록이_없으면_none() throws Exception {
         Lookup lookup = lookup(null, false);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(jsonPath("$.cardStatus").value("none"));
     }
 
     @Test
     void 모르는_플랫폼은_400() throws Exception {
-        mvc.perform(get("/api/players/xbox/N0-RU"))
+        mvc.perform(get("/api/players/xbox/Sample-01"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
         verify(lookupService, never()).find(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
@@ -169,9 +169,9 @@ class PlayerApiControllerTest {
 
     @Test
     void PUBG_요청_한도를_넘으면_429_와_다시_시도할_시간() throws Exception {
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenThrow(new PubgRateLimitException());
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenThrow(new PubgRateLimitException());
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("Retry-After", "60"))
                 .andExpect(jsonPath("$.code").value("RATE_LIMITED"))
@@ -180,10 +180,10 @@ class PlayerApiControllerTest {
 
     @Test
     void 그_밖의_PUBG_서버_문제는_502() throws Exception {
-        when(lookupService.find(Platform.STEAM, "N0-RU"))
+        when(lookupService.find(Platform.STEAM, "Sample-01"))
                 .thenThrow(new PubgApiException("PUBG 서버에 연결하지 못했어요."));
 
-        mvc.perform(get("/api/players/steam/N0-RU"))
+        mvc.perform(get("/api/players/steam/Sample-01"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.code").value("UPSTREAM_ERROR"));
     }
@@ -191,25 +191,25 @@ class PlayerApiControllerTest {
     @Test
     void 갱신하면_새로_불러왔는지와_갱신된_전적을_돌려준다() throws Exception {
         Lookup lookup = lookup(card(), false);
-        when(lookupService.refresh(Platform.STEAM, "N0-RU")).thenReturn(true);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.refresh(Platform.STEAM, "Sample-01")).thenReturn(true);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
         when(lookupService.secondsUntilRefresh(lookup)).thenReturn(120L);
 
-        mvc.perform(post("/api/players/steam/N0-RU/refresh"))
+        mvc.perform(post("/api/players/steam/Sample-01/refresh"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.refreshed").value(true))
-                .andExpect(jsonPath("$.player.nickname").value("N0-RU"))
+                .andExpect(jsonPath("$.player.nickname").value("Sample-01"))
                 .andExpect(jsonPath("$.player.refreshAvailableInSec").value(120));
     }
 
     @Test
     void 대기_시간_안의_갱신은_refreshed_false_로_저장본을_준다() throws Exception {
         Lookup lookup = lookup(card(), false);
-        when(lookupService.refresh(Platform.STEAM, "N0-RU")).thenReturn(false);
-        when(lookupService.find(Platform.STEAM, "N0-RU")).thenReturn(lookup);
+        when(lookupService.refresh(Platform.STEAM, "Sample-01")).thenReturn(false);
+        when(lookupService.find(Platform.STEAM, "Sample-01")).thenReturn(lookup);
         when(lookupService.secondsUntilRefresh(lookup)).thenReturn(30L);
 
-        mvc.perform(post("/api/players/steam/N0-RU/refresh"))
+        mvc.perform(post("/api/players/steam/Sample-01/refresh"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.refreshed").value(false))
                 .andExpect(jsonPath("$.player.refreshAvailableInSec").value(30));

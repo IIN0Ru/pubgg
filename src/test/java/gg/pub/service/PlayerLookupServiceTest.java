@@ -48,46 +48,46 @@ class PlayerLookupServiceTest {
         playerService = mock(PlayerService.class);
         clock = new TestClock();
         lookupService = new PlayerLookupService(playerService, clock);
-        when(playerService.getBasics(Platform.STEAM, "N0-RU"))
+        when(playerService.getBasics(Platform.STEAM, "Sample-01"))
                 .thenReturn(new PlayerService.Basics(
-                        new PlayerMatches("N0-RU", Platform.STEAM, null, List.of()), List.of(), "account.test0001"));
+                        new PlayerMatches("Sample-01", Platform.STEAM, null, List.of()), List.of(), "account.test0001"));
     }
 
     @Test
     void 두_번째_검색부터는_저장된_결과를_쓴다() {
-        lookupService.find(Platform.STEAM, "N0-RU");
+        lookupService.find(Platform.STEAM, "Sample-01");
         clock.advance(Duration.ofHours(3));
-        lookupService.find(Platform.STEAM, "n0-ru");   // 대소문자가 달라도 같은 사람
+        lookupService.find(Platform.STEAM, "sample-01");   // 대소문자가 달라도 같은 사람
 
-        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "Sample-01");
     }
 
     @Test
     void 저장된_결과만_보는_조회는_PUBG_API를_부르지_않는다() {
-        assertThat(lookupService.findSaved(Platform.STEAM, "N0-RU")).isEmpty();
-        verify(playerService, org.mockito.Mockito.never()).getBasics(Platform.STEAM, "N0-RU");
+        assertThat(lookupService.findSaved(Platform.STEAM, "Sample-01")).isEmpty();
+        verify(playerService, org.mockito.Mockito.never()).getBasics(Platform.STEAM, "Sample-01");
 
-        lookupService.find(Platform.STEAM, "N0-RU");
-        assertThat(lookupService.findSaved(Platform.STEAM, "n0-ru")).isPresent();   // 대소문자가 달라도 찾는다
-        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
+        lookupService.find(Platform.STEAM, "Sample-01");
+        assertThat(lookupService.findSaved(Platform.STEAM, "sample-01")).isPresent();   // 대소문자가 달라도 찾는다
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "Sample-01");
     }
 
     @Test
     void 갱신은_2분이_지나야_다시_불러온다() {
-        lookupService.find(Platform.STEAM, "N0-RU");
+        lookupService.find(Platform.STEAM, "Sample-01");
 
         clock.advance(Duration.ofSeconds(30));
-        assertThat(lookupService.refresh(Platform.STEAM, "N0-RU")).isFalse();   // 아직 2분 안 됨
+        assertThat(lookupService.refresh(Platform.STEAM, "Sample-01")).isFalse();   // 아직 2분 안 됨
 
         clock.advance(Duration.ofMinutes(2));
-        assertThat(lookupService.refresh(Platform.STEAM, "N0-RU")).isTrue();
+        assertThat(lookupService.refresh(Platform.STEAM, "Sample-01")).isTrue();
 
-        verify(playerService, times(2)).getBasics(Platform.STEAM, "N0-RU");
+        verify(playerService, times(2)).getBasics(Platform.STEAM, "Sample-01");
     }
 
     @Test
     void 남은_대기_시간과_갱신_시각_문구() {
-        Lookup lookup = lookupService.find(Platform.STEAM, "N0-RU");
+        Lookup lookup = lookupService.find(Platform.STEAM, "Sample-01");
         assertThat(lookupService.secondsUntilRefresh(lookup)).isEqualTo(120);
         assertThat(lookupService.updatedAgoText(lookup)).isEqualTo("방금 전");
 
@@ -104,26 +104,26 @@ class PlayerLookupServiceTest {
 
     @Test
     void 카드는_뒤에서_만들고_전적은_먼저_돌려준다() throws Exception {
-        PlayerMatches basic = new PlayerMatches("N0-RU", Platform.STEAM, null, List.of());
+        PlayerMatches basic = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
         PlayerService.Basics basics = new PlayerService.Basics(basic, List.of(mock(MatchRecord.class)), "account.test0001");
         PlayCard card = mock(PlayCard.class);
         CountDownLatch release = new CountDownLatch(1);
-        when(playerService.getBasics(Platform.STEAM, "N0-RU")).thenReturn(basics);
+        when(playerService.getBasics(Platform.STEAM, "Sample-01")).thenReturn(basics);
         when(playerService.buildCard(basics)).thenAnswer(inv -> {
             release.await(5, TimeUnit.SECONDS);   // 카드 계산이 오래 걸리는 상황
             return card;
         });
 
-        Lookup first = lookupService.find(Platform.STEAM, "N0-RU");
+        Lookup first = lookupService.find(Platform.STEAM, "Sample-01");
         assertThat(first.cardPending()).isTrue();                    // 전적은 먼저 나오고
         assertThat(first.result().card()).isNull();                  // 카드는 아직 없다
-        assertThat(lookupService.isCardPending(Platform.STEAM, "n0-ru")).isTrue();
+        assertThat(lookupService.isCardPending(Platform.STEAM, "sample-01")).isTrue();
 
         release.countDown();
-        Lookup done = lookupService.findWithCard(Platform.STEAM, "N0-RU");   // 끝날 때까지 기다림
+        Lookup done = lookupService.findWithCard(Platform.STEAM, "Sample-01");   // 끝날 때까지 기다림
         assertThat(done.cardPending()).isFalse();
         assertThat(done.result().card()).isSameAs(card);
-        assertThat(lookupService.isCardPending(Platform.STEAM, "N0-RU")).isFalse();
-        verify(playerService, times(1)).getBasics(Platform.STEAM, "N0-RU");
+        assertThat(lookupService.isCardPending(Platform.STEAM, "Sample-01")).isFalse();
+        verify(playerService, times(1)).getBasics(Platform.STEAM, "Sample-01");
     }
 }

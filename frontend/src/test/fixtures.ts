@@ -2,7 +2,7 @@ import type { Card, Match, MatchPlayer, PlayerPage, Season, ShareCard } from '..
 
 export function player(overrides: Partial<MatchPlayer> = {}): MatchPlayer {
   return {
-    name: 'N0-RU',
+    name: 'Sample-01',
     accountId: 'account.me',
     kills: 3,
     knocks: 2,
@@ -39,7 +39,7 @@ export function match(overrides: Partial<Match> = {}): Match {
 }
 
 export const shareCard: ShareCard = {
-  nickname: 'N0-RU',
+  nickname: 'Sample-01',
   clan: '',
   tierFamily: 'Platinum',
   tierIcon: 'Platinum-3',
@@ -55,7 +55,7 @@ export const shareCard: ShareCard = {
 
 export function page(overrides: Partial<PlayerPage> = {}): PlayerPage {
   return {
-    nickname: 'N0-RU',
+    nickname: 'Sample-01',
     platform: { shard: 'steam', label: '스팀' },
     updatedAt: new Date().toISOString(),
     refreshAvailableInSec: 0,

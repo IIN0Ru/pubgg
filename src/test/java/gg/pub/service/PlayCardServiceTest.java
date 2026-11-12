@@ -221,7 +221,7 @@ class PlayCardServiceTest {
     /** 테스트용 경쟁전 경기 하나 만들기 (나 한 명 + 텔레메트리 주소) */
     private static MatchRecord match(String id, String gameMode, int kills, int assists,
                                      double damage, int winPlace) {
-        MatchPlayer me = new MatchPlayer("N0-RU", ME, kills, 0, assists, (int) damage, winPlace,
+        MatchPlayer me = new MatchPlayer("Sample-01", ME, kills, 0, assists, (int) damage, winPlace,
                 1500, 0, 0, 0, winPlace == 1 ? "alive" : "byplayer");
         return new MatchRecord(id, Instant.parse("2026-10-19T14:00:00Z"), gameMode, "Baltic_Main",
                 "competitive", 16, "https://telemetry.example/" + id, me, List.of());

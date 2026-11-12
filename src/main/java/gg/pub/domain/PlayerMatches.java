@@ -62,7 +62,7 @@ public record PlayerMatches(String nickname,
 
     // ---------- 링크 미리보기 (디스코드·카톡·커뮤니티에 링크를 붙였을 때) ----------
 
-    /** "N0-RU · 플래티넘 3" (시즌 기록이 없으면 닉네임만) */
+    /** "Sample-01 · 플래티넘 3" (시즌 기록이 없으면 닉네임만) */
     public String shareTitle() {
         return season != null ? nickname + " · " + season.tierLabel() : nickname;
     }

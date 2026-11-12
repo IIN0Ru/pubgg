@@ -34,7 +34,7 @@ class ReplayControllerTest {
     ReplayService replayService;
 
     private static MatchRecord record() {
-        MatchPlayer me = new MatchPlayer("N0-RU", PLAYER, 3, 4, 1, 512, 2, 1800, 1, 120, 0, "alive");
+        MatchPlayer me = new MatchPlayer("Sample-01", PLAYER, 3, 4, 1, 512, 2, 1800, 1, 120, 0, "alive");
         return new MatchRecord(MATCH, Instant.parse("2026-10-19T14:12:30Z"), "squad-fpp", "Baltic_Main",
                 "competitive", 16, "https://telemetry.example/x", me, List.of());
     }
@@ -44,7 +44,7 @@ class ReplayControllerTest {
         when(replayService.record(Platform.STEAM, MATCH, PLAYER)).thenReturn(record());
 
         mvc.perform(get("/replay").param("platform", "steam").param("match", MATCH)
-                        .param("player", PLAYER).param("nickname", "N0-RU"))
+                        .param("player", PLAYER).param("nickname", "Sample-01"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("replay"))
                 .andExpect(model().attributeExists("record"));
@@ -71,7 +71,7 @@ class ReplayControllerTest {
     @Test
     void 데이터는_JSON_으로() throws Exception {
         Replay replay = new Replay(MATCH, MapInfo.of("Baltic_Main").orElseThrow(), 600, PLAYER, 1,
-                List.of(new Replay.Track(PLAYER, "N0-RU", 1, new int[]{10, 20}, new int[]{100, 110}, new int[]{200, 210}, new int[]{0, 1}, new int[]{100, 80}, null,
+                List.of(new Replay.Track(PLAYER, "Sample-01", 1, new int[]{10, 20}, new int[]{100, 110}, new int[]{200, 210}, new int[]{0, 1}, new int[]{100, 80}, null,
                         new int[]{15}, new int[]{90})),
                 List.of(), List.of(), List.of(), List.of(), null, List.of(), List.of(), List.of(), List.of());
         when(replayService.replay(Platform.STEAM, MATCH, PLAYER)).thenReturn(replay);

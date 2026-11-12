@@ -64,12 +64,12 @@ class PlayerServiceTest {
     void 최근_경기를_화면용으로_정리한다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
         MatchResponse match = read("/pubg/match.json", MatchResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), anyString())).thenReturn(match);
 
-        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "N0-RU");
+        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "Sample-01");
 
-        assertThat(result.nickname()).isEqualTo("N0-RU");
+        assertThat(result.nickname()).isEqualTo("Sample-01");
         assertThat(result.matches()).hasSize(2);   // 예시 플레이어의 경기 ID가 2개
 
         MatchRecord first = result.matches().get(0);
@@ -92,10 +92,10 @@ class PlayerServiceTest {
     @Test
     void 같은_팀_팀원_기록도_담는다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), anyString())).thenReturn(read("/pubg/match.json", MatchResponse.class));
 
-        MatchRecord first = service.getRecentMatches(Platform.STEAM, "N0-RU").matches().get(0);
+        MatchRecord first = service.getRecentMatches(Platform.STEAM, "Sample-01").matches().get(0);
 
         assertThat(first.me().headshotKills()).isEqualTo(3);
         assertThat(first.me().longestKill()).isEqualTo(212);
@@ -114,10 +114,10 @@ class PlayerServiceTest {
     void 경쟁전_경기만_플레이_카드_계산에_넘긴다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
         MatchResponse competitive = read("/pubg/match.json", MatchResponse.class);   // 예시 경기는 경쟁전
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), anyString())).thenReturn(competitive);
 
-        service.getRecentMatches(Platform.STEAM, "N0-RU");
+        service.getRecentMatches(Platform.STEAM, "Sample-01");
 
         verify(playCardService).build(argThat(list -> list.size() == 2), eq("account.test0001"));
     }
@@ -139,11 +139,11 @@ class PlayerServiceTest {
     @Test
     void 경쟁전이_한_판도_없으면_일반_경기로_카드를_만든다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), anyString())).thenReturn(normalMatch());
         when(playCardService.build(any(), anyString())).thenReturn(Optional.of(sampleCard()));
 
-        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "N0-RU");
+        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "Sample-01");
         PlayCard card = service.buildCard(basics);
 
         assertThat(basics.needsCard()).isTrue();
@@ -156,12 +156,12 @@ class PlayerServiceTest {
     @Test
     void 경쟁전이_있으면_일반_경기는_섞지_않는다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), eq("match-0001"))).thenReturn(read("/pubg/match.json", MatchResponse.class));
         when(client.getMatch(any(), eq("match-0002"))).thenReturn(normalMatch());
         when(playCardService.build(any(), anyString())).thenReturn(Optional.of(sampleCard()));
 
-        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "N0-RU");
+        PlayerService.Basics basics = service.getBasics(Platform.STEAM, "Sample-01");
         PlayCard card = service.buildCard(basics);
 
         assertThat(basics.normalScope()).isFalse();
@@ -173,11 +173,11 @@ class PlayerServiceTest {
     @Test
     void 경기_하나를_못_받아도_나머지로_보여준다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), eq("match-0001"))).thenReturn(read("/pubg/match.json", MatchResponse.class));
         when(client.getMatch(any(), eq("match-0002"))).thenThrow(new PubgApiException("일시적 오류"));
 
-        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "N0-RU");
+        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "Sample-01");
 
         assertThat(result.matches()).hasSize(1);
     }
@@ -185,12 +185,12 @@ class PlayerServiceTest {
     @Test
     void 시즌_티어를_결과에_담는다() throws IOException {
         PlayerResponse player = read("/pubg/player.json", PlayerResponse.class);
-        when(client.findPlayer(Platform.STEAM, "N0-RU")).thenReturn(player.data().get(0));
+        when(client.findPlayer(Platform.STEAM, "Sample-01")).thenReturn(player.data().get(0));
         when(client.getMatch(any(), anyString())).thenReturn(read("/pubg/match.json", MatchResponse.class));
         SeasonRank rank = new SeasonRank("squad-fpp", "Platinum", "3", 2450, 120, 2.5, 280, 7.4, 61);
         when(seasonService.currentRank(Platform.STEAM, "account.test0001")).thenReturn(Optional.of(rank));
 
-        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "N0-RU");
+        PlayerMatches result = service.getRecentMatches(Platform.STEAM, "Sample-01");
 
         assertThat(result.season().tierLabel()).isEqualTo("플래티넘 3");
     }

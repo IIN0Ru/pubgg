@@ -52,13 +52,13 @@ class CardServiceTest {
 
     @Test
     void 공유하면_ID를_주고_그_ID로_꾸민_값과_그림을_다시_읽는다() {
-        String id = service.share(Platform.STEAM, "N0-RU", Map.of("mic", "o", "time", "night"), BG, PNG);
+        String id = service.share(Platform.STEAM, "Sample-01", Map.of("mic", "o", "time", "night"), BG, PNG);
 
         assertThat(SharedCard.isValidId(id)).isTrue();
         SharedCard card = service.find(id).orElseThrow();
         assertThat(card.id()).isEqualTo(id);
         assertThat(card.platform()).isEqualTo("steam");
-        assertThat(card.nickname()).isEqualTo("N0-RU");
+        assertThat(card.nickname()).isEqualTo("Sample-01");
         assertThat(card.choices()).containsEntry("mic", "o").containsEntry("time", "night");
         assertThat(card.background()).isEqualTo(BG);
         assertThat(card.createdAt()).isEqualTo(Instant.parse("2026-11-07T12:00:00Z"));
@@ -68,8 +68,8 @@ class CardServiceTest {
 
     @Test
     void 공유할_때마다_다른_ID가_나온다() {
-        String a = service.share(Platform.STEAM, "N0-RU", Map.of(), BG, PNG);
-        String b = service.share(Platform.STEAM, "N0-RU", Map.of(), BG, PNG);
+        String a = service.share(Platform.STEAM, "Sample-01", Map.of(), BG, PNG);
+        String b = service.share(Platform.STEAM, "Sample-01", Map.of(), BG, PNG);
 
         assertThat(a).isNotEqualTo(b);
         assertThat(service.find(a)).isPresent();   // 서비스는 지우지 않는다 (이전 그림 비우기는 저장소가 한다)
