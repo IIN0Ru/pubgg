@@ -293,10 +293,9 @@ function setLetterSpacing(x: Ctx, value: string) {
 /**
  * 카드 한 장.
  * @param look  배경 그림·성향 태그
- * @param ms    지금까지 흐른 시간 (귀퉁이 반짝임용)
  * @param scale 픽셀 배율
  */
-export function draw(x: Ctx, A: CardAssets, card: ShareCard, look: CardLook, ms: number, scale: number) {
+export function draw(x: Ctx, A: CardAssets, card: ShareCard, look: CardLook, scale: number) {
   const pal = paletteOf(A, card);
   x.setTransform(scale, 0, 0, scale, 0, 0);
   x.clearRect(0, 0, W, H);
@@ -401,15 +400,12 @@ export function draw(x: Ctx, A: CardAssets, card: ShareCard, look: CardLook, ms:
   x.fillText('pub.gg', W - 34, 450);
   x.textAlign = 'left';
 
-  // 도트 테두리 + 귀퉁이 반짝임
+  // 도트 테두리
   x.drawImage(A.frame, 0, 0, W, H);
-  const on = Math.floor(ms / 900) % 2;
-  x.fillStyle = '#fff';
-  x.fillRect(on ? 16 : W - 20, on ? 16 : H - 20, 4, 4);
 }
 
 /**
- * 캔버스에서 카드를 계속 그린다 (귀퉁이 반짝임만 움직임). getLook() 이 돌려준 모습을 그린다.
+ * 캔버스에 카드를 그리고, 모습(배경·태그)이 바뀌면 다시 그린다. getLook() 이 돌려준 모습을 그린다.
  * @return 멈추는 함수
  */
 export function play(
@@ -420,11 +416,10 @@ export function play(
 ): () => void {
   const ctx = canvas.getContext('2d');
   if (ctx === null) return () => undefined;
-  const started = performance.now();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const tick = () => {
     const look = getLook();
-    if (look) draw(ctx, A, card, look, performance.now() - started, canvas.width / W);
+    if (look) draw(ctx, A, card, look, canvas.width / W);
     timer = setTimeout(tick, 450);
   };
   tick();
@@ -437,7 +432,7 @@ export function snapshot(A: CardAssets, card: ShareCard, look: CardLook, scale: 
   c.width = W * scale;
   c.height = H * scale;
   const ctx = c.getContext('2d');
-  if (ctx !== null) draw(ctx, A, card, look, 0, scale);
+  if (ctx !== null) draw(ctx, A, card, look, scale);
   return c;
 }
 

@@ -14,21 +14,21 @@ export const PICKS = {
 
 export type PickKey = keyof typeof PICKS;
 /** 하나만 고르는 것 */
-export const SINGLE_PICKS = ['mic', 'time'] as const;
+export const SINGLE_PICKS = ['mic'] as const;
 /** 여러 개 고르는 것 */
-export const MULTI_PICKS = ['aim', 'find', 'role'] as const;
+export const MULTI_PICKS = ['time', 'aim', 'find', 'role'] as const;
 export type SinglePick = (typeof SINGLE_PICKS)[number];
 export type MultiPick = (typeof MULTI_PICKS)[number];
 
 export interface Choices {
   mic: string;
-  time: string;
+  time: string[];
   aim: string[];
   find: string[];
   role: string[];
 }
 
-export const EMPTY_CHOICES: Choices = { mic: '', time: '', aim: [], find: [], role: [] };
+export const EMPTY_CHOICES: Choices = { mic: '', time: [], aim: [], find: [], role: [] };
 
 const label = (key: PickKey, value: string): string | undefined =>
   (PICKS[key] as Record<string, string>)[value];
@@ -44,7 +44,7 @@ export function normalizeChoices(get: (key: string) => string | null | undefined
     const picked = new Set((get(k) ?? '').split(','));
     return Object.keys(PICKS[k]).filter((v) => picked.has(v));
   };
-  return { mic: one('mic'), time: one('time'), aim: list('aim'), find: list('find'), role: list('role') };
+  return { mic: one('mic'), time: list('time'), aim: list('aim'), find: list('find'), role: list('role') };
 }
 
 /** 꾸민 값 → 저장·주소용 (안 고른 건 뺌) */
@@ -54,7 +54,7 @@ export function choicesToParams(c: Choices): Record<string, string> {
     if (v) out[k] = v;
   };
   set('mic', c.mic);
-  set('time', c.time);
+  set('time', c.time.join(','));
   set('aim', c.aim.join(','));
   set('find', c.find.join(','));
   set('role', c.role.join(','));
@@ -69,7 +69,7 @@ export function styleTags(c: Choices): string[] {
     if (text) tags.push(text);
   };
   if (c.mic) push('mic', c.mic);
-  if (c.time) push('time', c.time);
+  c.time.forEach((v) => push('time', v));
   c.aim.forEach((v) => push('aim', v));
   c.find.forEach((v) => push('find', v));
   c.role.forEach((v) => push('role', v));

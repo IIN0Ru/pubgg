@@ -26,13 +26,14 @@ import {
 /** 고르는 칸: 제목, 주소 이름, 보기 글자 (카드에 붙는 글자는 PICKS 에 따로 있다) */
 const SINGLE_FIELDS: ReadonlyArray<{ key: SinglePick; legend: string; options: ReadonlyArray<[string, string]> }> = [
   { key: 'mic', legend: '마이크', options: [['', '안 고름'], ['o', '마이크 O'], ['x', '마이크 X'], ['listen', '듣기만']] },
+];
+/** labels: 보기 글자가 카드 태그 글자(PICKS)와 다를 때만 */
+const MULTI_FIELDS: ReadonlyArray<{ key: MultiPick; legend: string; labels?: Record<string, string> }> = [
   {
     key: 'time',
     legend: '주로 하는 시간',
-    options: [['', '안 고름'], ['dawn', '새벽'], ['morning', '아침'], ['lunch', '점심'], ['evening', '저녁'], ['night', '밤']],
+    labels: { dawn: '새벽', morning: '아침', lunch: '점심', evening: '저녁', night: '밤' },
   },
-];
-const MULTI_FIELDS: ReadonlyArray<{ key: MultiPick; legend: string }> = [
   { key: 'aim', legend: '지향' },
   { key: 'find', legend: '구함' },
   { key: 'role', legend: '역할' },
@@ -223,7 +224,7 @@ export function CardEditor({ card, shard }: { card: ShareCard; shard: Shard }) {
                   checked={choices[f.key].includes(value)}
                   onChange={() => toggleMany(f.key, value)}
                 />{' '}
-                {text}
+                {f.labels?.[value] ?? text}
               </label>
             ))}
           </fieldset>

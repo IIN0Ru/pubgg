@@ -16,11 +16,11 @@ public final class CardChoices {
 
     /** 하나만 고르는 것 */
     private static final Map<String, Set<String>> ONE = Map.of(
-            "mic", Set.of("o", "x", "listen"),
-            "time", Set.of("dawn", "morning", "lunch", "evening", "night"));
+            "mic", Set.of("o", "x", "listen"));
 
     /** 여러 개 고르는 것 (쉼표로 이어 붙임) */
     private static final Map<String, Set<String>> MANY = Map.of(
+            "time", Set.of("dawn", "morning", "lunch", "evening", "night"),
             "aim", Set.of("chicken", "rank", "social", "normal", "ranked"),
             "find", Set.of("duo", "squad", "clan", "joinclan"),
             "role", Set.of("igl", "front", "second", "turret"));
