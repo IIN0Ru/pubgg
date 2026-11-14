@@ -17,15 +17,15 @@
 
 | 영역 | 사용 |
 |---|---|
-| 서버 | Java 21, Spring Boot 3.5, Maven (JSON API + 링크 미리보기용 껍데기 하나만 Thymeleaf) |
-| 검색 결과 화면 | React 19, TypeScript(strict), Vite, TanStack Query, Zustand |
+| 서버 | Java 21, Spring Boot 3.5, Maven (JSON API + 링크 미리보기: Thymeleaf) |
+| 화면 | React 19, TypeScript(strict), Vite, TanStack Query, Zustand |
 | 저장소 | PostgreSQL (운영), 파일 (로컬) |
 | 데이터 | PUBG 공식 API (매치/텔레메트리/시즌) |
 | 테스트·배포 | JUnit/Mockito, vitest·Testing Library, GitHub Actions, Docker (Render) |
 
 ## 설계에서 신경 쓴 것
 
-- **Spring JSON API + React/TS 분리**: 검색 결과 화면만 React로 옮기고, 서버는 원시값만 준다. 응답 모양은 도메인 객체와 따로 둬서 내부가 바뀌어도 화면 계약이 안 바뀐다
+- **Spring JSON API + React/TS 분리**: 모든 화면은 React, Spring은 데이터만 JSON으로 준다. 서버는 원시값만 준다. 응답 모양은 도메인 객체와 따로 둬서 내부가 바뀌어도 화면 계약이 안 바뀐다
 - **링크 미리보기는 서버가 채운다**: 디스코드·카톡 크롤러는 JS를 실행하지 않으므로, `/s/{id}`의 제목·설명·`og:image`는 서버가 `<head>`에 넣는다
 - **서버 상태와 화면 상태를 나눔**: 전적은 React Query, 필터·즐겨찾기·최근 검색은 Zustand
 - **오래 걸리는 계산은 뒤로**: 텔레메트리 분석은 느려서 카드는 뒤에서 계산하고, 화면은 `pending` 동안 3초마다 다시 묻는다. 분석 결과는 DB에 저장해 재검색을 빠르게 한다
@@ -50,6 +50,7 @@
 ```
 export PUBG_API_KEY=키      # developer.pubg.com 에서 발급 (Windows 는 환경 변수에 등록)
 mvn spring-boot:run          # http://localhost:8080
+PUG.GG #https://pubgg.onrender.com/
 ```
 
 IntelliJ 설정, 프론트 개발(`npm run dev`), 테스트는 [실행 방법](docs/getting-started.md). Docker·환경 변수는 [배포](docs/deployment.md).
