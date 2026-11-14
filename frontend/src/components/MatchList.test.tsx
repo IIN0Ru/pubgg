@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { render } from '../test/render';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useMatchFilters } from '../store/matchFilters';
 import { MatchList } from './MatchList';

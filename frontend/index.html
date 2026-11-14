@@ -1,10 +1,22 @@
 <!doctype html>
-<!-- 개발용 진입점 (npm run dev). 운영에서는 Spring 의 Thymeleaf 가 이 자리(#root)를 그린다 -->
+<!-- 개발용 진입점 (npm run dev). 운영에서는 Spring 의 templates/app.html 이 같은 #root 껍데기를 준다 -->
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>펍지지 (개발)</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script>
+      (function () {
+        var saved = null;
+        try { saved = localStorage.getItem('pubgg.theme'); } catch (e) {}
+        var light = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        document.documentElement.dataset.theme = saved === 'light' || saved === 'dark' ? saved : light ? 'light' : 'dark';
+      })();
+    </script>
+    <!-- 스타일·그림은 Spring(8080)에서 받는다 (vite.config.ts 의 proxy) -->
+    <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
     <div id="root"></div>

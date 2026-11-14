@@ -7,7 +7,7 @@ import java.util.Optional;
 
 /**
  * 공유용 플레이어 카드 (/card 화면). 검색 결과(PlayerMatches)에서 카드에 그릴 것만 뽑는다.
- * 그리는 일은 화면(static/js/player-card.js)이 캔버스로 한다. 이 값은 JSON 으로 넘어간다.
+ * 그리는 일은 화면(frontend/src/lib/card/render.ts)이 캔버스로 한다. 이 값은 JSON 으로 넘어간다.
  *
  * 기록에서 나오는 것만 여기서 정한다. 마이크·지향·구함·역할(성향 태그)은 사용자가 고르고 주소에 담긴다.
  *

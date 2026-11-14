@@ -185,7 +185,7 @@ body {
     padding: 12px 16px 0;
 }
 
-/* 모든 화면 맨 아래 공통 안내 (templates/fragments/footer.html) */
+/* 모든 화면 맨 아래 공통 안내 (React SiteFooter) */
 .sitefooter {
     margin-top: auto;
     padding: 32px 16px 40px;
@@ -1732,7 +1732,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 [hidden] { display: none !important; }
 
 /* =========================================================
-   2D 리플레이 (templates/replay.html, static/js/replay.js)
+   2D 리플레이 (React ReplayScreen, 캔버스는 frontend/src/lib/replay/engine.ts)
    ========================================================= */
 .replay {
     max-width: 1280px;
@@ -1831,7 +1831,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .replay__canvas canvas {
     display: block;
     width: 100%;
-    touch-action: pan-x pan-y;   /* 한 손가락은 페이지 내리기, 두 손가락(확대·이동)은 replay.js 가 받음 */
+    touch-action: pan-x pan-y;   /* 한 손가락은 페이지 내리기, 두 손가락(확대·이동)은 engine.ts 가 받음 */
     cursor: grab;
 }
 
@@ -2327,7 +2327,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     .replay__bar .tab { white-space: nowrap; }
     .replay__share { flex: none; white-space: nowrap; }
 
-    /* 따라가기·확대·축소·전체는 지도 오른쪽 위에 (replay.js 가 지도 안으로 옮김) */
+    /* 따라가기·확대·축소·전체는 지도 오른쪽 위에 (폰이면 ReplayScreen 이 지도 안에 그림) */
     .replay__canvas .replay__view {
         position: absolute;
         top: 8px;
@@ -2393,7 +2393,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
         top: 0;
         z-index: 20;
     }
-    /* 탭도 지도 바로 아래에 붙여서, 내려간 채로 칸을 바꿀 수 있게 (--stage-h 는 replay.js 가 잰 지도 칸 높이) */
+    /* 탭도 지도 바로 아래에 붙여서, 내려간 채로 칸을 바꿀 수 있게 (--stage-h 는 ReplayScreen 이 잰 지도 칸 높이) */
     .replay__panels {
         position: sticky;
         top: var(--stage-h, 0px);
@@ -2413,7 +2413,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 /* =========================================================
    플레이어 카드 (/card)
-   카드 그림은 player-card.js 가 캔버스에 그린다 (카드 안 색은 고정. CLAUDE.md 예외).
+   카드 그림은 frontend/src/lib/card/render.ts 가 캔버스에 그린다 (카드 안 색은 고정. CLAUDE.md 예외).
    여기는 카드 둘레와 꾸미기 칸만.
    ========================================================= */
 .pcard {
@@ -2454,7 +2454,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     aspect-ratio: 3 / 4;
     height: auto;
     image-rendering: pixelated;
-    /* 티어 색으로 빛 번짐 (--tier-glow 는 player-card.js 가 티어 색으로 넣는다) */
+    /* 티어 색으로 빛 번짐 (--tier-glow 는 CardEditor 가 티어 색으로 넣는다) */
     filter: drop-shadow(0 0 10px var(--tier-glow, transparent));
 }
 
@@ -2597,7 +2597,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .pick:disabled label { cursor: not-allowed; }
 .pick label small { margin-left: 4px; color: inherit; opacity: 0.7; font-size: 11px; }
 
-/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (React IdCard 가 card-render.js 로 그림) */
+/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (React IdCard 가 lib/card/render.ts 로 그림) */
 .idcard--player {
     padding: 0;
     background: transparent;
@@ -2663,6 +2663,9 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     border-radius: 50%;
     animation: loading-spin 0.9s linear infinite;
 }
+
+/* 처음 검색하는 닉네임은 오래 걸린다는 안내 (예전 첫 화면 검색창 아래 문구를 옮김) */
+.loading__hint { margin-top: -8px; font-size: 14px; color: var(--muted); text-align: center; }
 
 @keyframes loading-spin { to { transform: rotate(360deg); } }
 

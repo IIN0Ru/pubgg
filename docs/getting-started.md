@@ -6,7 +6,7 @@
 
 - JDK 21
 - PUBG API 키 ([developer.pubg.com](https://developer.pubg.com)에서 발급)
-- 프론트엔드를 고칠 때만: Node 22
+- Node 22 (화면이 전부 React라서 서버만 띄울 때도 한 번은 빌드해야 한다)
 
 ## 서버 실행 (IntelliJ)
 
@@ -20,8 +20,15 @@
    - 등록 후 IntelliJ를 완전히 껐다 켜야 반영됨
    - 그래도 "API 키가 설정되지 않았어요"가 뜨면: 실행 버튼 옆 **PubggApplication ▼ → 구성 편집 → 환경 변수**에 `PUBG_API_KEY=키` 입력
      (JetBrains Toolbox로 켠 IntelliJ는 예전 환경 변수를 들고 있을 수 있음. 이 설정은 내 컴퓨터에만 저장되고 GitHub에 올라가지 않음)
-5. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
-6. 브라우저에서 http://localhost:8080 접속
+5. 화면(React) 빌드: 터미널에서 아래를 실행한다. 처음 한 번, 그리고 `frontend/`가 바뀐 코드를 받았을 때마다
+   ```
+   cd frontend
+   npm install
+   npm run build:spring   # 빌드 결과를 src/main/resources/static/app/ 에 넣는다 (Git 에는 안 올라감)
+   ```
+   이걸 안 하면 8080 화면이 하얗게 나온다 (껍데기만 있고 React 파일이 없어서)
+6. `src/main/java/gg/pub/PubggApplication.java` 열고 `main` 옆 ▶ 버튼 → **Run**
+7. 브라우저에서 http://localhost:8080 접속
 
 터미널로 실행하려면 (키는 같은 환경 변수):
 
@@ -35,19 +42,20 @@ mvn spring-boot:run
 
 ## 프론트엔드(React) 개발
 
-검색 결과 화면(`/search`, `/s/{id}`)만 React이고, 첫 화면·카드 꾸미기(`/card`)·2D 리플레이(`/replay`)는 Thymeleaf다.
+모든 화면이 React다. 개발할 때는 Spring(8080)과 `npm run dev`(5173)를 같이 띄우고 5173으로 연다 (`/api`·`/css`·`/images`는 Spring으로 넘어간다). 공유 주소 `/s/{id}`만은 서버가 플레이어를 껍데기에 넣어 줘서 8080에서 확인한다.
 
 ```
 cd frontend
 npm install
-npm run dev        # http://localhost:5173/?platform=steam&nickname=닉네임
+npm run dev        # http://localhost:5173 (화면을 고치면 바로 반영)
 npm test           # vitest
 npm run typecheck  # 타입 검사
 npm run build      # 타입 검사 + 빌드 → dist/
+npm run build:spring  # 빌드 → Spring 의 static/app/ (8080 으로 바로 볼 때)
 ```
 
 - `npm run dev`는 Spring을 8080에서 같이 띄워 둔 상태에서 쓴다. 5173은 `/api` 등을 8080으로 넘겨 준다
-- 운영에서는 Docker 빌드가 `npm run build` 결과를 Spring의 `static/app/assets/`에 넣고, `/search`·`/s/{id}`의 껍데기(`templates/app.html`)가 이를 불러온다. 같은 주소라서 CORS 설정이 필요 없다
+- 운영에서는 Docker 빌드가 `npm run build` 결과를 Spring의 `static/app/assets/`에 넣고, 모든 화면 주소의 껍데기(`templates/app.html`)가 이를 불러온다. 같은 주소라서 CORS 설정이 필요 없다
 
 ## 테스트
 

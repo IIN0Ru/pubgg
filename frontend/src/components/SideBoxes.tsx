@@ -1,4 +1,6 @@
+import { Link } from 'react-router';
 import type { Card, Comparison, Season, Shard, Teammate } from '../api/types';
+import { searchPath } from '../lib/search';
 
 const ARROW = { 1: '▲', 0: '', [-1]: '▼' } as const;
 const TREND_TEXT = { 1: '시즌보다 높음', 0: '시즌과 같음', [-1]: '시즌보다 낮음' } as const;
@@ -56,12 +58,9 @@ export function TeammatesBox({ teammates, shard }: { teammates: Teammate[]; shar
         <ol className="mates">
           {teammates.map((t) => (
             <li className="mate" key={t.name}>
-              <a
-                className="mate__name"
-                href={`/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}
-              >
+              <Link className="mate__name" to={searchPath(shard, t.name)}>
                 {t.name}
-              </a>
+              </Link>
               <span className="mate__games">{t.games}경기</span>
               <span className="mate__meta">
                 <span>평균 #{t.avgRank.toFixed(1)}</span>

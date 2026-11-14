@@ -3,7 +3,7 @@ import type { ShareCard } from '../api/types';
 import { drawProfileCard } from '../lib/cardRenderer';
 
 /**
- * A카드 캔버스. 그리는 일은 기존 card-render.js 가 하고, 여기서는 켜고 끄는 것만 맡는다.
+ * A카드 캔버스. 그리는 일은 lib/card/render.ts 가 하고, 여기서는 켜고 끄는 것만 맡는다.
  * 카드 값(닉네임·티어·KDA 등)이 바뀌면 다시 그리고, 화면에서 사라지면 반짝임 타이머를 멈춘다.
  */
 export function PlayerCanvas({ card }: { card: ShareCard }) {

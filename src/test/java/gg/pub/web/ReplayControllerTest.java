@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,14 +42,29 @@ class ReplayControllerTest {
     }
 
     @Test
-    void 리플레이_화면이_열린다() throws Exception {
-        when(replayService.record(Platform.STEAM, MATCH, PLAYER)).thenReturn(record());
-
+    void 리플레이_화면은_React_껍데기를_연다() throws Exception {
         mvc.perform(get("/replay").param("platform", "steam").param("match", MATCH)
                         .param("player", PLAYER).param("nickname", "Sample-01"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("replay"))
-                .andExpect(model().attributeExists("record"));
+                .andExpect(view().name("app"))
+                .andExpect(content().string(containsString("<title>Sample-01 리플레이 | 펍지지</title>")))
+                .andExpect(content().string(containsString("/app/assets/app.js")));
+        // 경기 기록은 React 가 /api/replay/summary 로 받는다
+        verifyNoInteractions(replayService);
+    }
+
+    @Test
+    void 머리_줄은_전적_목록과_같은_경기_모양으로() throws Exception {
+        when(replayService.record(Platform.STEAM, MATCH, PLAYER)).thenReturn(record());
+
+        mvc.perform(get("/api/replay/summary").param("platform", "steam").param("match", MATCH).param("player", PLAYER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matchId").value(MATCH))
+                .andExpect(jsonPath("$.mapLabel").exists())
+                .andExpect(jsonPath("$.rank").value(2))
+                .andExpect(jsonPath("$.teams").value(16))
+                .andExpect(jsonPath("$.me.kills").value(3))
+                .andExpect(jsonPath("$.me.damage").value(512));
     }
 
     @Test
@@ -59,13 +76,19 @@ class ReplayControllerTest {
     }
 
     @Test
-    void 일반전이면_안내_문구() throws Exception {
+    void 일반전이면_머리_줄이_404_와_안내_문구() throws Exception {
         when(replayService.record(Platform.STEAM, MATCH, PLAYER))
                 .thenThrow(new ReplayUnavailableException("리플레이는 경쟁전 경기만 볼 수 있어요."));
 
-        mvc.perform(get("/replay").param("platform", "steam").param("match", MATCH).param("player", PLAYER))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("errorMessage", "리플레이는 경쟁전 경기만 볼 수 있어요."));
+        mvc.perform(get("/api/replay/summary").param("platform", "steam").param("match", MATCH).param("player", PLAYER))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("리플레이는 경쟁전 경기만 볼 수 있어요."));
+    }
+
+    @Test
+    void 머리_줄_주소가_이상하면_400() throws Exception {
+        mvc.perform(get("/api/replay/summary").param("platform", "steam").param("match", "../x").param("player", PLAYER))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

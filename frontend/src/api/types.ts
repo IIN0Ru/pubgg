@@ -102,7 +102,7 @@ export interface Card {
   farming: Farming | null;
 }
 
-/** A카드 캔버스(720x960)에 그릴 값. 기존 static/js/card-profile.js 가 그대로 받는다 */
+/** 카드 캔버스(720x960)에 그릴 값 (서버 ShareCard.java). 전적 화면 A카드와 공유 카드(B카드)가 같이 쓴다 */
 export interface ShareCard {
   nickname: string;
   clan: string;
@@ -208,4 +208,29 @@ export interface ApiErrorBody {
   code: ApiErrorCode;
   message: string;
   retryAfterSec?: number;
+}
+
+/** GET /api/card/{platform}/{nickname} (CardApiController) */
+export interface CardPage {
+  /** 서버가 찾은 정확한 닉네임 (대소문자) */
+  nickname: string;
+  platform: Platform;
+  /** 최근 30경기 안에 경쟁전·일반 경기 기록이 없으면 null */
+  card: ShareCard | null;
+}
+
+/** POST /api/share 본문 (CardController.ShareRequest) */
+export interface ShareRequest {
+  platform: Shard;
+  nickname: string;
+  choices: Record<string, string>;
+  background: { map: string; sx: number; sy: number };
+  /** 미리보기 그림 "data:image/png;base64,…" */
+  png: string;
+}
+
+export interface ShareResult {
+  id: string;
+  /** "/s/{id}" */
+  link: string;
 }

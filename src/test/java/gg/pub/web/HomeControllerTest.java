@@ -44,10 +44,15 @@ class HomeControllerTest {
     CardService cardService;   // 공유 카드 (공유 주소 /s/{id} 를 열 때만 쓴다)
 
     @Test
-    void 첫_화면이_열린다() throws Exception {
+    void 첫_화면은_React_껍데기와_사이트_소개_미리보기를_준다() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("index"));
+                .andExpect(view().name("app"))
+                .andExpect(content().string(containsString("/app/assets/app.js")))
+                .andExpect(content().string(containsString("<title>펍지지 PUB.GG</title>")))
+                .andExpect(content().string(containsString("og:description\" content=\"자기장 운영")))
+                // 첫 화면은 보여줄 플레이어가 없다 (껍데기 주석에 "data-nickname" 글자가 있어서 속성 모양 "=" 까지 본다)
+                .andExpect(content().string(not(containsString("data-nickname="))));
     }
 
     @Test

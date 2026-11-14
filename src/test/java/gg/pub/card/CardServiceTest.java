@@ -113,11 +113,12 @@ class CardServiceTest {
     }
 
     @Test
-    void 접속_시간대는_하나만_고르고_아는_값만_받는다() {
+    void 접속_시간대는_여러_개_고를_수_있고_아는_값만_받는다() {
         for (String t : new String[]{"dawn", "morning", "lunch", "evening", "night"}) {
             assertThat(CardChoices.clean(Map.of("time", t))).containsEntry("time", t);
         }
-        assertThatThrownBy(() -> CardChoices.clean(Map.of("time", "night,dawn")))   // 여러 개는 안 됨
+        assertThat(CardChoices.clean(Map.of("time", "dawn,night"))).containsEntry("time", "dawn,night");
+        assertThatThrownBy(() -> CardChoices.clean(Map.of("time", "night,afternoon")))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> CardChoices.clean(Map.of("time", "afternoon")))
                 .isInstanceOf(IllegalArgumentException.class);

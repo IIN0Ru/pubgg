@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { render } from '../test/render';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FAVORITES_KEY, usePlayerLists } from '../store/players';
 import { IdCard } from './IdCard';

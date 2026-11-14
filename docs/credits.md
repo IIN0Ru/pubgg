@@ -2,7 +2,7 @@
 
 [← README](../README.md)
 
-펍지지는 KRAFTON·PUBG와 관련이 없는 비공식 사이트다. 모든 화면 아래에 같은 안내와 상표 문구를 넣었다 (`templates/fragments/footer.html`).
+펍지지는 KRAFTON·PUBG와 관련이 없는 비공식 사이트다. 모든 화면 아래에 같은 안내와 상표 문구를 넣었다 (`frontend/src/components/layout/SiteFooter.tsx`).
 
 ## 자료 출처
 
