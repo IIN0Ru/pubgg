@@ -6,6 +6,7 @@ import gg.pub.domain.replay.Replay;
 import gg.pub.pubgapi.PubgApiException;
 import gg.pub.service.ReplayService;
 import gg.pub.service.ReplayUnavailableException;
+import gg.pub.web.api.PlayerPageResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,11 +20,12 @@ import java.util.Optional;
 
 /**
  * 2D 리플레이.
- *  - GET /replay      화면 (templates/replay.html). 데이터는 화면이 아래 주소로 따로 받아온다
- *  - GET /api/replay  리플레이 데이터(JSON)
+ *  - GET /replay              화면 껍데기 (React 가 그린다)
+ *  - GET /api/replay/summary  머리 줄에 쓸 경기 기록 (맵·등수·킬…). 경기 기록만 읽어서 빠르다
+ *  - GET /api/replay          리플레이 데이터(JSON)
  *
- * 화면과 데이터를 나눈 이유: 텔레메트리를 처음 읽을 때 수 초가 걸려서,
- * 화면부터 띄우고 "불러오는 중"을 보여준 뒤 데이터가 오면 그린다.
+ * 머리 줄과 데이터를 나눈 이유: 텔레메트리를 처음 읽을 때 수 초가 걸려서,
+ * 화면과 머리 줄부터 띄우고 "불러오는 중"을 보여준 뒤 데이터가 오면 그린다.
  */
 @Controller
 public class ReplayController {
@@ -40,24 +42,32 @@ public class ReplayController {
                        @RequestParam(required = false) String player,
                        @RequestParam(required = false) String nickname,
                        Model model) {
-        Optional<Platform> selected = Platform.fromShard(platform);
-        if (selected.isEmpty() || !validMatch(match) || !validPlayer(player)) {
+        if (Platform.fromShard(platform).isEmpty() || !validMatch(match) || !validPlayer(player)) {
             return "redirect:/";
         }
         String name = nickname == null ? "" : nickname.trim();
+        String title = name.isEmpty() ? "리플레이" : name + " 리플레이";
+        return Shell.fill(model, title + " | 펍지지", title, "배그 2D 리플레이 · 우리 팀 동선과 교전");
+    }
 
-        model.addAttribute("platforms", Platform.values());   // 상단 검색창용
-        model.addAttribute("platform", selected.get());
-        model.addAttribute("nickname", name);
-        model.addAttribute("matchId", match);
-        model.addAttribute("player", player);
+    /** 머리 줄: 전적 목록과 같은 경기 모양 (frontend 의 Match 타입) */
+    @GetMapping("/api/replay/summary")
+    @ResponseBody
+    public ResponseEntity<?> summary(@RequestParam String platform,
+                                     @RequestParam String match,
+                                     @RequestParam String player) {
+        Optional<Platform> selected = Platform.fromShard(platform);
+        if (selected.isEmpty() || !validMatch(match) || !validPlayer(player)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "주소가 올바르지 않아요."));
+        }
         try {
             MatchRecord record = replayService.record(selected.get(), match, player);
-            model.addAttribute("record", record);
+            return ResponseEntity.ok(PlayerPageResponse.MatchDto.from(record));
+        } catch (ReplayUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         } catch (PubgApiException e) {
-            model.addAttribute("errorMessage", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", e.getMessage()));
         }
-        return "replay";
     }
 
     @GetMapping("/api/replay")

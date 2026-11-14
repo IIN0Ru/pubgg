@@ -152,7 +152,8 @@ public record PlayerPageResponse(String nickname,
     public record MatchDto(String matchId, Instant playedAt, String type, String typeLabel, String perspective,
                            String gameMode, String modeLabel, String mapName, String mapLabel,
                            int rank, int teams, boolean replayAvailable, MatchPlayerDto me, List<MatchPlayerDto> teammates) {
-        static MatchDto from(MatchRecord m) {
+        /** 리플레이 머리 줄(ReplayController /api/replay/summary)도 같은 모양을 쓴다 */
+        public static MatchDto from(MatchRecord m) {
             return new MatchDto(m.matchId(), m.playedAt(), m.typeKey(), m.matchTypeLabel(), m.perspectiveKey(),
                     m.gameMode(), m.mode(), m.mapName(), m.map(),
                     m.rank(), m.teams(), m.isCompetitive(),

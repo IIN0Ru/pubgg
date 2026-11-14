@@ -4,7 +4,8 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { FAVORITES_KEY, RECENT_KEY, usePlayerLists } from '../store/players';
-import { page, shareCard } from '../test/fixtures';
+import { match, page, shareCard } from '../test/fixtures';
+import { replayData } from '../test/replayFixture';
 
 vi.mock('../lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
 // 카드 그리기는 그림 파일을 받아야 해서 테스트에서는 바로 끝나는 가짜로
@@ -185,6 +186,39 @@ describe('공유 카드 꾸미기', () => {
 
   it('주소가 이상하면 첫 화면으로', () => {
     renderAt('/card?platform=xbox&nickname=abc');
+    expect(location.pathname).toBe('/');
+  });
+});
+
+describe('2D 리플레이', () => {
+  const path = '/replay?platform=steam&match=0b1c2d3e-4f50&player=account.me&nickname=Sample-01';
+
+  it('머리 줄(맵·등수·킬)과 우리 팀·경기 흐름 칸을 보여준다', async () => {
+    serve({
+      '/api/replay/summary': () => json(200, match({ rank: 2, teams: 16 })),
+      '/api/replay?': () => json(200, replayData()),
+    });
+    renderAt(path);
+
+    expect(await screen.findByRole('heading', { name: /에란겔/ })).toHaveTextContent('#2');
+    expect(screen.getByRole('link', { name: /Sample-01 전적/ })).toHaveAttribute(
+      'href',
+      '/search?platform=steam&nickname=Sample-01',
+    );
+    // 데이터가 오면 오른쪽 칸이 채워진다 (jsdom 은 캔버스를 그릴 수 없어서 지도 자리에는 안내)
+    expect(await screen.findByText('Sample-01 → Enemy 킬')).toBeInTheDocument();
+    expect(screen.getByText('이 브라우저에서는 지도를 그릴 수 없어요.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /우리 팀 .*명 생존/ })).toBeInTheDocument();
+  });
+
+  it('일반전처럼 리플레이가 없는 경기는 서버 안내', async () => {
+    serve({ '/api/replay/summary': () => json(404, { message: '리플레이는 경쟁전 경기만 볼 수 있어요.' }) });
+    renderAt(path);
+    expect(await screen.findByText('리플레이는 경쟁전 경기만 볼 수 있어요.')).toBeInTheDocument();
+  });
+
+  it('주소가 이상하면 첫 화면으로', () => {
+    renderAt('/replay?platform=steam&match=../../x&player=account.me');
     expect(location.pathname).toBe('/');
   });
 });

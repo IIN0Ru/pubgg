@@ -3,7 +3,7 @@ package gg.pub.domain.replay;
 import java.util.List;
 
 /**
- * 2D 리플레이 한 경기에 필요한 것만 추린 데이터. 화면(replay.js)이 JSON 으로 받아서 그린다.
+ * 2D 리플레이 한 경기에 필요한 것만 추린 데이터. 화면(frontend/src/lib/replay/)이 JSON 으로 받아서 그린다.
  *
  * 텔레메트리 원본은 한 경기에 수 MB 라서 그대로 보내지 않고,
  * 위치는 미터 단위 정수, 시각은 경기 시작부터 초 단위 정수로 줄여서 보낸다.

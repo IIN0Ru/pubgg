@@ -1,4 +1,5 @@
-import type { ApiErrorBody, ApiErrorCode, CardPage, PlayerPage, RefreshResult, ShareRequest, ShareResult, Shard } from './types';
+import type { ApiErrorBody, ApiErrorCode, CardPage, Match, PlayerPage, RefreshResult, ShareRequest, ShareResult, Shard } from './types';
+import type { ReplayData } from '../lib/replay/types';
 
 /**
  * 서버가 돌려준 실패. 화면은 code 로 안내를 나눈다.
@@ -85,4 +86,18 @@ export function createShare(body: ShareRequest): Promise<ShareResult> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+function replayQuery(shard: Shard, matchId: string, accountId: string): string {
+  return new URLSearchParams({ platform: shard, match: matchId, player: accountId }).toString();
+}
+
+/** 리플레이 머리 줄 (맵·등수·킬…). 경기 기록만 읽어서 빠르다 */
+export function fetchReplaySummary(shard: Shard, matchId: string, accountId: string): Promise<Match> {
+  return request<Match>(`/api/replay/summary?${replayQuery(shard, matchId, accountId)}`);
+}
+
+/** 2D 리플레이 데이터. 처음 여는 경기는 텔레메트리를 읽느라 몇 초 걸린다 */
+export function fetchReplay(shard: Shard, matchId: string, accountId: string): Promise<ReplayData> {
+  return request<ReplayData>(`/api/replay?${replayQuery(shard, matchId, accountId)}`);
 }

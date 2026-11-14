@@ -185,7 +185,7 @@ body {
     padding: 12px 16px 0;
 }
 
-/* 모든 화면 맨 아래 공통 안내 (React SiteFooter, 카드·리플레이 화면은 아직 fragments/footer.html) */
+/* 모든 화면 맨 아래 공통 안내 (React SiteFooter) */
 .sitefooter {
     margin-top: auto;
     padding: 32px 16px 40px;
@@ -1732,7 +1732,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 [hidden] { display: none !important; }
 
 /* =========================================================
-   2D 리플레이 (templates/replay.html, static/js/replay.js)
+   2D 리플레이 (React ReplayScreen, 캔버스는 frontend/src/lib/replay/engine.ts)
    ========================================================= */
 .replay {
     max-width: 1280px;
@@ -1831,7 +1831,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .replay__canvas canvas {
     display: block;
     width: 100%;
-    touch-action: pan-x pan-y;   /* 한 손가락은 페이지 내리기, 두 손가락(확대·이동)은 replay.js 가 받음 */
+    touch-action: pan-x pan-y;   /* 한 손가락은 페이지 내리기, 두 손가락(확대·이동)은 engine.ts 가 받음 */
     cursor: grab;
 }
 
@@ -2327,7 +2327,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     .replay__bar .tab { white-space: nowrap; }
     .replay__share { flex: none; white-space: nowrap; }
 
-    /* 따라가기·확대·축소·전체는 지도 오른쪽 위에 (replay.js 가 지도 안으로 옮김) */
+    /* 따라가기·확대·축소·전체는 지도 오른쪽 위에 (폰이면 ReplayScreen 이 지도 안에 그림) */
     .replay__canvas .replay__view {
         position: absolute;
         top: 8px;
@@ -2393,7 +2393,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
         top: 0;
         z-index: 20;
     }
-    /* 탭도 지도 바로 아래에 붙여서, 내려간 채로 칸을 바꿀 수 있게 (--stage-h 는 replay.js 가 잰 지도 칸 높이) */
+    /* 탭도 지도 바로 아래에 붙여서, 내려간 채로 칸을 바꿀 수 있게 (--stage-h 는 ReplayScreen 이 잰 지도 칸 높이) */
     .replay__panels {
         position: sticky;
         top: var(--stage-h, 0px);
