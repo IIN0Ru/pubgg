@@ -51,8 +51,8 @@ class HomeControllerTest {
                 .andExpect(content().string(containsString("/app/assets/app.js")))
                 .andExpect(content().string(containsString("<title>펍지지 PUB.GG</title>")))
                 .andExpect(content().string(containsString("og:description\" content=\"자기장 운영")))
-                // 첫 화면은 보여줄 플레이어가 없다
-                .andExpect(content().string(not(containsString("data-nickname"))));
+                // 첫 화면은 보여줄 플레이어가 없다 (껍데기 주석에 "data-nickname" 글자가 있어서 속성 모양 "=" 까지 본다)
+                .andExpect(content().string(not(containsString("data-nickname="))));
     }
 
     @Test
