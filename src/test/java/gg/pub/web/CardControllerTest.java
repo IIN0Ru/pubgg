@@ -3,7 +3,6 @@ package gg.pub.web;
 import gg.pub.card.CardService;
 import gg.pub.domain.Platform;
 import gg.pub.domain.PlayerMatches;
-import gg.pub.pubgapi.PlayerNotFoundException;
 import gg.pub.service.PlayerLookupService;
 import gg.pub.service.PlayerLookupService.Lookup;
 import org.junit.jupiter.api.Test;
@@ -16,9 +15,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,25 +48,14 @@ class CardControllerTest {
     }
 
     @Test
-    void 경쟁전_기록이_없으면_카드_없이_안내() throws Exception {
-        PlayerMatches result = new PlayerMatches("Sample-01", Platform.STEAM, null, List.of());
-        when(lookupService.findWithCard(Platform.STEAM, "sample-01"))
-                .thenReturn(new Lookup(result, Instant.parse("2026-10-20T12:00:00Z")));
-
+    void 꾸미기_화면은_카드_계산을_기다리지_않고_React_껍데기를_바로_연다() throws Exception {
         mvc.perform(get("/card").param("platform", "steam").param("nickname", "sample-01"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("card"))
-                .andExpect(model().attribute("nickname", "Sample-01"))   // 정확한 닉네임으로
-                .andExpect(model().attributeDoesNotExist("card"));
-    }
-
-    @Test
-    void 플레이어가_없으면_안내_문구() throws Exception {
-        when(lookupService.findWithCard(Platform.KAKAO, "nobody")).thenThrow(new PlayerNotFoundException("nobody"));
-
-        mvc.perform(get("/card").param("platform", "kakao").param("nickname", "nobody"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("errorMessage"));
+                .andExpect(view().name("app"))
+                .andExpect(content().string(containsString("<title>sample-01 공유 카드 | 펍지지</title>")))
+                .andExpect(content().string(containsString("/app/assets/app.js")));
+        // 카드 값은 React 가 /api/card 로 받는다 (CardApiControllerTest)
+        verify(lookupService, never()).findWithCard(any(), any());
     }
 
     private static final String BODY = """

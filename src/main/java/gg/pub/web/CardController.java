@@ -1,12 +1,9 @@
 package gg.pub.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.pub.card.CardService;
 import gg.pub.card.ShareRateLimiter;
 import gg.pub.card.SharedCard;
 import gg.pub.domain.Platform;
-import gg.pub.domain.ShareCard;
 import gg.pub.pubgapi.PubgApiException;
 import gg.pub.service.PlayerLookupService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,10 +28,11 @@ import java.util.Optional;
 
 /**
  * 공유 카드(B카드).
- *  - GET  /card?platform=steam&nickname=Sample-01   공유 카드 꾸미기 화면 (태그를 고르고 배경을 정한다)
+ *  - GET  /card?platform=steam&nickname=Sample-01   공유 카드 꾸미기 화면 껍데기 (React 가 그린다)
  *  - POST /api/share                             공유 카드를 만들고 공유 주소(/s/{id})를 돌려준다
  *  - GET  /s/{id}/image                          공유한 카드 그림 (디스코드·카톡 링크 미리보기용)
  *
+ * 꾸미기 화면에 쓸 카드 값은 web/api/CardApiController 가 JSON 으로 준다.
  * 공유 주소 /s/{id} 자체는 HomeController 가 전적 화면(A카드)으로 보여준다.
  * 기록 값(KDA·딜·전투 태그)은 저장하지 않고 늘 최신 검색 결과로 채운다. 꾸민 값은 주소 뒤에도 붙어서
  * 새로고침해도 같은 모습으로 이어진다.
@@ -49,14 +47,16 @@ public class CardController {
 
     private final PlayerLookupService lookupService;
     private final CardService cardService;
-    private final ObjectMapper objectMapper;
 
-    public CardController(PlayerLookupService lookupService, CardService cardService, ObjectMapper objectMapper) {
+    public CardController(PlayerLookupService lookupService, CardService cardService) {
         this.lookupService = lookupService;
         this.cardService = cardService;
-        this.objectMapper = objectMapper;
     }
 
+    /**
+     * 꾸미기 화면 껍데기. 카드 값은 React 가 GET /api/card/{platform}/{nickname} (CardApiController) 으로 받는다.
+     * 주소가 이상하면 첫 화면으로.
+     */
     @GetMapping("/card")
     public String card(@RequestParam(required = false) String platform,
                        @RequestParam(required = false) String nickname,
@@ -66,23 +66,7 @@ public class CardController {
         if (selected.isEmpty() || name.isEmpty()) {
             return "redirect:/";
         }
-
-        model.addAttribute("platforms", Platform.values());   // 상단 검색창용
-        model.addAttribute("platform", selected.get());
-        model.addAttribute("nickname", name);
-        try {
-            PlayerLookupService.Lookup lookup = lookupService.findWithCard(selected.get(), name);
-            String exact = lookup.result().nickname();
-            model.addAttribute("nickname", exact);
-            Optional<ShareCard> card = ShareCard.from(lookup.result());
-            if (card.isPresent()) {
-                model.addAttribute("card", card.get());
-                model.addAttribute("cardJson", toJson(card.get()));
-            }
-        } catch (PubgApiException e) {
-            model.addAttribute("errorMessage", e.getMessage());
-        }
-        return "card";
+        return Shell.fill(model, name + " 공유 카드 | 펍지지", name + " 공유 카드", Shell.DEFAULT_DESCRIPTION);
     }
 
     /**
@@ -132,13 +116,5 @@ public class CardController {
 
     private static ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of("message", message));
-    }
-
-    private String toJson(Object value) {
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("카드 값을 JSON 으로 못 바꿈", e);
-        }
     }
 }

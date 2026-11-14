@@ -2413,7 +2413,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 
 /* =========================================================
    플레이어 카드 (/card)
-   카드 그림은 player-card.js 가 캔버스에 그린다 (카드 안 색은 고정. CLAUDE.md 예외).
+   카드 그림은 frontend/src/lib/card/render.ts 가 캔버스에 그린다 (카드 안 색은 고정. CLAUDE.md 예외).
    여기는 카드 둘레와 꾸미기 칸만.
    ========================================================= */
 .pcard {
@@ -2454,7 +2454,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     aspect-ratio: 3 / 4;
     height: auto;
     image-rendering: pixelated;
-    /* 티어 색으로 빛 번짐 (--tier-glow 는 player-card.js 가 티어 색으로 넣는다) */
+    /* 티어 색으로 빛 번짐 (--tier-glow 는 CardEditor 가 티어 색으로 넣는다) */
     filter: drop-shadow(0 0 10px var(--tier-glow, transparent));
 }
 

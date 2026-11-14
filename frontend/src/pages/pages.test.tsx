@@ -1,10 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { FAVORITES_KEY, RECENT_KEY, usePlayerLists } from '../store/players';
-import { page } from '../test/fixtures';
+import { page, shareCard } from '../test/fixtures';
 
 vi.mock('../lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
 // 카드 그리기는 그림 파일을 받아야 해서 테스트에서는 바로 끝나는 가짜로
@@ -129,5 +129,62 @@ describe('상단 바', () => {
     expect(location.search).toBe('?platform=steam&nickname=Recent-1');
     // 다른 플레이어로 넘어가면 검색창도 그 닉네임으로
     await waitFor(() => expect(screen.getByLabelText('배그 닉네임')).toHaveValue('Recent-1'));
+  });
+});
+
+describe('공유 카드 꾸미기', () => {
+  it('카드 값을 받아 그리고, 고른 성향을 주소에 붙이고, 공유 링크를 만들어 복사한다', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    const fetchMock = serve({
+      '/api/card/steam/sample-01': () =>
+        json(200, { nickname: 'Sample-01', platform: { shard: 'steam', label: '스팀' }, card: shareCard }),
+      '/api/share': () => json(200, { id: 'abc', link: '/s/abc' }),
+    });
+    renderAt('/card?platform=steam&nickname=sample-01&mic=o');
+
+    expect(await screen.findByRole('heading', { name: '공유 카드' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '← 전적으로 돌아가기' })).toHaveAttribute(
+      'href',
+      '/search?platform=steam&nickname=Sample-01',
+    );
+    expect(screen.getByLabelText('마이크 O')).toBeChecked();
+
+    fireEvent.click(screen.getByLabelText('IGL'));
+    fireEvent.click(screen.getByLabelText('듀오 구함'));
+    await waitFor(() => expect(location.search).toBe('?platform=steam&nickname=Sample-01&mic=o&find=duo&role=igl'));
+
+    const shareButton = screen.getByRole('button', { name: '공유 링크 만들기' });
+    await waitFor(() => expect(shareButton).toBeEnabled());
+    await act(async () => {
+      fireEvent.click(shareButton);
+    });
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/s/abc`));
+    const call = fetchMock.mock.calls.find(([url]) => String(url) === '/api/share') as unknown as [string, RequestInit];
+    expect(JSON.parse(String(call[1].body))).toMatchObject({
+      platform: 'steam',
+      nickname: 'Sample-01',
+      choices: { mic: 'o', find: 'duo', role: 'igl' },
+      background: { map: 'erangel', sx: 1, sy: 2 },
+    });
+
+    // 같은 모습으로 다시 누르면 새로 만들지 않는다
+    await act(async () => {
+      fireEvent.click(shareButton);
+    });
+    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/share')).toHaveLength(1);
+  });
+
+  it('기록이 없거나 플레이어가 없으면 안내만', async () => {
+    serve({
+      '/api/card/steam/nobody': () => json(404, { code: 'PLAYER_NOT_FOUND', message: '플레이어를 찾지 못했어요.' }),
+    });
+    renderAt('/card?platform=steam&nickname=nobody');
+    expect(await screen.findByText('플레이어를 찾지 못했어요.')).toBeInTheDocument();
+  });
+
+  it('주소가 이상하면 첫 화면으로', () => {
+    renderAt('/card?platform=xbox&nickname=abc');
+    expect(location.pathname).toBe('/');
   });
 });

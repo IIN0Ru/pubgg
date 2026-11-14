@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 공유할 꾸민 값 검사. 화면(player-card.js)의 주소 값과 같은 이름·값만 받는다.
+ * 공유할 꾸민 값 검사. 화면(frontend/src/lib/card/choices.ts)의 주소 값과 같은 이름·값만 받는다.
  * 모르는 이름은 버리고, 아는 이름에 이상한 값이 오면 IllegalArgumentException.
  */
 public final class CardChoices {

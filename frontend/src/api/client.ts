@@ -1,4 +1,4 @@
-import type { ApiErrorBody, ApiErrorCode, PlayerPage, RefreshResult, Shard } from './types';
+import type { ApiErrorBody, ApiErrorCode, CardPage, PlayerPage, RefreshResult, ShareRequest, ShareResult, Shard } from './types';
 
 /**
  * 서버가 돌려준 실패. 화면은 code 로 안내를 나눈다.
@@ -27,6 +27,17 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
+/** 전적 API 가 아닌 주소(공유·리플레이)는 { message } 만 준다. 상태 코드로 종류를 나눈다 */
+function hasMessage(value: unknown): value is { message: string } {
+  return typeof value === 'object' && value !== null && typeof (value as { message?: unknown }).message === 'string';
+}
+
+function codeFromStatus(status: number): ApiErrorCode {
+  if (status === 400) return 'BAD_REQUEST';
+  if (status === 429) return 'RATE_LIMITED';
+  return 'UPSTREAM_ERROR';
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -39,6 +50,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     if (isErrorBody(body)) {
       throw new ApiError(body.code, body.message, response.status, body.retryAfterSec);
+    }
+    if (hasMessage(body)) {
+      throw new ApiError(codeFromStatus(response.status), body.message, response.status);
     }
     // 서버가 우리 형식이 아닌 응답을 줬다 (예: 배포 중이거나 프록시 오류)
     throw new ApiError('UPSTREAM_ERROR', '서버에서 오류가 났어요. 잠시 뒤에 다시 시도해 주세요.', response.status);
@@ -57,4 +71,18 @@ export function fetchPlayer(shard: Shard, nickname: string): Promise<PlayerPage>
 
 export function refreshPlayer(shard: Shard, nickname: string): Promise<RefreshResult> {
   return request<RefreshResult>(`${playerPath(shard, nickname)}/refresh`, { method: 'POST' });
+}
+
+/** 공유 카드 꾸미기 화면 값 (카드 계산이 끝날 때까지 기다렸다가 준다) */
+export function fetchCard(shard: Shard, nickname: string): Promise<CardPage> {
+  return request<CardPage>(`/api/card/${shard}/${encodeURIComponent(nickname)}`);
+}
+
+/** 공유 링크 만들기 (같은 접속 주소에서 10분에 10번까지) */
+export function createShare(body: ShareRequest): Promise<ShareResult> {
+  return request<ShareResult>('/api/share', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 }
