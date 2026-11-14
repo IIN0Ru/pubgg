@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { App } from './App';
-import { card, match, page, season, shareCard } from './test/fixtures';
-import { RECENT_KEY, usePlayerLists } from './store/players';
+import { MemoryRouter } from 'react-router';
+import { PlayerView } from './SearchPage';
+import { card, match, page, season, shareCard } from '../test/fixtures';
+import { RECENT_KEY, usePlayerLists } from '../store/players';
 
-vi.mock('./lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
+vi.mock('../lib/cardRenderer', () => ({ drawProfileCard: vi.fn(() => Promise.resolve(() => undefined)) }));
 
 function json(status: number, body: unknown) {
   return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
@@ -15,7 +16,9 @@ function renderApp() {
   const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0 } } });
   render(
     <QueryClientProvider client={client}>
-      <App target={{ shard: 'steam', nickname: 'Sample-01' }} />
+      <MemoryRouter>
+        <PlayerView target={{ shard: 'steam', nickname: 'Sample-01' }} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -27,11 +30,13 @@ beforeEach(() => {
   usePlayerLists.getState().reload();
 });
 
-describe('App', () => {
+describe('전적 화면', () => {
   it('잘못된 주소면 안내한다', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <App target={null} />
+        <MemoryRouter>
+          <PlayerView target={null} />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('닉네임과 플랫폼을 확인해 주세요.');

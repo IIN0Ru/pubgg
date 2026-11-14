@@ -185,7 +185,7 @@ body {
     padding: 12px 16px 0;
 }
 
-/* 모든 화면 맨 아래 공통 안내 (templates/fragments/footer.html) */
+/* 모든 화면 맨 아래 공통 안내 (React SiteFooter, 카드·리플레이 화면은 아직 fragments/footer.html) */
 .sitefooter {
     margin-top: auto;
     padding: 32px 16px 40px;
@@ -2597,7 +2597,7 @@ details[open] .match__chevron { transform: rotate(-135deg); }
 .pick:disabled label { cursor: not-allowed; }
 .pick label small { margin-left: 4px; color: inherit; opacity: 0.7; font-size: 11px; }
 
-/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (React IdCard 가 card-render.js 로 그림) */
+/* 전적 화면 왼쪽 위: 플레이어 카드가 프로필 칸을 대신한다 (React IdCard 가 lib/card/render.ts 로 그림) */
 .idcard--player {
     padding: 0;
     background: transparent;
@@ -2663,6 +2663,9 @@ details[open] .match__chevron { transform: rotate(-135deg); }
     border-radius: 50%;
     animation: loading-spin 0.9s linear infinite;
 }
+
+/* 처음 검색하는 닉네임은 오래 걸린다는 안내 (예전 첫 화면 검색창 아래 문구를 옮김) */
+.loading__hint { margin-top: -8px; font-size: 14px; color: var(--muted); text-align: center; }
 
 @keyframes loading-spin { to { transform: rotate(360deg); } }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import type { ApiError } from '../api/client';
 
 /** 오류 종류별 제목·안내. 서버가 code 로 알려준 것을 화면이 나눠 보여준다 */
@@ -77,9 +78,9 @@ export function ErrorScreen({ error, onRetry, retrying }: Props) {
             </button>
           )}
           {/* 다시 시도가 없는 오류(없는 플레이어)는 첫 화면이 눈에 띄는 버튼, 있으면 보조 버튼 */}
-          <a className={canRetry ? 'errorbox__button errorbox__button--ghost' : 'errorbox__button'} href="/">
+          <Link className={canRetry ? 'errorbox__button errorbox__button--ghost' : 'errorbox__button'} to="/">
             첫 화면으로
-          </a>
+          </Link>
         </div>
       </section>
     </div>

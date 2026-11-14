@@ -1,5 +1,7 @@
+import { Link } from 'react-router';
 import type { Match, MatchPlayer, Shard } from '../api/types';
 import { formatPlayedAt, formatRelativeTime, formatSurvived, matchRankClass, resultBadge } from '../lib/format';
+import { replayPath, searchPath } from '../lib/search';
 
 interface Props {
   match: Match;
@@ -10,12 +12,7 @@ interface Props {
 /** 경기 한 줄. 누르면 펼쳐져서 세부 기록과 팀원 기록, 2D 리플레이 링크가 나온다 */
 export function MatchItem({ match: m, shard, nickname }: Props) {
   const badge = resultBadge(m.rank);
-  const replayHref = `/replay?${new URLSearchParams({
-    platform: shard,
-    match: m.matchId,
-    player: m.me.accountId,
-    nickname,
-  }).toString()}`;
+  const replayHref = replayPath(shard, m.matchId, m.me.accountId, nickname);
 
   return (
     <li className={`match ${matchRankClass(m.rank)}`.trim()}>
@@ -105,9 +102,9 @@ export function MatchItem({ match: m, shard, nickname }: Props) {
                     key={t.accountId}
                     player={t}
                     name={
-                      <a href={`/search?${new URLSearchParams({ platform: shard, nickname: t.name }).toString()}`}>
+                      <Link to={searchPath(shard, t.name)}>
                         {t.name}
-                      </a>
+                      </Link>
                     }
                   />
                 ))}
@@ -118,12 +115,12 @@ export function MatchItem({ match: m, shard, nickname }: Props) {
           )}
 
           {m.replayAvailable && (
-            <a className="match__replay" href={replayHref}>
+            <Link className="match__replay" to={replayHref}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M7 4.5v15l12-7.5z" fill="currentColor" />
               </svg>
               2D 리플레이 보기
-            </a>
+            </Link>
           )}
         </div>
       </details>

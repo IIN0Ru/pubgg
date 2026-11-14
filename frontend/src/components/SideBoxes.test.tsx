@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
+import { render } from '../test/render';
 import { describe, expect, it } from 'vitest';
 import { CompareBox, TeammatesBox } from './SideBoxes';
 import { card, season } from '../test/fixtures';

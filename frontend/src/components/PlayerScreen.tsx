@@ -43,6 +43,7 @@ export function PlayerScreen({ target }: { target: SearchTarget }) {
         <p className="loading" role="status">
           <span className="loading__spinner" aria-hidden="true" />
           전적을 불러오는 중이에요…
+          <span className="loading__hint">처음 검색하는 닉네임은 최근 경기를 모두 받아야 해서 시간이 조금 걸려요.</span>
         </p>
       </div>
     );

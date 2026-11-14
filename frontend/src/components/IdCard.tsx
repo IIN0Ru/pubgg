@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import type { PlayerPage } from '../api/types';
 import { formatCountdown, formatRankPoint, formatRelativeTime } from '../lib/format';
+import { cardPath } from '../lib/search';
 import { FavoriteButton } from './FavoriteButton';
 import { PlayerCanvas } from './PlayerCanvas';
 
@@ -13,7 +15,7 @@ interface Props {
 
 /** 왼쪽 위 칸: 플레이어 카드(A카드) + 카드 아래 한 줄(플랫폼 · RP · 갱신) + 공유 버튼 */
 export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props) {
-  const cardHref = `/card?${new URLSearchParams({ platform: player.platform.shard, nickname: player.nickname }).toString()}`;
+  const cardHref = cardPath(player.platform.shard, player.nickname);
   const wait = useCountdown(player.refreshAvailableInSec, player.updatedAt);
   const season = player.season;
   const saved = { platform: player.platform.shard, nickname: player.nickname, label: player.platform.label };
@@ -46,9 +48,9 @@ export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props)
     return (
       <section className="idcard idcard--player">
         <h1 className="sr-only">{player.nickname}</h1>
-        <a className="idcard__card" href={cardHref} aria-label="공유 카드 만들기">
+        <Link className="idcard__card" to={cardHref} aria-label="공유 카드 만들기">
           <PlayerCanvas card={player.shareCard} />
-        </a>
+        </Link>
 
         <div className="idcard__bar">
           <span className="idcard__platform">{player.platform.label}</span>
@@ -63,9 +65,9 @@ export function IdCard({ player, refreshing, refreshMessage, onRefresh }: Props)
         )}
 
         <div className="idcard__actions">
-          <a className="idcard__make" href={cardHref}>
+          <Link className="idcard__make" to={cardHref}>
             공유 카드 만들기
-          </a>
+          </Link>
           <CopyLinkButton />
         </div>
       </section>
