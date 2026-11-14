@@ -1,5 +1,8 @@
 # 펍지지 (PUB.GG)
 
+<img width="1919" height="905" alt="home" src="https://github.com/user-attachments/assets/30711556-7356-4d63-86e5-4c9cf4e0cdf4" />
+
+
 [![test](https://github.com/IIN0Ru/pubgg/actions/workflows/test.yml/badge.svg)](https://github.com/IIN0Ru/pubgg/actions/workflows/test.yml)
 
 배그 닉네임으로 전적과 플레이 스타일을 분석하고, 디스코드·커뮤니티에 공유할 수 있는 카드를 만들어 주는 사이트.
