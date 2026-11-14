@@ -17,7 +17,7 @@
 
 | 영역 | 사용 |
 |---|---|
-| 서버 | Java 21, Spring Boot 3.5, Maven, Thymeleaf |
+| 서버 | Java 21, Spring Boot 3.5, Maven (JSON API + 링크 미리보기용 껍데기 하나만 Thymeleaf) |
 | 검색 결과 화면 | React 19, TypeScript(strict), Vite, TanStack Query, Zustand |
 | 저장소 | PostgreSQL (운영), 파일 (로컬) |
 | 데이터 | PUBG 공식 API (매치/텔레메트리/시즌) |
@@ -43,7 +43,7 @@
                                                        └─ 오류는 { code, message, retryAfterSec? } + HTTP 상태
 ```
 
-첫 화면·카드 꾸미기(`/card`)·2D 리플레이(`/replay`)는 Thymeleaf가 그린다. 자세한 폴더 구조와 API는 [구조](docs/architecture.md).
+모든 화면(첫 화면·전적·카드 꾸미기·2D 리플레이)은 React가 그린다. 자세한 폴더 구조와 API는 [구조](docs/architecture.md).
 
 ## 실행
 
